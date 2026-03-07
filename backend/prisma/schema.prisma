@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -137,7 +137,7 @@ model Source {
   // Relations
   liens             Lien[]
 
-  @@unique([url(length: 255), datePublication])
+  @@unique([url, datePublication])
   @@map("sources")
 }
 
