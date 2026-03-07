@@ -1,10 +1,16 @@
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import fastifyStatic from '@fastify/static'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import dotenv from 'dotenv'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 import { prisma } from './utils/prisma.js'
 import authRoutes from './routes/auth.js'
@@ -83,10 +89,28 @@ async function build() {
     return { status: 'ok', timestamp: new Date().toISOString() }
   })
 
-  // Route racine (health check Infomaniak)
-  fastify.get('/', async () => {
-    return { status: 'ok', name: 'Réseaux d\'Influence API', version: '1.0.0' }
-  })
+  // En production : servir le frontend buildé
+  if (process.env.NODE_ENV === 'production') {
+    const frontendPath = join(__dirname, '../../frontend/dist')
+    await fastify.register(fastifyStatic, {
+      root: frontendPath,
+      prefix: '/',
+    })
+
+    // SPA fallback : toute route non-API renvoie index.html
+    fastify.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith('/api')) {
+        reply.code(404).send({ error: 'Route not found' })
+      } else {
+        reply.sendFile('index.html')
+      }
+    })
+  } else {
+    // Route racine dev
+    fastify.get('/', async () => {
+      return { status: 'ok', name: 'Réseaux d\'Influence API', version: '1.0.0' }
+    })
+  }
 
   return fastify
 }
