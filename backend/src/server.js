@@ -83,6 +83,11 @@ async function build() {
     return { status: 'ok', timestamp: new Date().toISOString() }
   })
 
+  // Route racine (health check Infomaniak)
+  fastify.get('/', async () => {
+    return { status: 'ok', name: 'Réseaux d\'Influence API', version: '1.0.0' }
+  })
+
   return fastify
 }
 
