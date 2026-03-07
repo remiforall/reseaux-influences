@@ -9,6 +9,12 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "start": "cd backend && node src/server.js",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
+    "format:check": "npx prettier --check .",
+    "format": "npx prettier --write .",
     "deploy": "npm run install:all && npm run build && cd backend && npx prisma generate && npx prisma db push && node prisma/seed.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }
