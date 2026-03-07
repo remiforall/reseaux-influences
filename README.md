@@ -164,7 +164,9 @@ MIT — libre d'utilisation, modification et distribution.
 
 ## Contact
 
-**Rémi Vincent** — Designer et initiateur du projet
+Sur une idée de NXX
+Relancée par Rémi Vincent** — porteur du projet 
+
 Site : [reseauxinfluences.fr](https://reseauxinfluences.fr)
 
 ---
