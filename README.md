@@ -23,13 +23,15 @@ Ce projet s'inscrit dans la continuité du projet *InfluenceNetwork* développé
 
 | Composant | Technologie |
 |---|---|
-| **Backend** | Python 3.12+ / Django 5.x / Django REST Framework |
+| **Backend** | Node.js 20+ / Fastify 5 / Prisma ORM |
 | **Frontend** | React 18+ / Vite / Tailwind CSS |
 | **Visualisation** | D3.js (graphes interactifs) |
 | **Base de données** | PostgreSQL 16+ |
-| **Cache** | Redis |
-| **Tâches asynchrones** | Celery + Redis |
-| **Authentification** | Django Allauth (email + OAuth) |
+| **Cache** | Redis (ioredis) |
+| **Tâches asynchrones** | BullMQ + Redis |
+| **Authentification** | JWT + bcrypt |
+| **Validation** | Zod |
+| **Documentation API** | Swagger / OpenAPI |
 | **Hébergement** | Infomaniak Public Cloud (Suisse, éco-responsable) |
 
 ---
@@ -72,7 +74,6 @@ Ce projet s'inscrit dans la continuité du projet *InfluenceNetwork* développé
 
 ### Prérequis
 
-- Python 3.12+
 - Node.js 20+
 - PostgreSQL 16+
 - Redis
@@ -81,14 +82,15 @@ Ce projet s'inscrit dans la continuité du projet *InfluenceNetwork* développé
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 cp .env.example .env  # Configurer les variables d'environnement
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+npm install
+npx prisma generate
+npx prisma db push    # Créer les tables
+node prisma/seed.js   # Insérer les données de référence (types de liens, badges, config)
+npm run dev
 ```
+
+L'API est accessible sur `http://localhost:3000` et la documentation Swagger sur `http://localhost:3000/docs`.
 
 ### Frontend
 
@@ -98,14 +100,7 @@ npm install
 npm run dev
 ```
 
-### Base de données
-
-```bash
-# Créer la base PostgreSQL
-createdb reseaux_influences
-# Appliquer le schéma
-psql reseaux_influences < database/schema.sql
-```
+Le frontend est accessible sur `http://localhost:5173`.
 
 ---
 
@@ -115,27 +110,38 @@ psql reseaux_influences < database/schema.sql
 reseaux-influences/
 ├── README.md
 ├── docs/
-│   ├── cahier-des-charges.md      # Cahier des charges fonctionnel et technique
-│   ├── plan-developpement.md      # Plan de développement hebdomadaire
-│   └── architecture.md            # Architecture technique
+│   ├── cahier-des-charges.md        # Cahier des charges fonctionnel et technique
+│   └── plan-developpement.md        # Plan de développement hebdomadaire
 ├── database/
-│   └── schema.sql                 # Schéma SQL complet
-├── backend/                       # Projet Django
-│   ├── manage.py
-│   ├── requirements.txt
-│   ├── config/                    # Configuration Django
-│   ├── personnes/                 # App Django : personnes publiques
-│   ├── liens/                     # App Django : liens d'influence
-│   ├── sources/                   # App Django : sources médiatiques
-│   ├── utilisateurs/              # App Django : utilisateurs et gamification
-│   └── validations/               # App Django : validations communautaires
-└── frontend/                      # Projet React + Vite
+│   └── schema.sql                   # Schéma SQL de référence
+├── backend/                         # API Node.js (Fastify + Prisma)
+│   ├── package.json
+│   ├── prisma/
+│   │   ├── schema.prisma            # Modèles Prisma ORM
+│   │   └── seed.js                  # Données de référence
+│   └── src/
+│       ├── server.js                # Point d'entrée Fastify
+│       ├── routes/                  # Routes API REST
+│       │   ├── auth.js              # Inscription, connexion, JWT
+│       │   ├── personnes.js         # CRUD personnes publiques
+│       │   ├── liens.js             # CRUD liens + seuil de soumission
+│       │   ├── sources.js           # CRUD sources médiatiques
+│       │   ├── validations.js       # Validation communautaire (vrai/faux)
+│       │   ├── utilisateurs.js      # Profils publics, badges, classement
+│       │   ├── graphe.js            # Données pour D3.js
+│       │   └── export.js            # Export CSV / JSON
+│       ├── services/
+│       │   └── gamification.js      # Logique de points, badges, consensus
+│       ├── middleware/
+│       │   └── auth.js              # Authentification JWT
+│       └── utils/
+│           └── prisma.js            # Client Prisma
+└── frontend/                        # React 18 + Vite + Tailwind
     ├── package.json
-    ├── src/
-    │   ├── components/
-    │   ├── pages/
-    │   └── api/
-    └── public/
+    └── src/
+        ├── components/              # Navbar, ValidationForm, BadgeDisplay
+        ├── pages/                   # Accueil, Liens, Graphe, Profil
+        └── api/                     # Client API (axios)
 ```
 
 ---

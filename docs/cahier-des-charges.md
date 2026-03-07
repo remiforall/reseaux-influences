@@ -180,9 +180,9 @@ Badges attribués automatiquement selon des règles configurables :
 │                  API REST (HTTPS)                    │
 ├─────────────────────────────────────────────────────┤
 │                    BACKEND                           │
-│         Django 5.x + Django REST Framework           │
-│              Django Allauth (auth)                   │
-│              Celery (tâches async)                   │
+│          Node.js 20+ / Fastify 5 / Prisma            │
+│            JWT + bcrypt (auth) / Zod (validation)    │
+│              BullMQ (tâches async)                   │
 ├─────────────────┬───────────────────────────────────┤
 │   PostgreSQL    │         Redis                      │
 │   (données)     │   (cache + file de tâches)         │
@@ -193,25 +193,26 @@ Badges attribués automatiquement selon des règles configurables :
 
 | Composant | Technologie | Version | Justification |
 |---|---|---|---|
-| Langage backend | Python | 3.12+ | Écosystème riche, sécurité, communauté |
-| Framework backend | Django | 5.x | ORM puissant, admin intégrée, sécurité native |
-| API | Django REST Framework | 3.15+ | Standard de facto pour les API Django |
-| Auth | Django Allauth | 0.60+ | OAuth multi-providers, email |
-| Tâches async | Celery | 5.4+ | Attribution badges, export, notifications |
+| Runtime backend | Node.js | 20+ | Stack unifiée JS front+back, performance I/O |
+| Framework backend | Fastify | 5.x | Performance, plugins, Swagger natif |
+| ORM | Prisma | 6.x | Typage, migrations, client auto-généré |
+| Validation | Zod | 3.x | Validation de schéma TypeScript-first |
+| Auth | JWT + bcrypt | 9.x | Authentification stateless, hashage sécurisé |
+| Tâches async | BullMQ | 5.x | Attribution badges, export, notifications |
 | Frontend | React | 18+ | Écosystème graphes (D3.js), composants |
 | Build frontend | Vite | 5+ | Rapidité de build, HMR |
 | CSS | Tailwind CSS | 3+ | Utility-first, personnalisable |
 | Graphes | D3.js | 7+ | Standard de visualisation de données |
 | BDD | PostgreSQL | 16+ | JSONB, trigrams, performances |
-| Cache | Redis | 7+ | Cache, sessions, broker Celery |
-| Serveur | Gunicorn + Nginx | - | Production-ready |
+| Cache | Redis | 7+ | Cache, sessions, broker BullMQ |
+| Serveur | Node.js + Nginx | - | Production-ready |
 
 ### 3.3 Sécurité
 
-- **OWASP Top 10** : protection native via Django ORM (injection SQL), templates (XSS), CSRF tokens
-- **Rate limiting** : django-ratelimit sur les endpoints sensibles
-- **Validation des entrées** : sérialiseurs DRF avec validation stricte
-- **Mots de passe** : hashage bcrypt via Django
+- **OWASP Top 10** : protection via Prisma ORM (injection SQL), @fastify/helmet (headers), validation Zod
+- **Rate limiting** : @fastify/rate-limit sur les endpoints sensibles
+- **Validation des entrées** : schémas Zod avec validation stricte sur chaque route
+- **Mots de passe** : hashage bcrypt (12 rounds)
 - **HTTPS** : obligatoire, certificat Let's Encrypt via Certbot
 - **CORS** : configuration stricte pour le domaine reseauxinfluences.fr
 - **Headers de sécurité** : HSTS, X-Content-Type-Options, X-Frame-Options

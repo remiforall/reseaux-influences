@@ -1,0 +1,343 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// UTILISATEURS ET GAMIFICATION
+// =============================================================================
+
+model Utilisateur {
+  id                     String   @id @default(uuid())
+  email                  String   @unique
+  motDePasseHash         String   @map("mot_de_passe_hash")
+  nom                    String
+  pseudo                 String?  @unique
+  bio                    String?
+  avatarUrl              String?  @map("avatar_url")
+  role                   Role     @default(CONTRIBUTEUR)
+
+  // Gamification
+  points                 Int      @default(0)
+  niveau                 Niveau   @default(DEBUTANT)
+  validationsEffectuees  Int      @default(0) @map("validations_effectuees")
+  soumissionsEffectuees  Int      @default(0) @map("soumissions_effectuees")
+  soumissionsAcceptees   Int      @default(0) @map("soumissions_acceptees")
+  tauxPrecision          Float    @default(0) @map("taux_precision")
+
+  // Métadonnées
+  estActif               Boolean  @default(true) @map("est_actif")
+  dateInscription        DateTime @default(now()) @map("date_inscription")
+  derniereConnexion      DateTime? @map("derniere_connexion")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  personnesCrees         Personne[]    @relation("PersonneCreeePar")
+  liensCrees             Lien[]        @relation("LienCreePar")
+  liensModeres           Lien[]        @relation("LienModerePar")
+  sourcesCrees           Source[]      @relation("SourceCreeePar")
+  sourcesVerifiees       Source[]      @relation("SourceVerifieePar")
+  validations            Validation[]
+  badges                 UtilisateurBadge[]
+  signalementsCrees      Signalement[] @relation("SignalementCreePar")
+  signalementsTraites    Signalement[] @relation("SignalementTraitePar")
+  historiques            Historique[]
+
+  @@map("utilisateurs")
+}
+
+enum Role {
+  CONTRIBUTEUR
+  MODERATEUR
+  ADMIN
+}
+
+enum Niveau {
+  DEBUTANT
+  INTERMEDIAIRE
+  EXPERT
+  MODERATEUR
+}
+
+// =============================================================================
+// PERSONNES PUBLIQUES
+// =============================================================================
+
+model Personne {
+  id              String   @id @default(uuid())
+  nom             String
+  prenom          String?
+  pays            String?
+  nationalite     String?
+  dateNaissance   DateTime? @map("date_naissance") @db.Date
+  rolePrincipal   String?  @map("role_principal")
+  rolesSecondaires String[] @map("roles_secondaires")
+  bio             String?
+  photoUrl        String?  @map("photo_url")
+  wikipediaUrl    String?  @map("wikipedia_url")
+  wikidataId      String?  @map("wikidata_id")
+
+  // Modération
+  statut          StatutEntite @default(EN_ATTENTE)
+  creePar         Utilisateur? @relation("PersonneCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId       String?      @map("cree_par")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  liensCommeA     Lien[] @relation("PersonneA")
+  liensCommeB     Lien[] @relation("PersonneB")
+
+  @@map("personnes")
+}
+
+enum StatutEntite {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+  ARCHIVE
+  CONTESTE
+}
+
+// =============================================================================
+// SOURCES MÉDIATIQUES
+// =============================================================================
+
+model Source {
+  id                String    @id @default(uuid())
+  url               String
+  titre             String
+  media             String?
+  typeMedia         TypeMedia? @map("type_media")
+  langue            String    @default("fr")
+  paysMedia         String?   @map("pays_media")
+  datePublication   DateTime? @map("date_publication") @db.Date
+  dateConsultation  DateTime? @map("date_consultation") @db.Date
+  auteur            String?
+  description       String?
+
+  // Vérification
+  verifiee          Boolean   @default(false)
+  verifieePar       Utilisateur? @relation("SourceVerifieePar", fields: [verifieeParId], references: [id], onDelete: SetNull)
+  verifieeParId     String?   @map("verifiee_par")
+  verifieeLe        DateTime? @map("verifiee_le")
+
+  // Métadonnées
+  creePar           Utilisateur? @relation("SourceCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId         String?   @map("cree_par")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  liens             Lien[]
+
+  @@unique([url, datePublication])
+  @@map("sources")
+}
+
+enum TypeMedia {
+  PRESSE_ECRITE
+  TELEVISION
+  RADIO
+  WEB
+  DOCUMENT_OFFICIEL
+}
+
+// =============================================================================
+// TYPES DE LIENS (référentiel)
+// =============================================================================
+
+model TypeLien {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  libelle     String
+  description String?
+  categorie   String?
+  icone       String?
+  couleur     String?
+
+  // Relations
+  liens       Lien[]
+
+  @@map("types_liens")
+}
+
+// =============================================================================
+// LIENS D'INFLUENCE
+// =============================================================================
+
+model Lien {
+  id                   String       @id @default(uuid())
+  personneA            Personne     @relation("PersonneA", fields: [personneAId], references: [id], onDelete: Cascade)
+  personneAId          String       @map("personne_a_id")
+  personneB            Personne     @relation("PersonneB", fields: [personneBId], references: [id], onDelete: Cascade)
+  personneBId          String       @map("personne_b_id")
+  typeLien             TypeLien     @relation(fields: [typeLienId], references: [id])
+  typeLienId           Int          @map("type_lien_id")
+  description          String?
+  dateDebut            DateTime?    @map("date_debut") @db.Date
+  dateFin              DateTime?    @map("date_fin") @db.Date
+  estBidirectionnel    Boolean      @default(true) @map("est_bidirectionnel")
+  intensite            Int          @default(1)
+
+  // Source
+  source               Source?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceId             String?      @map("source_id")
+
+  // Modération et consensus
+  statut               StatutEntite @default(EN_ATTENTE)
+  nbValidationsVrai    Int          @default(0) @map("nb_validations_vrai")
+  nbValidationsFaux    Int          @default(0) @map("nb_validations_faux")
+  nbValidationsIndecis Int          @default(0) @map("nb_validations_indecis")
+  scoreConfiance       Float        @default(0) @map("score_confiance")
+
+  // Contribution
+  creePar              Utilisateur? @relation("LienCreePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId            String?      @map("cree_par")
+  moderePar            Utilisateur? @relation("LienModerePar", fields: [modereParId], references: [id], onDelete: SetNull)
+  modereParId          String?      @map("modere_par")
+  modereLe             DateTime?    @map("modere_le")
+
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  validations          Validation[]
+
+  @@unique([personneAId, personneBId, typeLienId, sourceId])
+  @@map("liens")
+}
+
+// =============================================================================
+// VALIDATIONS COMMUNAUTAIRES
+// =============================================================================
+
+model Validation {
+  id                    String   @id @default(uuid())
+  utilisateur           Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  utilisateurId         String   @map("utilisateur_id")
+  lien                  Lien     @relation(fields: [lienId], references: [id], onDelete: Cascade)
+  lienId                String   @map("lien_id")
+  verdict               Verdict
+  commentaire           String?
+  sourceSupplementaire  String?  @map("source_supplementaire")
+
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@unique([utilisateurId, lienId])
+  @@map("validations")
+}
+
+enum Verdict {
+  VRAI
+  FAUX
+  INDECIS
+}
+
+// =============================================================================
+// BADGES DE GAMIFICATION
+// =============================================================================
+
+model Badge {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  nom         String
+  description String?
+  categorie   String
+  iconeUrl    String? @map("icone_url")
+  couleur     String?
+  conditions  Json
+  estActif    Boolean @default(true) @map("est_actif")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  utilisateurs UtilisateurBadge[]
+
+  @@map("badges")
+}
+
+model UtilisateurBadge {
+  id             Int         @id @default(autoincrement())
+  utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  utilisateurId  String      @map("utilisateur_id")
+  badge          Badge       @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  badgeId        Int         @map("badge_id")
+  attribueLe     DateTime    @default(now()) @map("attribue_le")
+
+  @@unique([utilisateurId, badgeId])
+  @@map("utilisateurs_badges")
+}
+
+// =============================================================================
+// HISTORIQUE DES MODIFICATIONS
+// =============================================================================
+
+model Historique {
+  id            String   @id @default(uuid())
+  entiteType    String   @map("entite_type")
+  entiteId      String   @map("entite_id")
+  action        String
+  donneesAvant  Json?    @map("donnees_avant")
+  donneesApres  Json?    @map("donnees_apres")
+  utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id], onDelete: SetNull)
+  utilisateurId String?  @map("utilisateur_id")
+  commentaire   String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("historique")
+}
+
+// =============================================================================
+// SIGNALEMENTS
+// =============================================================================
+
+model Signalement {
+  id          String          @id @default(uuid())
+  entiteType  String          @map("entite_type")
+  entiteId    String          @map("entite_id")
+  signalePar  Utilisateur     @relation("SignalementCreePar", fields: [signaleParId], references: [id], onDelete: Cascade)
+  signaleParId String         @map("signale_par")
+  raison      RaisonSignalement
+  description String?
+  statut      StatutSignalement @default(OUVERT)
+  traitePar   Utilisateur?    @relation("SignalementTraitePar", fields: [traiteParId], references: [id], onDelete: SetNull)
+  traiteParId String?         @map("traite_par")
+  traiteLe    DateTime?       @map("traite_le")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@map("signalements")
+}
+
+enum RaisonSignalement {
+  INEXACT
+  DIFFAMATOIRE
+  DOUBLON
+  SPAM
+  AUTRE
+}
+
+enum StatutSignalement {
+  OUVERT
+  EN_COURS
+  RESOLU
+  REJETE
+}
+
+// =============================================================================
+// CONFIGURATION GAMIFICATION
+// =============================================================================
+
+model ConfigGamification {
+  cle         String @id
+  valeur      String
+  description String?
+
+  @@map("config_gamification")
+}
