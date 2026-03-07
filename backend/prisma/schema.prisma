@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -12,13 +12,13 @@ datasource db {
 // =============================================================================
 
 model Utilisateur {
-  id                     String   @id @default(uuid())
-  email                  String   @unique
-  motDePasseHash         String   @map("mot_de_passe_hash")
-  nom                    String
-  pseudo                 String?  @unique
-  bio                    String?
-  avatarUrl              String?  @map("avatar_url")
+  id                     String   @id @default(uuid()) @db.VarChar(36)
+  email                  String   @unique @db.VarChar(255)
+  motDePasseHash         String   @map("mot_de_passe_hash") @db.VarChar(255)
+  nom                    String   @db.VarChar(255)
+  pseudo                 String?  @unique @db.VarChar(100)
+  bio                    String?  @db.Text
+  avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
   role                   Role     @default(CONTRIBUTEUR)
 
   // Gamification
@@ -69,23 +69,23 @@ enum Niveau {
 // =============================================================================
 
 model Personne {
-  id              String   @id @default(uuid())
-  nom             String
-  prenom          String?
-  pays            String?
-  nationalite     String?
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  nom             String   @db.VarChar(255)
+  prenom          String?  @db.VarChar(255)
+  pays            String?  @db.VarChar(100)
+  nationalite     String?  @db.VarChar(100)
   dateNaissance   DateTime? @map("date_naissance") @db.Date
-  rolePrincipal   String?  @map("role_principal")
-  rolesSecondaires String[] @map("roles_secondaires")
-  bio             String?
-  photoUrl        String?  @map("photo_url")
-  wikipediaUrl    String?  @map("wikipedia_url")
-  wikidataId      String?  @map("wikidata_id")
+  rolePrincipal   String?  @map("role_principal") @db.VarChar(255)
+  rolesSecondaires Json     @default("[]") @map("roles_secondaires")
+  bio             String?  @db.Text
+  photoUrl        String?  @map("photo_url") @db.VarChar(500)
+  wikipediaUrl    String?  @map("wikipedia_url") @db.VarChar(500)
+  wikidataId      String?  @map("wikidata_id") @db.VarChar(50)
 
   // Modération
   statut          StatutEntite @default(EN_ATTENTE)
   creePar         Utilisateur? @relation("PersonneCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
-  creeParId       String?      @map("cree_par")
+  creeParId       String?      @map("cree_par") @db.VarChar(36)
 
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -110,34 +110,34 @@ enum StatutEntite {
 // =============================================================================
 
 model Source {
-  id                String    @id @default(uuid())
-  url               String
-  titre             String
-  media             String?
+  id                String    @id @default(uuid()) @db.VarChar(36)
+  url               String    @db.VarChar(500)
+  titre             String    @db.VarChar(500)
+  media             String?   @db.VarChar(255)
   typeMedia         TypeMedia? @map("type_media")
-  langue            String    @default("fr")
-  paysMedia         String?   @map("pays_media")
+  langue            String    @default("fr") @db.VarChar(10)
+  paysMedia         String?   @map("pays_media") @db.VarChar(100)
   datePublication   DateTime? @map("date_publication") @db.Date
   dateConsultation  DateTime? @map("date_consultation") @db.Date
-  auteur            String?
-  description       String?
+  auteur            String?   @db.VarChar(255)
+  description       String?   @db.Text
 
   // Vérification
   verifiee          Boolean   @default(false)
   verifieePar       Utilisateur? @relation("SourceVerifieePar", fields: [verifieeParId], references: [id], onDelete: SetNull)
-  verifieeParId     String?   @map("verifiee_par")
+  verifieeParId     String?   @map("verifiee_par") @db.VarChar(36)
   verifieeLe        DateTime? @map("verifiee_le")
 
   // Métadonnées
   creePar           Utilisateur? @relation("SourceCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
-  creeParId         String?   @map("cree_par")
+  creeParId         String?   @map("cree_par") @db.VarChar(36)
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   // Relations
   liens             Lien[]
 
-  @@unique([url, datePublication])
+  @@unique([url(length: 255), datePublication])
   @@map("sources")
 }
 
@@ -155,12 +155,12 @@ enum TypeMedia {
 
 model TypeLien {
   id          Int     @id @default(autoincrement())
-  code        String  @unique
-  libelle     String
-  description String?
-  categorie   String?
-  icone       String?
-  couleur     String?
+  code        String  @unique @db.VarChar(50)
+  libelle     String  @db.VarChar(255)
+  description String? @db.Text
+  categorie   String? @db.VarChar(100)
+  icone       String? @db.VarChar(50)
+  couleur     String? @db.VarChar(20)
 
   // Relations
   liens       Lien[]
@@ -173,14 +173,14 @@ model TypeLien {
 // =============================================================================
 
 model Lien {
-  id                   String       @id @default(uuid())
+  id                   String       @id @default(uuid()) @db.VarChar(36)
   personneA            Personne     @relation("PersonneA", fields: [personneAId], references: [id], onDelete: Cascade)
-  personneAId          String       @map("personne_a_id")
+  personneAId          String       @map("personne_a_id") @db.VarChar(36)
   personneB            Personne     @relation("PersonneB", fields: [personneBId], references: [id], onDelete: Cascade)
-  personneBId          String       @map("personne_b_id")
+  personneBId          String       @map("personne_b_id") @db.VarChar(36)
   typeLien             TypeLien     @relation(fields: [typeLienId], references: [id])
   typeLienId           Int          @map("type_lien_id")
-  description          String?
+  description          String?      @db.Text
   dateDebut            DateTime?    @map("date_debut") @db.Date
   dateFin              DateTime?    @map("date_fin") @db.Date
   estBidirectionnel    Boolean      @default(true) @map("est_bidirectionnel")
@@ -188,7 +188,7 @@ model Lien {
 
   // Source
   source               Source?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  sourceId             String?      @map("source_id")
+  sourceId             String?      @map("source_id") @db.VarChar(36)
 
   // Modération et consensus
   statut               StatutEntite @default(EN_ATTENTE)
@@ -199,9 +199,9 @@ model Lien {
 
   // Contribution
   creePar              Utilisateur? @relation("LienCreePar", fields: [creeParId], references: [id], onDelete: SetNull)
-  creeParId            String?      @map("cree_par")
+  creeParId            String?      @map("cree_par") @db.VarChar(36)
   moderePar            Utilisateur? @relation("LienModerePar", fields: [modereParId], references: [id], onDelete: SetNull)
-  modereParId          String?      @map("modere_par")
+  modereParId          String?      @map("modere_par") @db.VarChar(36)
   modereLe             DateTime?    @map("modere_le")
 
   createdAt            DateTime     @default(now()) @map("created_at")
@@ -219,14 +219,14 @@ model Lien {
 // =============================================================================
 
 model Validation {
-  id                    String   @id @default(uuid())
+  id                    String   @id @default(uuid()) @db.VarChar(36)
   utilisateur           Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
-  utilisateurId         String   @map("utilisateur_id")
+  utilisateurId         String   @map("utilisateur_id") @db.VarChar(36)
   lien                  Lien     @relation(fields: [lienId], references: [id], onDelete: Cascade)
-  lienId                String   @map("lien_id")
+  lienId                String   @map("lien_id") @db.VarChar(36)
   verdict               Verdict
-  commentaire           String?
-  sourceSupplementaire  String?  @map("source_supplementaire")
+  commentaire           String?  @db.Text
+  sourceSupplementaire  String?  @map("source_supplementaire") @db.VarChar(500)
 
   createdAt             DateTime @default(now()) @map("created_at")
 
@@ -246,12 +246,12 @@ enum Verdict {
 
 model Badge {
   id          Int     @id @default(autoincrement())
-  code        String  @unique
-  nom         String
-  description String?
-  categorie   String
-  iconeUrl    String? @map("icone_url")
-  couleur     String?
+  code        String  @unique @db.VarChar(50)
+  nom         String  @db.VarChar(255)
+  description String? @db.Text
+  categorie   String  @db.VarChar(100)
+  iconeUrl    String? @map("icone_url") @db.VarChar(500)
+  couleur     String? @db.VarChar(20)
   conditions  Json
   estActif    Boolean @default(true) @map("est_actif")
 
@@ -266,7 +266,7 @@ model Badge {
 model UtilisateurBadge {
   id             Int         @id @default(autoincrement())
   utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
-  utilisateurId  String      @map("utilisateur_id")
+  utilisateurId  String      @map("utilisateur_id") @db.VarChar(36)
   badge          Badge       @relation(fields: [badgeId], references: [id], onDelete: Cascade)
   badgeId        Int         @map("badge_id")
   attribueLe     DateTime    @default(now()) @map("attribue_le")
@@ -280,15 +280,15 @@ model UtilisateurBadge {
 // =============================================================================
 
 model Historique {
-  id            String   @id @default(uuid())
-  entiteType    String   @map("entite_type")
-  entiteId      String   @map("entite_id")
-  action        String
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  entiteType    String   @map("entite_type") @db.VarChar(50)
+  entiteId      String   @map("entite_id") @db.VarChar(36)
+  action        String   @db.VarChar(50)
   donneesAvant  Json?    @map("donnees_avant")
   donneesApres  Json?    @map("donnees_apres")
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id], onDelete: SetNull)
-  utilisateurId String?  @map("utilisateur_id")
-  commentaire   String?
+  utilisateurId String?  @map("utilisateur_id") @db.VarChar(36)
+  commentaire   String?  @db.Text
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@map("historique")
@@ -299,16 +299,16 @@ model Historique {
 // =============================================================================
 
 model Signalement {
-  id          String          @id @default(uuid())
-  entiteType  String          @map("entite_type")
-  entiteId    String          @map("entite_id")
+  id          String          @id @default(uuid()) @db.VarChar(36)
+  entiteType  String          @map("entite_type") @db.VarChar(50)
+  entiteId    String          @map("entite_id") @db.VarChar(36)
   signalePar  Utilisateur     @relation("SignalementCreePar", fields: [signaleParId], references: [id], onDelete: Cascade)
-  signaleParId String         @map("signale_par")
+  signaleParId String         @map("signale_par") @db.VarChar(36)
   raison      RaisonSignalement
-  description String?
+  description String?         @db.Text
   statut      StatutSignalement @default(OUVERT)
   traitePar   Utilisateur?    @relation("SignalementTraitePar", fields: [traiteParId], references: [id], onDelete: SetNull)
-  traiteParId String?         @map("traite_par")
+  traiteParId String?         @map("traite_par") @db.VarChar(36)
   traiteLe    DateTime?       @map("traite_le")
   createdAt   DateTime        @default(now()) @map("created_at")
 
@@ -335,9 +335,9 @@ enum StatutSignalement {
 // =============================================================================
 
 model ConfigGamification {
-  cle         String @id
-  valeur      String
-  description String?
+  cle         String @id @db.VarChar(100)
+  valeur      String @db.VarChar(500)
+  description String? @db.Text
 
   @@map("config_gamification")
 }

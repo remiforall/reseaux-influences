@@ -21,7 +21,7 @@ export default async function sourcesRoutes(fastify) {
     const skip = (parseInt(page) - 1) * parseInt(limit)
 
     const where = {}
-    if (media) where.media = { contains: media, mode: 'insensitive' }
+    if (media) where.media = { contains: media }
     if (type) where.typeMedia = type
 
     const [sources, total] = await Promise.all([
