@@ -38,6 +38,7 @@ model Utilisateur {
 
   // Relations
   personnesCrees         Personne[]    @relation("PersonneCreeePar")
+  organisationsCrees     Organisation[] @relation("OrganisationCreeePar")
   liensCrees             Lien[]        @relation("LienCreePar")
   liensModeres           Lien[]        @relation("LienModerePar")
   sourcesCrees           Source[]      @relation("SourceCreeePar")
@@ -103,6 +104,54 @@ enum StatutEntite {
   REJETE
   ARCHIVE
   CONTESTE
+}
+
+// =============================================================================
+// ORGANISATIONS (entreprises, institutions, partis, ONG, médias...)
+// =============================================================================
+
+model Organisation {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  nom               String   @db.VarChar(255)
+  sigle             String?  @db.VarChar(50)
+  typeOrganisation  TypeOrganisation @map("type_organisation")
+  pays              String?  @db.VarChar(100)
+  siteWeb           String?  @map("site_web") @db.VarChar(500)
+  description       String?  @db.Text
+  logoUrl           String?  @map("logo_url") @db.VarChar(500)
+  dateCreation      DateTime? @map("date_creation") @db.Date
+  dateFin           DateTime? @map("date_fin") @db.Date
+  wikipediaUrl      String?  @map("wikipedia_url") @db.VarChar(500)
+  wikidataId        String?  @map("wikidata_id") @db.VarChar(50)
+
+  // Modération
+  statut            StatutEntite @default(EN_ATTENTE)
+  creePar           Utilisateur? @relation("OrganisationCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId         String?      @map("cree_par") @db.VarChar(36)
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations — l'organisation peut être côté A ou B d'un lien
+  liensCommeA       Lien[] @relation("OrganisationA")
+  liensCommeB       Lien[] @relation("OrganisationB")
+
+  @@map("organisations")
+}
+
+enum TypeOrganisation {
+  ENTREPRISE
+  INSTITUTION_PUBLIQUE
+  PARTI_POLITIQUE
+  ONG
+  MEDIA
+  SYNDICAT
+  FONDATION
+  THINK_TANK
+  LOBBY
+  ASSOCIATION
+  ORGANISATION_INTERNATIONALE
+  AUTRE
 }
 
 // =============================================================================
@@ -174,10 +223,19 @@ model TypeLien {
 
 model Lien {
   id                   String       @id @default(uuid()) @db.VarChar(36)
-  personneA            Personne     @relation("PersonneA", fields: [personneAId], references: [id], onDelete: Cascade)
-  personneAId          String       @map("personne_a_id") @db.VarChar(36)
-  personneB            Personne     @relation("PersonneB", fields: [personneBId], references: [id], onDelete: Cascade)
-  personneBId          String       @map("personne_b_id") @db.VarChar(36)
+
+  // Entité A — soit une personne, soit une organisation
+  personneA            Personne?    @relation("PersonneA", fields: [personneAId], references: [id], onDelete: Cascade)
+  personneAId          String?      @map("personne_a_id") @db.VarChar(36)
+  organisationA        Organisation? @relation("OrganisationA", fields: [organisationAId], references: [id], onDelete: Cascade)
+  organisationAId      String?      @map("organisation_a_id") @db.VarChar(36)
+
+  // Entité B — soit une personne, soit une organisation
+  personneB            Personne?    @relation("PersonneB", fields: [personneBId], references: [id], onDelete: Cascade)
+  personneBId          String?      @map("personne_b_id") @db.VarChar(36)
+  organisationB        Organisation? @relation("OrganisationB", fields: [organisationBId], references: [id], onDelete: Cascade)
+  organisationBId      String?      @map("organisation_b_id") @db.VarChar(36)
+
   typeLien             TypeLien     @relation(fields: [typeLienId], references: [id])
   typeLienId           Int          @map("type_lien_id")
   description          String?      @db.Text
@@ -210,7 +268,6 @@ model Lien {
   // Relations
   validations          Validation[]
 
-  @@unique([personneAId, personneBId, typeLienId, sourceId])
   @@map("liens")
 }
 

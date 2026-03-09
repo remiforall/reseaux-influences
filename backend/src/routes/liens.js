@@ -4,8 +4,12 @@ import { authenticate } from '../middleware/auth.js'
 import { peutSoumettre } from '../services/gamification.js'
 
 const lienSchema = z.object({
-  personneAId: z.string().uuid(),
-  personneBId: z.string().uuid(),
+  // Entité A : personne OU organisation
+  personneAId: z.string().uuid().optional(),
+  organisationAId: z.string().uuid().optional(),
+  // Entité B : personne OU organisation
+  personneBId: z.string().uuid().optional(),
+  organisationBId: z.string().uuid().optional(),
   typeLienId: z.number().int().positive(),
   description: z.string().optional(),
   dateDebut: z.string().optional(),
@@ -22,7 +26,13 @@ const lienSchema = z.object({
     datePublication: z.string().optional(),
     auteur: z.string().optional(),
   }).optional(),
-})
+}).refine(
+  (data) => (data.personneAId || data.organisationAId) && !(data.personneAId && data.organisationAId),
+  { message: 'Entité A : fournir personneAId OU organisationAId (pas les deux)' },
+).refine(
+  (data) => (data.personneBId || data.organisationBId) && !(data.personneBId && data.organisationBId),
+  { message: 'Entité B : fournir personneBId OU organisationBId (pas les deux)' },
+)
 
 export default async function liensRoutes(fastify) {
   // Liste des liens (public)
@@ -42,6 +52,8 @@ export default async function liensRoutes(fastify) {
         include: {
           personneA: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true } },
           personneB: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true } },
+          organisationA: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true } },
+          organisationB: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true } },
           typeLien: true,
           source: { select: { id: true, url: true, titre: true, media: true } },
           creePar: { select: { id: true, pseudo: true } },
@@ -80,6 +92,8 @@ export default async function liensRoutes(fastify) {
         include: {
           personneA: { select: { id: true, nom: true, prenom: true, rolePrincipal: true } },
           personneB: { select: { id: true, nom: true, prenom: true, rolePrincipal: true } },
+          organisationA: { select: { id: true, nom: true, sigle: true, typeOrganisation: true } },
+          organisationB: { select: { id: true, nom: true, sigle: true, typeOrganisation: true } },
           typeLien: true,
           source: { select: { id: true, url: true, titre: true, media: true } },
           validations: utilisateurId
@@ -108,6 +122,8 @@ export default async function liensRoutes(fastify) {
       include: {
         personneA: true,
         personneB: true,
+        organisationA: true,
+        organisationB: true,
         typeLien: true,
         source: true,
         creePar: { select: { id: true, pseudo: true } },
@@ -144,18 +160,23 @@ export default async function liensRoutes(fastify) {
 
     const { nouvelleSource, ...lienData } = result.data
 
-    // Vérifier que les deux personnes existent
-    const [personneA, personneB] = await Promise.all([
-      prisma.personne.findUnique({ where: { id: lienData.personneAId } }),
-      prisma.personne.findUnique({ where: { id: lienData.personneBId } }),
-    ])
+    // Vérifier que les entités A et B existent
+    const entiteA = lienData.personneAId
+      ? await prisma.personne.findUnique({ where: { id: lienData.personneAId } })
+      : await prisma.organisation.findUnique({ where: { id: lienData.organisationAId } })
+    const entiteB = lienData.personneBId
+      ? await prisma.personne.findUnique({ where: { id: lienData.personneBId } })
+      : await prisma.organisation.findUnique({ where: { id: lienData.organisationBId } })
 
-    if (!personneA || !personneB) {
-      return reply.code(404).send({ error: 'Une ou les deux personnes sont introuvables' })
+    if (!entiteA || !entiteB) {
+      return reply.code(404).send({ error: 'Une ou les deux entités sont introuvables' })
     }
 
-    if (lienData.personneAId === lienData.personneBId) {
-      return reply.code(400).send({ error: 'Un lien ne peut pas relier une personne à elle-même' })
+    // Empêcher un lien vers soi-même
+    const idA = lienData.personneAId || lienData.organisationAId
+    const idB = lienData.personneBId || lienData.organisationBId
+    if (idA === idB) {
+      return reply.code(400).send({ error: 'Un lien ne peut pas relier une entité à elle-même' })
     }
 
     // Créer la source si nécessaire

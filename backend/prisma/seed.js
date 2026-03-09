@@ -60,6 +60,23 @@ async function main() {
   }
   console.log(`${badges.length} badges insérés.`)
 
+  // Types d'organisations (exemples)
+  const organisations = [
+    { nom: 'Transparency International', sigle: 'TI', typeOrganisation: 'ONG', pays: 'Allemagne', description: 'ONG internationale de lutte contre la corruption', siteWeb: 'https://www.transparency.org', wikidataId: 'Q131566', statut: 'VALIDE' },
+    { nom: 'Parlement européen', sigle: 'PE', typeOrganisation: 'INSTITUTION_PUBLIQUE', pays: 'Union européenne', description: 'Institution parlementaire de l\'Union européenne', siteWeb: 'https://www.europarl.europa.eu', wikidataId: 'Q8889', statut: 'VALIDE' },
+    { nom: 'TotalEnergies', sigle: 'TTE', typeOrganisation: 'ENTREPRISE', pays: 'France', description: 'Compagnie pétrolière et gazière multinationale', siteWeb: 'https://totalenergies.com', wikidataId: 'Q154037', statut: 'VALIDE' },
+    { nom: 'Reporters sans frontières', sigle: 'RSF', typeOrganisation: 'ONG', pays: 'France', description: 'ONG de défense de la liberté de la presse', siteWeb: 'https://rsf.org', wikidataId: 'Q199584', statut: 'VALIDE' },
+    { nom: 'Institut Montaigne', typeOrganisation: 'THINK_TANK', pays: 'France', description: 'Think tank libéral français', siteWeb: 'https://www.institutmontaigne.org', wikidataId: 'Q3152452', statut: 'VALIDE' },
+  ]
+
+  for (const org of organisations) {
+    const existing = await prisma.organisation.findFirst({ where: { nom: org.nom } })
+    if (!existing) {
+      await prisma.organisation.create({ data: org })
+    }
+  }
+  console.log(`${organisations.length} organisations de référence insérées.`)
+
   // Configuration gamification
   const configs = [
     { cle: 'seuil_validations_pour_soumettre', valeur: '5', description: 'Nombre minimum de validations avant de pouvoir soumettre un lien' },

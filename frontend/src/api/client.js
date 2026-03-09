@@ -34,6 +34,13 @@ export const getLien = (id) => api.get(`/liens/${id}`)
 export const postLien = (data) => api.post('/liens', data)
 export const getTypesLiens = () => api.get('/liens/types/all')
 
+// Organisations
+export const getOrganisations = (params) => api.get('/organisations', { params })
+export const getOrganisation = (id) => api.get(`/organisations/${id}`)
+export const postOrganisation = (data) => api.post('/organisations', data)
+export const searchOrganisations = (q) => api.get('/organisations/search/autocomplete', { params: { q } })
+export const getTypesOrganisations = () => api.get('/organisations/types/all')
+
 // Sources
 export const getSources = (params) => api.get('/sources', { params })
 export const postSource = (data) => api.post('/sources', data)
@@ -50,9 +57,13 @@ export const getClassement = (params) => api.get('/utilisateurs/classement/top',
 // Graphe
 export const getGraphe = (params) => api.get('/graphe', { params })
 export const getGraphePersonne = (id, params) => api.get(`/graphe/personne/${id}`, { params })
+export const getGrapheEntite = (id, params) => api.get(`/graphe/entite/${id}`, { params })
 
 // Export
 export const getExportJSON = (params) => api.get('/export/json', { params })
 export const getExportCSV = (params) => api.get('/export/csv', { params, responseType: 'blob' })
+export const getExportJSONLD = (params) => api.get('/export/jsonld', { params })
+export const getExportGraphML = (params) => api.get('/export/graphml', { params, responseType: 'blob' })
+export const getApiPublique = (params) => api.get('/export/api-publique', { params })
 
 export default api

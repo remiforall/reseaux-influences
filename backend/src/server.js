@@ -20,6 +20,7 @@ import sourcesRoutes from './routes/sources.js'
 import validationsRoutes from './routes/validations.js'
 import utilisateursRoutes from './routes/utilisateurs.js'
 import grapheRoutes from './routes/graphe.js'
+import organisationsRoutes from './routes/organisations.js'
 import exportRoutes from './routes/export.js'
 
 dotenv.config()
@@ -81,6 +82,7 @@ async function build() {
   await fastify.register(sourcesRoutes, { prefix: '/api/sources' })
   await fastify.register(validationsRoutes, { prefix: '/api/validations' })
   await fastify.register(utilisateursRoutes, { prefix: '/api/utilisateurs' })
+  await fastify.register(organisationsRoutes, { prefix: '/api/organisations' })
   await fastify.register(grapheRoutes, { prefix: '/api/graphe' })
   await fastify.register(exportRoutes, { prefix: '/api/export' })
 
