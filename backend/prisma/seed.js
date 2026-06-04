@@ -15,6 +15,29 @@ async function main() {
     { code: 'financement', libelle: 'Financement / Mécénat', description: 'Financement, don, mécénat, sponsoring', categorie: 'professionnel', couleur: '#E67E22' },
     { code: 'lobbying', libelle: "Lobbying / Influence", description: "Activité de lobbying ou d'influence directe", categorie: 'professionnel', couleur: '#C0392B' },
     { code: 'juridique', libelle: 'Lien juridique', description: 'Affaire judiciaire commune, avocat, procès', categorie: 'institutionnel', couleur: '#7F8C8D' },
+    // --- Nouveaux types OSINT (module enrichissement) ---
+    { code: 'DIRIGEANT', libelle: 'Dirigeant·e de', description: 'Relation de direction au sein d\'une organisation', categorie: 'professionnel', couleur: '#2980B9' },
+    { code: 'BENEFICIAIRE_EFFECTIF', libelle: 'Bénéficiaire effectif·ve de', description: 'Bénéficiaire effectif au sens RNE / Pappers', categorie: 'financier', couleur: '#27AE60' },
+    { code: 'MANDAT_ELECTIF', libelle: 'Mandat électif', description: 'Mandat électif (P39 Wikidata)', categorie: 'politique', couleur: '#8E44AD' },
+    { code: 'EMPLOI', libelle: 'Emploi salarié', description: 'Relation employeur–salarié (P108 Wikidata)', categorie: 'professionnel', couleur: '#16A085' },
+    { code: 'AFFILIATION_PARTI', libelle: "Affiliation à un parti", description: "Appartenance à un parti politique (P102 Wikidata)", categorie: 'politique', couleur: '#2C3E50' },
+    { code: 'CONJOINT', libelle: 'Conjoint·e', description: 'Relation conjugale (P26 Wikidata — personnes publiques seulement)', categorie: 'familial', couleur: '#E74C3C' },
+    { code: 'FONDATEUR', libelle: 'Fondateur·rice de', description: 'Relation de fondation (P112 Wikidata)', categorie: 'professionnel', couleur: '#D35400' },
+    { code: 'EDITEUR_DE', libelle: 'Éditeur·rice de', description: 'Relation éditoriale (P98 Wikidata)', categorie: 'media', couleur: '#6C3483' },
+    { code: 'PRODUCTEUR_DE', libelle: 'Producteur·rice de', description: 'Relation de production (P162 Wikidata)', categorie: 'media', couleur: '#1A5276' },
+    { code: 'TITULAIRE_DOMAINE', libelle: 'Titulaire du domaine', description: 'Titulaire enregistré du nom de domaine (RDAP)', categorie: 'numerique', couleur: '#117A65' },
+    { code: 'HEBERGE_PAR', libelle: 'Hébergé·e par', description: 'Hébergement du site web (NS déduit par RDAP)', categorie: 'numerique', couleur: '#1F618D' },
+    { code: 'HEBERGEUR_DE', libelle: 'Hébergeur·euse de', description: 'Prestation d\'hébergement fournie', categorie: 'numerique', couleur: '#1F618D' },
+    { code: 'EDITEUR_DU_SITE', libelle: 'Éditeur·rice du site', description: 'Responsable éditorial du site web', categorie: 'numerique', couleur: '#5B2C6F' },
+    // --- Types OSINT phase 2 (ADR-012 : HATVP, BODACC, Parlementaires, DataESR) ---
+    { code: 'HAUT_FONCTIONNAIRE', libelle: 'Haut·e fonctionnaire', description: 'Personne exerçant une haute fonction publique (HATVP)', categorie: 'institutionnel', couleur: '#6D4C8C' },
+    { code: 'AVANTAGE_RECU', libelle: 'Avantage reçu de', description: 'Avantage (cadeau, repas, rémunération) reçu d\'un laboratoire pharmaceutique (Transparence Santé)', categorie: 'financier', couleur: '#A93226' },
+    { code: 'CONVENTION_SIGNEE', libelle: 'Convention signée avec', description: 'Convention signée entre un professionnel de santé et un laboratoire (Transparence Santé)', categorie: 'financier', couleur: '#C0392B' },
+    { code: 'MEMBRE_COMMISSION', libelle: 'Membre de commission', description: 'Appartenance à une commission parlementaire permanente ou spéciale', categorie: 'institutionnel', couleur: '#1A5276' },
+    { code: 'TUTELLE', libelle: 'Sous tutelle de', description: 'Relation de tutelle institutionnelle (DataESR : laboratoire / établissement de rattachement)', categorie: 'institutionnel', couleur: '#117A65' },
+    // --- Types historiques (Passe 4 — dimension géo-historique) ---
+    { code: 'ANCIEN_MANDAT', libelle: 'Ancien mandat électif', description: 'Mandat électif passé (terminé)', categorie: 'politique', couleur: '#5D6D7E' },
+    { code: 'EX_CONJOINT', libelle: 'Ex-conjoint·e', description: 'Lien conjugal éteint (divorce, séparation légale)', categorie: 'familial', couleur: '#CB4335' },
   ]
 
   for (const type of typesLiens) {
