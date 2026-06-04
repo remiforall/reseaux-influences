@@ -22,5 +22,15 @@ Thumbs.db
 # Redis
 dump.rdb
 
+# Cache connecteurs OSINT
+backend/.cache/
+
 # Logs
 *.log
+
+# graphify knowledge graph (build output, ne pas committer)
+graphify-out/
+
+# Templates env dev locaux (contiennent JWT_SECRET et autres secrets, même placeholder)
+docs/env-dev-local.txt
+docs/env-*.local.txt
