@@ -22,11 +22,54 @@ import utilisateursRoutes from './routes/utilisateurs.js'
 import grapheRoutes from './routes/graphe.js'
 import organisationsRoutes from './routes/organisations.js'
 import exportRoutes from './routes/export.js'
+import enrichissementRoutes from './routes/enrichissement.js'
+import entitesRoutes from './routes/entites.js'
 
 dotenv.config()
 
+// ---------------------------------------------------------------------------
+// M-01 — Vérification JWT_SECRET au démarrage
+// En production : refus de démarrer si absent, par défaut, ou trop court.
+// En dev/test : génération d'un secret aléatoire en RAM + avertissement.
+// ---------------------------------------------------------------------------
+
+const JWT_SECRET_DEFAUT = 'changez-moi-avec-une-vraie-cle-secrete-de-32-caracteres'
+
+if (process.env.NODE_ENV === 'production') {
+  if (
+    !process.env.JWT_SECRET ||
+    process.env.JWT_SECRET === JWT_SECRET_DEFAUT ||
+    process.env.JWT_SECRET.length < 32
+  ) {
+    console.error(
+      '[FATAL] JWT_SECRET absent, par défaut, ou trop court (< 32 chars) en prod. Refus de démarrage.',
+    )
+    process.exit(1)
+  }
+} else if (!process.env.JWT_SECRET || process.env.JWT_SECRET === JWT_SECRET_DEFAUT) {
+  // En dev/test : secret aléatoire en RAM, ne pas bloquer les tests Jest
+  const { randomBytes } = await import('node:crypto')
+  process.env.JWT_SECRET = randomBytes(32).toString('hex')
+  console.warn('[WARN] JWT_SECRET absent ou par défaut — secret aléatoire généré en RAM (dev uniquement).')
+}
+
+// ---------------------------------------------------------------------------
+// SEC-I-02 — Avertissement si l'email dans ENRICHISSEMENT_USER_AGENT est perso
+// ---------------------------------------------------------------------------
+
+const USER_AGENT_PERSO_REGEX = /\b[a-zA-Z0-9._%+-]+@(?:gmail|outlook|yahoo|hotmail|icloud|live)\./i
+if (process.env.ENRICHISSEMENT_USER_AGENT && USER_AGENT_PERSO_REGEX.test(process.env.ENRICHISSEMENT_USER_AGENT)) {
+  console.warn(
+    '[WARN] ENRICHISSEMENT_USER_AGENT contient ce qui ressemble à un email personnel. ' +
+    'Utiliser une adresse fonctionnelle générique (ex: contact@reseauxinfluences.fr) — ' +
+    "cet email apparaît dans les logs de toutes les APIs publiques tierces (Wikidata, RDAP, IGN).",
+  )
+}
+
+// M-06 — trustProxy : fiabilise request.ip derrière Phusion Passenger en prod
 const fastify = Fastify({
   logger: true,
+  trustProxy: process.env.NODE_ENV === 'production',
 })
 
 async function build() {
@@ -40,12 +83,12 @@ async function build() {
     timeWindow: '1 minute',
   })
 
-  // Documentation API
+  // Documentation API — M-05 : Swagger UI désactivé en production sauf opt-in explicite
   await fastify.register(swagger, {
     openapi: {
       info: {
-        title: 'Réseaux d\'Influence API',
-        description: 'API de cartographie des réseaux d\'influence avec gamification communautaire',
+        title: "Réseaux d'Influence API",
+        description: "API de cartographie des réseaux d'influence avec gamification communautaire",
         version: '1.0.0',
       },
       servers: [
@@ -63,9 +106,12 @@ async function build() {
       },
     },
   })
-  await fastify.register(swaggerUi, {
-    routePrefix: '/docs',
-  })
+
+  if (process.env.NODE_ENV !== 'production' || process.env.SWAGGER_PUBLIC === 'true') {
+    await fastify.register(swaggerUi, {
+      routePrefix: '/docs',
+    })
+  }
 
   // Décorateur Prisma
   fastify.decorate('prisma', prisma)
@@ -85,6 +131,8 @@ async function build() {
   await fastify.register(organisationsRoutes, { prefix: '/api/organisations' })
   await fastify.register(grapheRoutes, { prefix: '/api/graphe' })
   await fastify.register(exportRoutes, { prefix: '/api/export' })
+  await fastify.register(enrichissementRoutes, { prefix: '/api/enrichissement' })
+  await fastify.register(entitesRoutes, { prefix: '/api/entites' })
 
   // Health check
   fastify.get('/api/health', async () => {
@@ -110,7 +158,7 @@ async function build() {
   } else {
     // Route racine dev
     fastify.get('/', async () => {
-      return { status: 'ok', name: 'Réseaux d\'Influence API', version: '1.0.0' }
+      return { status: 'ok', name: "Réseaux d'Influence API", version: '1.0.0' }
     })
   }
 
