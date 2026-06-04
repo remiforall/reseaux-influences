@@ -45,9 +45,12 @@ model Utilisateur {
   sourcesVerifiees       Source[]      @relation("SourceVerifieePar")
   validations            Validation[]
   badges                 UtilisateurBadge[]
-  signalementsCrees      Signalement[] @relation("SignalementCreePar")
-  signalementsTraites    Signalement[] @relation("SignalementTraitePar")
+  signalementsCrees      Signalement[]           @relation("SignalementCreePar")
+  signalementsTraites    Signalement[]           @relation("SignalementTraitePar")
   historiques            Historique[]
+  sitesWebCrees          SiteWeb[]               @relation("SiteWebCreePar")
+  auditsEnrichissement   AuditEnrichissement[]   @relation("AuditEnrichissementUtilisateur")
+  evenementsCreees       Evenement[]             @relation("EvenementCreeePar")
 
   @@map("utilisateurs")
 }
@@ -84,17 +87,26 @@ model Personne {
   wikidataId      String?  @map("wikidata_id") @db.VarChar(50)
 
   // Modération
-  statut          StatutEntite @default(EN_ATTENTE)
-  creePar         Utilisateur? @relation("PersonneCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
-  creeParId       String?      @map("cree_par") @db.VarChar(36)
+  statut          StatutEntite     @default(EN_ATTENTE)
+  qualiteInfluence QualiteInfluence? @map("qualite_influence")
+  creePar         Utilisateur?     @relation("PersonneCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId       String?          @map("cree_par") @db.VarChar(36)
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  // Géolocalisation — lieu de naissance (L2 Passe 4)
+  lieuNaissance         String?  @map("lieu_naissance") @db.VarChar(255)
+  lieuNaissanceCodeInsee String? @map("lieu_naissance_code_insee") @db.VarChar(10)
+  lieuNaissanceLat      Float?   @map("lieu_naissance_lat")
+  lieuNaissanceLon      Float?   @map("lieu_naissance_lon")
 
   // Relations
   liensCommeA     Lien[] @relation("PersonneA")
   liensCommeB     Lien[] @relation("PersonneB")
+  participationsEvenement ParticipationEvenement[]
 
+  @@index([wikidataId])
   @@map("personnes")
 }
 
@@ -125,17 +137,28 @@ model Organisation {
   wikidataId        String?  @map("wikidata_id") @db.VarChar(50)
 
   // Modération
-  statut            StatutEntite @default(EN_ATTENTE)
-  creePar           Utilisateur? @relation("OrganisationCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
-  creeParId         String?      @map("cree_par") @db.VarChar(36)
+  statut            StatutEntite     @default(EN_ATTENTE)
+  qualiteInfluence  QualiteInfluence? @map("qualite_influence")
+  creePar           Utilisateur?     @relation("OrganisationCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId         String?          @map("cree_par") @db.VarChar(36)
 
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Géolocalisation du siège social (L2 Passe 4)
+  siegeLat          Float?   @map("siege_lat")
+  siegeLon          Float?   @map("siege_lon")
+  siegeCodeInsee    String?  @map("siege_code_insee") @db.VarChar(10)
+
+  // Adresse textuelle du siège (utilisée pour géocodage BAN)
+  adresseSiege      String?  @map("adresse_siege") @db.VarChar(500)
 
   // Relations — l'organisation peut être côté A ou B d'un lien
   liensCommeA       Lien[] @relation("OrganisationA")
   liensCommeB       Lien[] @relation("OrganisationB")
+  participationsEvenement ParticipationEvenement[]
 
+  @@index([wikidataId])
   @@map("organisations")
 }
 
@@ -185,6 +208,7 @@ model Source {
 
   // Relations
   liens             Lien[]
+  evenements        Evenement[]
 
   @@unique([url(length: 255), datePublication])
   @@map("sources")
@@ -224,17 +248,21 @@ model TypeLien {
 model Lien {
   id                   String       @id @default(uuid()) @db.VarChar(36)
 
-  // Entité A — soit une personne, soit une organisation
+  // Entité A — soit une personne, soit une organisation, soit un site web
   personneA            Personne?    @relation("PersonneA", fields: [personneAId], references: [id], onDelete: Cascade)
   personneAId          String?      @map("personne_a_id") @db.VarChar(36)
   organisationA        Organisation? @relation("OrganisationA", fields: [organisationAId], references: [id], onDelete: Cascade)
   organisationAId      String?      @map("organisation_a_id") @db.VarChar(36)
+  siteWebA             SiteWeb?     @relation("LienSiteWebA", fields: [siteWebAId], references: [id], onDelete: Cascade)
+  siteWebAId           String?      @map("site_web_a_id") @db.VarChar(36)
 
-  // Entité B — soit une personne, soit une organisation
+  // Entité B — soit une personne, soit une organisation, soit un site web
   personneB            Personne?    @relation("PersonneB", fields: [personneBId], references: [id], onDelete: Cascade)
   personneBId          String?      @map("personne_b_id") @db.VarChar(36)
   organisationB        Organisation? @relation("OrganisationB", fields: [organisationBId], references: [id], onDelete: Cascade)
   organisationBId      String?      @map("organisation_b_id") @db.VarChar(36)
+  siteWebB             SiteWeb?     @relation("LienSiteWebB", fields: [siteWebBId], references: [id], onDelete: Cascade)
+  siteWebBId           String?      @map("site_web_b_id") @db.VarChar(36)
 
   typeLien             TypeLien     @relation(fields: [typeLienId], references: [id])
   typeLienId           Int          @map("type_lien_id")
@@ -268,6 +296,15 @@ model Lien {
   // Relations
   validations          Validation[]
 
+  // Indexes sur les FK polymorphes (P-C1) — MySQL ne les crée pas automatiquement
+  @@index([personneAId, statut])
+  @@index([personneBId, statut])
+  @@index([organisationAId, statut])
+  @@index([organisationBId, statut])
+  @@index([siteWebAId, statut])
+  @@index([siteWebBId, statut])
+  @@index([statut])
+  @@index([typeLienId])
   @@map("liens")
 }
 
@@ -397,4 +434,169 @@ model ConfigGamification {
   description String? @db.Text
 
   @@map("config_gamification")
+}
+
+// =============================================================================
+// QUALITÉ D'INFLUENCE PUBLIQUE (ADR-006)
+// Garde-fou RGPD art. 85 + LIL art. 80
+// =============================================================================
+
+enum QualiteInfluence {
+  ELU
+  HAUT_FONCTIONNAIRE
+  LOBBYISTE
+  DIRIGEANT
+  ARTISTE
+  PRODUCTEUR
+  EDITEUR_PRESSE
+  HEBERGEUR
+  EDITEUR_SITE
+  AUTRE
+}
+
+// =============================================================================
+// SITES WEB (nouvelle entité — ADR-002)
+// =============================================================================
+
+model SiteWeb {
+  id                 String           @id @default(uuid()) @db.VarChar(36)
+  domaine            String           @unique @db.VarChar(255)
+  url                String?          @db.VarChar(500)
+  titre              String?          @db.VarChar(500)
+  description        String?          @db.Text
+  dateEnregistrement DateTime?        @map("date_enregistrement") @db.Date
+  dateExpiration     DateTime?        @map("date_expiration") @db.Date
+  registrar          String?          @db.VarChar(255)
+  hebergeurProbable  String?          @map("hebergeur_probable") @db.VarChar(255)
+  nameservers        Json             @default("[]")
+  titulaireRedacted  Boolean          @default(false) @map("titulaire_redacted")
+  statut             StatutEntite     @default(EN_ATTENTE)
+  qualiteInfluence   QualiteInfluence? @map("qualite_influence")
+
+  creePar            Utilisateur?     @relation("SiteWebCreePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId          String?          @map("cree_par") @db.VarChar(36)
+
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  liensCommeA        Lien[]           @relation("LienSiteWebA")
+  liensCommeB        Lien[]           @relation("LienSiteWebB")
+  participationsEvenement ParticipationEvenement[]
+
+  @@map("sites_web")
+}
+
+// =============================================================================
+// PARCELLES CADASTRALES (données IGN)
+// =============================================================================
+
+model Parcelle {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  idu         String   @unique @db.VarChar(50)
+  codeInsee   String   @map("code_insee") @db.VarChar(10)
+  section     String   @db.VarChar(10)
+  numero      String   @db.VarChar(10)
+  contenance  Int?
+  commune     String   @db.VarChar(255)
+  geometrie   Json?
+  source      String   @default("IGN Cadastre") @db.VarChar(100)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("parcelles")
+}
+
+// =============================================================================
+// ÉVÉNEMENTS HISTORIQUES (Passe 4 — dimension géo-historique)
+// =============================================================================
+
+enum TypeEvenement {
+  NAISSANCE
+  DECES
+  ELECTION
+  NOMINATION
+  DEMISSION
+  CREATION_ORGANISATION
+  FUSION
+  SCISSION
+  CESSION
+  CONDAMNATION
+  PUBLICATION
+  CHANGEMENT_DIRIGEANT
+  CHANGEMENT_CAPITAL
+  AUTRE
+}
+
+model Evenement {
+  id                String        @id @default(uuid()) @db.VarChar(36)
+  date              DateTime      @db.Date
+  dateFin           DateTime?     @map("date_fin") @db.Date
+  titre             String        @db.VarChar(500)
+  description       String?       @db.Text
+  typeEvenement     TypeEvenement @map("type_evenement")
+  lieu              String?       @db.VarChar(255)
+  lieuLat           Float?        @map("lieu_lat")
+  lieuLon           Float?        @map("lieu_lon")
+
+  source            Source?       @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceId          String?       @map("source_id") @db.VarChar(36)
+
+  statut            StatutEntite  @default(EN_ATTENTE)
+
+  // onDelete: SetNull — conservation de l'événement si l'utilisateur est supprimé (RGPD art. 5.2)
+  creePar           Utilisateur?  @relation("EvenementCreeePar", fields: [creeParId], references: [id], onDelete: SetNull)
+  creeParId         String?       @map("cree_par") @db.VarChar(36)
+
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  participants      ParticipationEvenement[]
+
+  @@index([date])
+  @@index([typeEvenement])
+  @@map("evenements")
+}
+
+model ParticipationEvenement {
+  id             String        @id @default(uuid()) @db.VarChar(36)
+
+  evenement      Evenement     @relation(fields: [evenementId], references: [id], onDelete: Cascade)
+  evenementId    String        @map("evenement_id") @db.VarChar(36)
+
+  // Exactement un des trois doit être non-nul (invariant applicatif, cohérent avec ADR-002)
+  personne       Personne?     @relation(fields: [personneId], references: [id], onDelete: Cascade)
+  personneId     String?       @map("personne_id") @db.VarChar(36)
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  organisationId String?       @map("organisation_id") @db.VarChar(36)
+  siteWeb        SiteWeb?      @relation(fields: [siteWebId], references: [id], onDelete: Cascade)
+  siteWebId      String?       @map("site_web_id") @db.VarChar(36)
+
+  roleEvenement  String?       @map("role_evenement") @db.VarChar(100)
+
+  @@index([evenementId])
+  @@index([personneId])
+  @@index([organisationId])
+  @@index([siteWebId])
+  @@map("participations_evenement")
+}
+
+// =============================================================================
+// AUDIT ENRICHISSEMENT (traçabilité RGPD)
+// =============================================================================
+
+model AuditEnrichissement {
+  id                  String       @id @default(uuid()) @db.VarChar(36)
+  // onDelete: SetNull — conserver l'audit après suppression d'un utilisateur (ADR-008 / RGPD art. 5.2 accountability)
+  utilisateur   Utilisateur? @relation("AuditEnrichissementUtilisateur", fields: [utilisateurId], references: [id], onDelete: SetNull)
+  utilisateurId String?      @map("utilisateur_id") @db.VarChar(36)
+  dateAction          DateTime     @default(now()) @map("date_action")
+  requete             Json
+  connecteursUtilises Json         @map("connecteurs_utilises")
+  entitesCreees       Json         @map("entites_creees")
+  ipAddressTronquee   String?      @map("ip_address_tronquee") @db.VarChar(45)
+  creeLe              DateTime     @default(now()) @map("cree_le")
+
+  @@index([utilisateurId, dateAction])
+  @@map("audit_enrichissement")
 }
