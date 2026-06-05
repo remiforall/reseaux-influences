@@ -1,0 +1,21 @@
+# Projet en alpha fermé — accès restreint, pas d'indexation publique
+# Sera revu lors de l'ouverture publique après audit juridique externe (ADR-010)
+
+User-agent: *
+Disallow: /
+
+# IA crawlers — explicitement refusés en alpha fermé
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
