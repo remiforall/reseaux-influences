@@ -24,13 +24,13 @@
  *     demande administrative requise — ADR-003).
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_CADASTRE = 'https://apicarto.ign.fr/api/cadastre/parcelle';
+const ENDPOINT_CADASTRE = 'https://apicarto.ign.fr/api/cadastre/parcelle'
 
 /** Regex de validation du format de query cadastrale. */
-const REGEX_QUERY_CADASTRE = /^(\d{5})\/([A-Z0-9]+)(?:\/(\d+))?$/i;
+const REGEX_QUERY_CADASTRE = /^(\d{5})\/([A-Z0-9]+)(?:\/(\d+))?$/i
 
 export default class IgnCartoCadastre extends BaseConnecteur {
   constructor() {
@@ -44,7 +44,7 @@ export default class IgnCartoCadastre extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 15_000,
-    });
+    })
   }
 
   /**
@@ -56,32 +56,32 @@ export default class IgnCartoCadastre extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query) {
-    const correspondance = query?.trim().match(REGEX_QUERY_CADASTRE);
+    const correspondance = query?.trim().match(REGEX_QUERY_CADASTRE)
     if (!correspondance) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const [, codeInsee, section, numero] = correspondance;
+    const [, codeInsee, section, numero] = correspondance
     const params = new URLSearchParams({
       code_insee: codeInsee,
       section: section.toUpperCase(),
-    });
-    if (numero) params.set('numero', numero.padStart(4, '0'));
+    })
+    if (numero) params.set('numero', numero.padStart(4, '0'))
 
-    const url = `${ENDPOINT_CADASTRE}?${params}`;
-    let donnees;
+    const url = `${ENDPOINT_CADASTRE}?${params}`
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'rechercher',
         cacheArgs: { codeInsee, section, numero: numero ?? null },
-      });
+      })
     } catch (err) {
-      if (err.status === 404) return this._enveloppe([]);
-      throw err;
+      if (err.status === 404) return this._enveloppe([])
+      throw err
     }
 
-    const features = donnees.features ?? [];
-    return this._enveloppe(features.map((f) => this._mappageFeature(f)));
+    const features = donnees.features ?? []
+    return this._enveloppe(features.map((f) => this._mappageFeature(f)))
   }
 
   /**
@@ -97,22 +97,22 @@ export default class IgnCartoCadastre extends BaseConnecteur {
         source: 'IGN Cadastre',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
     // Décompose l'IDU : 5 chiffres INSEE + 3 préfixe + 1 lettre section + 4 numéro
-    const codeInsee = idu.substring(0, 5);
-    const section = idu.substring(8, 9);
-    const numero = idu.substring(9, 13);
+    const codeInsee = idu.substring(0, 5)
+    const section = idu.substring(8, 9)
+    const numero = idu.substring(9, 13)
 
-    const resultats = await this.rechercher(`${codeInsee}/${section}/${numero}`);
-    const entite = resultats.resultats[0] ?? null;
+    const resultats = await this.rechercher(`${codeInsee}/${section}/${numero}`)
+    const entite = resultats.resultats[0] ?? null
     return {
       entite,
       source: 'IGN Cadastre',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -126,7 +126,7 @@ export default class IgnCartoCadastre extends BaseConnecteur {
       source: 'IGN Cadastre',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
@@ -138,8 +138,8 @@ export default class IgnCartoCadastre extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageFeature(feature) {
-    const props = feature.properties ?? {};
-    const sourceInfo = { source: 'IGN Cadastre', url: ENDPOINT_CADASTRE };
+    const props = feature.properties ?? {}
+    const sourceInfo = { source: 'IGN Cadastre', url: ENDPOINT_CADASTRE }
 
     return creerEntiteNormalisee(
       'Parcelle',
@@ -152,7 +152,7 @@ export default class IgnCartoCadastre extends BaseConnecteur {
         geometrie: marquerProvenance(feature.geometry ?? null, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -162,6 +162,6 @@ export default class IgnCartoCadastre extends BaseConnecteur {
       source: 'IGN Cadastre',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

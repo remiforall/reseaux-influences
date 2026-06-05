@@ -50,7 +50,9 @@ if (process.env.NODE_ENV === 'production') {
   // En dev/test : secret aléatoire en RAM, ne pas bloquer les tests Jest
   const { randomBytes } = await import('node:crypto')
   process.env.JWT_SECRET = randomBytes(32).toString('hex')
-  console.warn('[WARN] JWT_SECRET absent ou par défaut — secret aléatoire généré en RAM (dev uniquement).')
+  console.warn(
+    '[WARN] JWT_SECRET absent ou par défaut — secret aléatoire généré en RAM (dev uniquement).',
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -58,11 +60,14 @@ if (process.env.NODE_ENV === 'production') {
 // ---------------------------------------------------------------------------
 
 const USER_AGENT_PERSO_REGEX = /\b[a-zA-Z0-9._%+-]+@(?:gmail|outlook|yahoo|hotmail|icloud|live)\./i
-if (process.env.ENRICHISSEMENT_USER_AGENT && USER_AGENT_PERSO_REGEX.test(process.env.ENRICHISSEMENT_USER_AGENT)) {
+if (
+  process.env.ENRICHISSEMENT_USER_AGENT &&
+  USER_AGENT_PERSO_REGEX.test(process.env.ENRICHISSEMENT_USER_AGENT)
+) {
   console.warn(
     '[WARN] ENRICHISSEMENT_USER_AGENT contient ce qui ressemble à un email personnel. ' +
-    'Utiliser une adresse fonctionnelle générique (ex: contact@reseauxinfluences.fr) — ' +
-    "cet email apparaît dans les logs de toutes les APIs publiques tierces (Wikidata, RDAP, IGN).",
+      'Utiliser une adresse fonctionnelle générique (ex: contact@reseauxinfluences.fr) — ' +
+      'cet email apparaît dans les logs de toutes les APIs publiques tierces (Wikidata, RDAP, IGN).',
   )
 }
 

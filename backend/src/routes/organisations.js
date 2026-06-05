@@ -6,9 +6,18 @@ const organisationSchema = z.object({
   nom: z.string().min(1).max(255),
   sigle: z.string().max(50).optional(),
   typeOrganisation: z.enum([
-    'ENTREPRISE', 'INSTITUTION_PUBLIQUE', 'PARTI_POLITIQUE', 'ONG', 'MEDIA',
-    'SYNDICAT', 'FONDATION', 'THINK_TANK', 'LOBBY', 'ASSOCIATION',
-    'ORGANISATION_INTERNATIONALE', 'AUTRE',
+    'ENTREPRISE',
+    'INSTITUTION_PUBLIQUE',
+    'PARTI_POLITIQUE',
+    'ONG',
+    'MEDIA',
+    'SYNDICAT',
+    'FONDATION',
+    'THINK_TANK',
+    'LOBBY',
+    'ASSOCIATION',
+    'ORGANISATION_INTERNATIONALE',
+    'AUTRE',
   ]),
   pays: z.string().max(100).optional(),
   siteWeb: z.string().url().optional(),
@@ -119,12 +128,16 @@ export default async function organisationsRoutes(fastify) {
 
     return prisma.organisation.findMany({
       where: {
-        OR: [
-          { nom: { contains: q } },
-          { sigle: { contains: q } },
-        ],
+        OR: [{ nom: { contains: q } }, { sigle: { contains: q } }],
       },
-      select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true, logoUrl: true },
+      select: {
+        id: true,
+        nom: true,
+        sigle: true,
+        typeOrganisation: true,
+        pays: true,
+        logoUrl: true,
+      },
       take: 10,
     })
   })

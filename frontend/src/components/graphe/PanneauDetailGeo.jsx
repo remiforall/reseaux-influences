@@ -49,7 +49,11 @@ function mapperTypeApi(typeNoeud) {
 function formaterEuros(valeur) {
   const n = Number(valeur)
   if (Number.isNaN(n) || valeur === null || valeur === undefined) return '—'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(n)
 }
 
 /**
@@ -142,9 +146,10 @@ function PanneauDetailGeo({ noeud }) {
       const { data } = await getEntiteFoncier(typeApi, noeud.id)
       setFoncier(data)
     } catch (err) {
-      const msg = err.response?.status === 403
-        ? 'Authentification requise pour consulter les données foncières.'
-        : 'Impossible de charger les données foncières.'
+      const msg =
+        err.response?.status === 403
+          ? 'Authentification requise pour consulter les données foncières.'
+          : 'Impossible de charger les données foncières.'
       setErreurFoncier(msg)
     } finally {
       setChargementFoncier(false)
@@ -164,9 +169,10 @@ function PanneauDetailGeo({ noeud }) {
       const { data } = await getEntiteCadastre(typeApi, noeud.id)
       setCadastre(data)
     } catch (err) {
-      const msg = err.response?.status === 403
-        ? 'Authentification requise pour consulter les données cadastrales.'
-        : 'Impossible de charger les données cadastrales.'
+      const msg =
+        err.response?.status === 403
+          ? 'Authentification requise pour consulter les données cadastrales.'
+          : 'Impossible de charger les données cadastrales.'
       setErreurCadastre(msg)
     } finally {
       setChargementCadastre(false)
@@ -186,9 +192,10 @@ function PanneauDetailGeo({ noeud }) {
       const { data } = await getEntiteUrbanisme(typeApi, noeud.id)
       setUrbanisme(data)
     } catch (err) {
-      const msg = err.response?.status === 403
-        ? 'Authentification requise pour consulter les données d\'urbanisme.'
-        : 'Impossible de charger les données d\'urbanisme.'
+      const msg =
+        err.response?.status === 403
+          ? "Authentification requise pour consulter les données d'urbanisme."
+          : "Impossible de charger les données d'urbanisme."
       setErreurUrbanisme(msg)
     } finally {
       setChargementUrbanisme(false)
@@ -223,16 +230,21 @@ function PanneauDetailGeo({ noeud }) {
                   <dl className="text-sm grid grid-cols-3 gap-2 mb-3 bg-gray-50 rounded p-2">
                     <div>
                       <dt className="text-xs text-gray-500">Transactions</dt>
-                      <dd className="font-medium text-gray-900">{foncier.statsZone.nbTransactions}</dd>
+                      <dd className="font-medium text-gray-900">
+                        {foncier.statsZone.nbTransactions}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-xs text-gray-500">Prix médian</dt>
-                      <dd className="font-medium text-gray-900">{formaterEuros(foncier.statsZone.prixMedian)}</dd>
+                      <dd className="font-medium text-gray-900">
+                        {formaterEuros(foncier.statsZone.prixMedian)}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-xs text-gray-500">Surface médiane</dt>
                       <dd className="font-medium text-gray-900">
-                        {foncier.statsZone.surfaceMediane !== null && foncier.statsZone.surfaceMediane !== undefined
+                        {foncier.statsZone.surfaceMediane !== null &&
+                        foncier.statsZone.surfaceMediane !== undefined
                           ? `${foncier.statsZone.surfaceMediane} m²`
                           : '—'}
                       </dd>
@@ -241,22 +253,39 @@ function PanneauDetailGeo({ noeud }) {
                 )}
                 {foncier.transactions?.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs border-collapse" aria-label="Transactions immobilières DVF">
+                    <table
+                      className="w-full text-xs border-collapse"
+                      aria-label="Transactions immobilières DVF"
+                    >
                       <thead>
                         <tr className="text-left border-b border-gray-200">
-                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">Date</th>
-                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">Valeur</th>
-                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">Surface</th>
-                          <th scope="col" className="py-1 font-medium text-gray-600">Type</th>
+                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">
+                            Date
+                          </th>
+                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">
+                            Valeur
+                          </th>
+                          <th scope="col" className="py-1 pr-2 font-medium text-gray-600">
+                            Surface
+                          </th>
+                          <th scope="col" className="py-1 font-medium text-gray-600">
+                            Type
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {foncier.transactions.slice(0, 10).map((t, i) => (
                           <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-1 pr-2 text-gray-700">{formaterDate(t.dateMutation)}</td>
-                            <td className="py-1 pr-2 text-gray-700">{formaterEuros(t.valeurFonciere)}</td>
                             <td className="py-1 pr-2 text-gray-700">
-                              {t.surface !== null && t.surface !== undefined ? `${t.surface} m²` : '—'}
+                              {formaterDate(t.dateMutation)}
+                            </td>
+                            <td className="py-1 pr-2 text-gray-700">
+                              {formaterEuros(t.valeurFonciere)}
+                            </td>
+                            <td className="py-1 pr-2 text-gray-700">
+                              {t.surface !== null && t.surface !== undefined
+                                ? `${t.surface} m²`
+                                : '—'}
                             </td>
                             <td className="py-1 text-gray-700">{t.typeLocal ?? '—'}</td>
                           </tr>
@@ -270,7 +299,9 @@ function PanneauDetailGeo({ noeud }) {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">Aucune transaction sur les 12 derniers mois.</p>
+                  <p className="text-sm text-gray-500 italic">
+                    Aucune transaction sur les 12 derniers mois.
+                  </p>
                 )}
               </>
             )}
@@ -297,19 +328,29 @@ function PanneauDetailGeo({ noeud }) {
                   ['IDU', cadastre.parcelle.idu],
                   ['Section', cadastre.parcelle.section],
                   ['Numéro', cadastre.parcelle.numero],
-                  ['Contenance', cadastre.parcelle.contenance !== null && cadastre.parcelle.contenance !== undefined ? `${cadastre.parcelle.contenance} ca` : null],
+                  [
+                    'Contenance',
+                    cadastre.parcelle.contenance !== null &&
+                    cadastre.parcelle.contenance !== undefined
+                      ? `${cadastre.parcelle.contenance} ca`
+                      : null,
+                  ],
                   ['Code INSEE', cadastre.parcelle.codeInsee],
-                ].map(([label, valeur]) => (
-                  valeur !== null && valeur !== undefined && (
-                    <div key={label} className="flex justify-between py-1">
-                      <dt className="text-gray-600 font-medium">{label}</dt>
-                      <dd className="text-gray-900 text-right">{String(valeur)}</dd>
-                    </div>
-                  )
-                ))}
+                ].map(
+                  ([label, valeur]) =>
+                    valeur !== null &&
+                    valeur !== undefined && (
+                      <div key={label} className="flex justify-between py-1">
+                        <dt className="text-gray-600 font-medium">{label}</dt>
+                        <dd className="text-gray-900 text-right">{String(valeur)}</dd>
+                      </div>
+                    ),
+                )}
               </dl>
             ) : (
-              <p className="text-sm text-gray-500 italic">Aucune parcelle trouvée pour cette zone.</p>
+              <p className="text-sm text-gray-500 italic">
+                Aucune parcelle trouvée pour cette zone.
+              </p>
             )}
           </>
         )}
@@ -334,14 +375,16 @@ function PanneauDetailGeo({ noeud }) {
                   ['Libellé', urbanisme.zone.libelle],
                   ['Type de zone', urbanisme.zone.typezone],
                   ['Destinations', urbanisme.zone.destinations],
-                ].map(([label, valeur]) => (
-                  valeur !== null && valeur !== undefined && (
-                    <div key={label} className="flex justify-between py-1 gap-2">
-                      <dt className="text-gray-600 font-medium shrink-0">{label}</dt>
-                      <dd className="text-gray-900 text-right">{String(valeur)}</dd>
-                    </div>
-                  )
-                ))}
+                ].map(
+                  ([label, valeur]) =>
+                    valeur !== null &&
+                    valeur !== undefined && (
+                      <div key={label} className="flex justify-between py-1 gap-2">
+                        <dt className="text-gray-600 font-medium shrink-0">{label}</dt>
+                        <dd className="text-gray-900 text-right">{String(valeur)}</dd>
+                      </div>
+                    ),
+                )}
               </dl>
             ) : (
               <p className="text-sm text-gray-500 italic">Aucune zone d'urbanisme trouvée.</p>

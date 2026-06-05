@@ -47,20 +47,23 @@ function Profil() {
           )}
           <div>
             <h1 className="text-2xl font-bold text-primary">{utilisateur.pseudo}</h1>
-            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-              utilisateur.niveau === 'moderateur' ? 'bg-purple-100 text-purple-800'
-              : utilisateur.niveau === 'expert' ? 'bg-blue-100 text-blue-800'
-              : utilisateur.niveau === 'intermediaire' ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-            }`}>
+            <span
+              className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                utilisateur.niveau === 'moderateur'
+                  ? 'bg-purple-100 text-purple-800'
+                  : utilisateur.niveau === 'expert'
+                    ? 'bg-blue-100 text-blue-800'
+                    : utilisateur.niveau === 'intermediaire'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+              }`}
+            >
               {utilisateur.niveau}
             </span>
           </div>
         </div>
 
-        {utilisateur.bio && (
-          <p className="text-gray-600 mb-6">{utilisateur.bio}</p>
-        )}
+        {utilisateur.bio && <p className="text-gray-600 mb-6">{utilisateur.bio}</p>}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="text-center p-3 bg-gray-50 rounded">

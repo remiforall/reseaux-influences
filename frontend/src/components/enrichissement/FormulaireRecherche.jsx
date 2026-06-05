@@ -35,21 +35,18 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
   const [erreurTypes, setErreurTypes] = useState(null)
 
   /** Synchronise connecteurs cochés quand les disponibles changent */
-  const connecteursActifs = connecteursDisponibles.length > 0
-    ? connecteurs.filter((c) => connecteursDisponibles.includes(c))
-    : connecteurs
+  const connecteursActifs =
+    connecteursDisponibles.length > 0
+      ? connecteurs.filter((c) => connecteursDisponibles.includes(c))
+      : connecteurs
 
   const toggleType = (code) => {
     setErreurTypes(null)
-    setTypes((prev) =>
-      prev.includes(code) ? prev.filter((t) => t !== code) : [...prev, code],
-    )
+    setTypes((prev) => (prev.includes(code) ? prev.filter((t) => t !== code) : [...prev, code]))
   }
 
   const toggleConnecteur = (nom) => {
-    setConnecteurs((prev) =>
-      prev.includes(nom) ? prev.filter((c) => c !== nom) : [...prev, nom],
-    )
+    setConnecteurs((prev) => (prev.includes(nom) ? prev.filter((c) => c !== nom) : [...prev, nom]))
   }
 
   const handleSubmit = (e) => {
@@ -65,7 +62,7 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
     }
 
     if (types.length === 0) {
-      setErreurTypes('Sélectionnez au moins un type d\'entité.')
+      setErreurTypes("Sélectionnez au moins un type d'entité.")
       valide = false
     } else {
       setErreurTypes(null)
@@ -76,9 +73,7 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
     onSubmit({
       query: query.trim(),
       types,
-      connecteurs: connecteursActifs.length > 0
-        ? connecteursActifs
-        : connecteursDisponibles,
+      connecteurs: connecteursActifs.length > 0 ? connecteursActifs : connecteursDisponibles,
     })
   }
 
@@ -93,7 +88,9 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
       <div className="space-y-1">
         <label htmlFor="recherche-query" className="block text-sm font-semibold text-gray-900">
           Terme de recherche
-          <span aria-hidden="true" className="text-red-800 ml-1">*</span>
+          <span aria-hidden="true" className="text-red-800 ml-1">
+            *
+          </span>
           <span className="sr-only"> (champ obligatoire)</span>
         </label>
         <p id="recherche-query-aide" className="text-xs text-gray-600">
@@ -104,7 +101,10 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
           type="text"
           name="query"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setErreurQuery(null) }}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setErreurQuery(null)
+          }}
           required
           minLength={2}
           maxLength={200}
@@ -120,7 +120,11 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
           ].join(' ')}
         />
         {erreurQuery && (
-          <p id="recherche-query-erreur" role="alert" className="text-sm text-red-800 flex items-center gap-1">
+          <p
+            id="recherche-query-erreur"
+            role="alert"
+            className="text-sm text-red-800 flex items-center gap-1"
+          >
             <span aria-hidden="true">⚠</span>
             {erreurQuery}
           </p>
@@ -128,12 +132,12 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
       </div>
 
       {/* ── Types d'entité ── */}
-      <fieldset
-        aria-describedby={erreurTypes ? 'recherche-types-erreur' : undefined}
-      >
+      <fieldset aria-describedby={erreurTypes ? 'recherche-types-erreur' : undefined}>
         <legend className="text-sm font-semibold text-gray-900 mb-1">
           Types d'entité à rechercher
-          <span aria-hidden="true" className="text-red-800 ml-1">*</span>
+          <span aria-hidden="true" className="text-red-800 ml-1">
+            *
+          </span>
           <span className="sr-only"> (au moins un requis)</span>
         </legend>
         <div className="flex flex-wrap gap-4 mt-2">
@@ -155,7 +159,11 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
           ))}
         </div>
         {erreurTypes && (
-          <p id="recherche-types-erreur" role="alert" className="text-sm text-red-800 flex items-center gap-1 mt-1">
+          <p
+            id="recherche-types-erreur"
+            role="alert"
+            className="text-sm text-red-800 flex items-center gap-1 mt-1"
+          >
             <span aria-hidden="true">⚠</span>
             {erreurTypes}
           </p>
@@ -165,9 +173,7 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
       {/* ── Connecteurs ── */}
       {connecteursDisponibles.length > 0 && (
         <fieldset>
-          <legend className="text-sm font-semibold text-gray-900 mb-1">
-            Sources à interroger
-          </legend>
+          <legend className="text-sm font-semibold text-gray-900 mb-1">Sources à interroger</legend>
           <p className="text-xs text-gray-600 mb-2">
             Tous les connecteurs actifs sont sélectionnés par défaut.
           </p>
@@ -201,9 +207,7 @@ function FormulaireRecherche({ connecteursDisponibles = [], onSubmit, enChargeme
           'inline-flex items-center gap-2 px-6 py-3 rounded font-semibold text-sm text-white',
           'min-h-[44px]',
           'focus-visible-ring',
-          enChargement
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-secondary hover:bg-primary',
+          enChargement ? 'bg-gray-400 cursor-not-allowed' : 'bg-secondary hover:bg-primary',
           'transition-colors',
         ].join(' ')}
       >

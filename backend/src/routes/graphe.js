@@ -118,11 +118,13 @@ export default async function grapheRoutes(fastify) {
         intensite: lien.intensite,
         scoreConfiance: lien.scoreConfiance,
         description: lien.description,
-        sourceMedia: lien.source ? {
-          titre: lien.source.titre,
-          media: lien.source.media,
-          url: lien.source.url,
-        } : null,
+        sourceMedia: lien.source
+          ? {
+              titre: lien.source.titre,
+              media: lien.source.media,
+              url: lien.source.url,
+            }
+          : null,
       })
     }
 
@@ -195,11 +197,13 @@ export default async function grapheRoutes(fastify) {
         couleur: lien.typeLien.couleur,
         intensite: lien.intensite,
         scoreConfiance: lien.scoreConfiance,
-        sourceMedia: lien.source ? {
-          titre: lien.source.titre,
-          media: lien.source.media,
-          url: lien.source.url,
-        } : null,
+        sourceMedia: lien.source
+          ? {
+              titre: lien.source.titre,
+              media: lien.source.media,
+              url: lien.source.url,
+            }
+          : null,
       })
     }
 
@@ -214,7 +218,9 @@ export default async function grapheRoutes(fastify) {
   fastify.get('/personne/:id', async (request, reply) => {
     const { id } = request.params
     const { profondeur } = request.query
-    return reply.redirect(`/api/graphe/entite/${id}${profondeur ? `?profondeur=${profondeur}` : ''}`)
+    return reply.redirect(
+      `/api/graphe/entite/${id}${profondeur ? `?profondeur=${profondeur}` : ''}`,
+    )
   })
 
   /**
@@ -231,11 +237,7 @@ export default async function grapheRoutes(fastify) {
    */
   fastify.get('/timeline/:entiteId', { preHandler: [optionalAuth] }, async (request, reply) => {
     const { entiteId } = request.params
-    const {
-      granularite = 'year',
-      dateDebut: dateDbutStr,
-      dateFin: dateFinStr,
-    } = request.query
+    const { granularite = 'year', dateDebut: dateDbutStr, dateFin: dateFinStr } = request.query
 
     // Validation de la granularité
     const granulariteValide = granularite === 'month' ? 'month' : 'year'
@@ -312,8 +314,10 @@ export default async function grapheRoutes(fastify) {
       .map(({ date, volumeLiens, sommeIntensites, sommeConfiances }) => ({
         date,
         volumeLiens,
-        intensiteMoyenne: volumeLiens > 0 ? Math.round((sommeIntensites / volumeLiens) * 100) / 100 : 0,
-        scoreConfianceMoyen: volumeLiens > 0 ? Math.round((sommeConfiances / volumeLiens) * 1000) / 1000 : 0,
+        intensiteMoyenne:
+          volumeLiens > 0 ? Math.round((sommeIntensites / volumeLiens) * 100) / 100 : 0,
+        scoreConfianceMoyen:
+          volumeLiens > 0 ? Math.round((sommeConfiances / volumeLiens) * 1000) / 1000 : 0,
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
 
@@ -323,11 +327,7 @@ export default async function grapheRoutes(fastify) {
       const participations = await prisma.participationEvenement.findMany({
         where: {
           evenement: { statut: statutAutorise },
-          OR: [
-            { personneId: entiteId },
-            { organisationId: entiteId },
-            { siteWebId: entiteId },
-          ],
+          OR: [{ personneId: entiteId }, { organisationId: entiteId }, { siteWebId: entiteId }],
         },
         include: {
           evenement: {
@@ -345,10 +345,12 @@ export default async function grapheRoutes(fastify) {
         date: p.evenement.date?.toISOString().substring(0, 10) ?? null,
         titre: p.evenement.titre,
         typeEvenement: p.evenement.typeEvenement,
-        source: p.evenement.source ? {
-          titre: p.evenement.source.titre,
-          url: p.evenement.source.url,
-        } : null,
+        source: p.evenement.source
+          ? {
+              titre: p.evenement.source.titre,
+              url: p.evenement.source.url,
+            }
+          : null,
       }))
     } catch {
       // ParticipationEvenement peut ne pas exister en base si la migration n'a pas été appliquée
@@ -371,11 +373,7 @@ export default async function grapheRoutes(fastify) {
    */
   fastify.get('/heatmap/:entiteId', { preHandler: [optionalAuth] }, async (request, reply) => {
     const { entiteId } = request.params
-    const {
-      dateDebut: dateDbutStr,
-      dateFin: dateFinStr,
-      typeEntite,
-    } = request.query
+    const { dateDebut: dateDbutStr, dateFin: dateFinStr, typeEntite } = request.query
 
     const filtreDate = {}
     if (dateDbutStr) {
@@ -409,8 +407,24 @@ export default async function grapheRoutes(fastify) {
     const liens = await prisma.lien.findMany({
       where: whereClause,
       include: {
-        personneA: { select: { id: true, nom: true, prenom: true, lieuNaissanceLat: true, lieuNaissanceLon: true } },
-        personneB: { select: { id: true, nom: true, prenom: true, lieuNaissanceLat: true, lieuNaissanceLon: true } },
+        personneA: {
+          select: {
+            id: true,
+            nom: true,
+            prenom: true,
+            lieuNaissanceLat: true,
+            lieuNaissanceLon: true,
+          },
+        },
+        personneB: {
+          select: {
+            id: true,
+            nom: true,
+            prenom: true,
+            lieuNaissanceLat: true,
+            lieuNaissanceLon: true,
+          },
+        },
         organisationA: { select: { id: true, nom: true, siegeLat: true, siegeLon: true } },
         organisationB: { select: { id: true, nom: true, siegeLat: true, siegeLon: true } },
       },
@@ -422,7 +436,10 @@ export default async function grapheRoutes(fastify) {
       const poids = (lien.intensite ?? 1) * (lien.scoreConfiance > 0 ? lien.scoreConfiance : 0.1)
 
       const entitesLiees = [
-        lien.personneA, lien.personneB, lien.organisationA, lien.organisationB,
+        lien.personneA,
+        lien.personneB,
+        lien.organisationA,
+        lien.organisationB,
       ].filter(Boolean)
 
       for (const entite of entitesLiees) {
@@ -444,9 +461,7 @@ export default async function grapheRoutes(fastify) {
         if (existant) {
           existant.poids += poids
         } else {
-          const libelle = entite.prenom
-            ? `${entite.prenom} ${entite.nom}`
-            : entite.nom
+          const libelle = entite.prenom ? `${entite.prenom} ${entite.nom}` : entite.nom
           pointsMap.set(cle, { lat, lon, poids, libelle, entiteId: entite.id })
         }
       }
@@ -488,19 +503,29 @@ export default async function grapheRoutes(fastify) {
       : statutCsv
 
     const profondeur = Math.min(Math.max(parseInt(profondeurStr, 10) || 2, 1), 3)
-    const statutsFiltres = statutCsvFiltre.split(',').map((s) => s.trim()).filter(Boolean)
+    const statutsFiltres = statutCsvFiltre
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
     const typesLienFiltres = typesLienCsv
-      ? typesLienCsv.split(',').map((t) => t.trim()).filter(Boolean)
+      ? typesLienCsv
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
       : null
 
     // Vérifier que l'entité racine existe (personne, organisation ou site web)
-    const personneRacine = await prisma.personne.findUnique({ where: { id: entiteId }, select: { id: true } })
+    const personneRacine = await prisma.personne.findUnique({
+      where: { id: entiteId },
+      select: { id: true },
+    })
     const organisationRacine = !personneRacine
       ? await prisma.organisation.findUnique({ where: { id: entiteId }, select: { id: true } })
       : null
-    const siteWebRacine = !personneRacine && !organisationRacine
-      ? await prisma.siteWeb.findUnique({ where: { id: entiteId }, select: { id: true } })
-      : null
+    const siteWebRacine =
+      !personneRacine && !organisationRacine
+        ? await prisma.siteWeb.findUnique({ where: { id: entiteId }, select: { id: true } })
+        : null
 
     if (!personneRacine && !organisationRacine && !siteWebRacine) {
       return reply.code(404).send({ error: 'Entité racine non trouvée' })

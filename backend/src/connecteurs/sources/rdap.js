@@ -20,15 +20,15 @@
  *   - L'hébergeur déduit des NS est une heuristique, pas une certitude.
  */
 
-import { promises as dns } from 'node:dns';
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { promises as dns } from 'node:dns'
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_RDAP_BOOTSTRAP = 'https://data.iana.org/rdap/dns.json';
-const ENDPOINT_RDAP_FALLBACK = 'https://rdap.iana.org/domain/';
+const ENDPOINT_RDAP_BOOTSTRAP = 'https://data.iana.org/rdap/dns.json'
+const ENDPOINT_RDAP_FALLBACK = 'https://rdap.iana.org/domain/'
 
 /** Regex de validation d'un nom de domaine (sans protocole ni slash). */
-const REGEX_DOMAINE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+const REGEX_DOMAINE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i
 
 /**
  * Mapping suffixe de nameserver → libellé hébergeur.
@@ -56,7 +56,7 @@ const MAPPING_HEBERGEURS_NS = new Map([
   ['planethoster.net', 'PlanetHoster'],
   ['online.net', 'Scaleway'],
   ['scaleway.com', 'Scaleway'],
-]);
+])
 
 /** Valeurs indiquant un titulaire anonymisé par le registrar. */
 const VALEURS_REDACTEES = new Set([
@@ -66,7 +66,7 @@ const VALEURS_REDACTEES = new Set([
   'Private Registration',
   'Redacted',
   'REDACTED',
-]);
+])
 
 export default class RdapConnecteur extends BaseConnecteur {
   constructor() {
@@ -80,10 +80,10 @@ export default class RdapConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 15_000,
-    });
+    })
     // Cache mémoire du bootstrap IANA (TLD → URL RDAP).
     // Re-chargé au plus toutes les 24 h (TTL du cache disque via _appelHttp).
-    this._bootstrapCache = null;
+    this._bootstrapCache = null
   }
 
   /**
@@ -104,21 +104,21 @@ export default class RdapConnecteur extends BaseConnecteur {
         const bootstrap = await this._appelHttp(ENDPOINT_RDAP_BOOTSTRAP, {
           cacheMethode: 'bootstrap',
           cacheArgs: 'dns',
-        });
-        this._bootstrapCache = this._indexerBootstrap(bootstrap);
+        })
+        this._bootstrapCache = this._indexerBootstrap(bootstrap)
       } catch {
         // Bootstrap inaccessible : utiliser uniquement le fallback IANA
-        this._bootstrapCache = new Map();
+        this._bootstrapCache = new Map()
       }
     }
 
-    const tld = domaine.split('.').pop().toLowerCase();
-    const urlBase = this._bootstrapCache.get(tld);
+    const tld = domaine.split('.').pop().toLowerCase()
+    const urlBase = this._bootstrapCache.get(tld)
     if (urlBase) {
-      const racine = urlBase.endsWith('/') ? urlBase : `${urlBase}/`;
-      return `${racine}domain/${domaine}`;
+      const racine = urlBase.endsWith('/') ? urlBase : `${urlBase}/`
+      return `${racine}domain/${domaine}`
     }
-    return `${ENDPOINT_RDAP_FALLBACK}${domaine}`;
+    return `${ENDPOINT_RDAP_FALLBACK}${domaine}`
   }
 
   /**
@@ -130,18 +130,18 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {Map<string, string>}
    */
   _indexerBootstrap(bootstrap) {
-    const index = new Map();
-    const services = bootstrap.services ?? [];
+    const index = new Map()
+    const services = bootstrap.services ?? []
     for (const service of services) {
-      const tlds = service[0] ?? [];
-      const urls = service[1] ?? [];
-      const url = urls.find((u) => u.startsWith('https://')) ?? urls[0];
-      if (!url) continue;
+      const tlds = service[0] ?? []
+      const urls = service[1] ?? []
+      const url = urls.find((u) => u.startsWith('https://')) ?? urls[0]
+      if (!url) continue
       for (const tld of tlds) {
-        index.set(tld.toLowerCase(), url);
+        index.set(tld.toLowerCase(), url)
       }
     }
-    return index;
+    return index
   }
 
   /**
@@ -155,14 +155,14 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query) {
-    const domaine = query?.trim().toLowerCase();
+    const domaine = query?.trim().toLowerCase()
     if (!domaine || !REGEX_DOMAINE.test(domaine)) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const detail = await this.detailler(domaine);
-    const resultats = detail.entite ? [detail.entite] : [];
-    return this._enveloppe(resultats);
+    const detail = await this.detailler(domaine)
+    const resultats = detail.entite ? [detail.entite] : []
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -172,24 +172,24 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(domaine) {
-    const domainePropre = domaine?.trim().toLowerCase();
+    const domainePropre = domaine?.trim().toLowerCase()
     if (!domainePropre || !REGEX_DOMAINE.test(domainePropre)) {
       return {
         entite: null,
         source: 'RDAP',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
-    const url = await this._resoudreEndpointRdap(domainePropre);
-    let donnees;
+    const url = await this._resoudreEndpointRdap(domainePropre)
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'detailler',
         cacheArgs: domainePropre,
         redirect: 'follow',
-      });
+      })
     } catch (err) {
       if (err.status === 404) {
         return {
@@ -197,18 +197,18 @@ export default class RdapConnecteur extends BaseConnecteur {
           source: 'RDAP',
           dateRecuperation: new Date().toISOString(),
           version: this.version,
-        };
+        }
       }
-      throw err;
+      throw err
     }
 
-    const entite = this._mappageRdap(domainePropre, donnees);
+    const entite = this._mappageRdap(domainePropre, donnees)
     return {
       entite,
       source: 'RDAP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -218,14 +218,14 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(domaine) {
-    const detail = await this.detailler(domaine);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(domaine)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'RDAP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
@@ -240,25 +240,24 @@ export default class RdapConnecteur extends BaseConnecteur {
   _mappageRdap(domaine, rdap) {
     // L'URL canonique de citation reste IANA (point d'entrée standardisé)
     // même si la requête réelle est passée par Verisign/AFNIC/Gandi.
-    const urlRdap = `https://rdap.iana.org/domain/${domaine}`;
-    const sourceInfo = { source: 'RDAP', url: urlRdap };
+    const urlRdap = `https://rdap.iana.org/domain/${domaine}`
+    const sourceInfo = { source: 'RDAP', url: urlRdap }
 
     // Extraction des événements
-    const evenements = rdap.events ?? [];
-    const dateEnregistrement = this._trouverEvenement(evenements, 'registration');
-    const dateExpiration = this._trouverEvenement(evenements, 'expiration');
+    const evenements = rdap.events ?? []
+    const dateEnregistrement = this._trouverEvenement(evenements, 'registration')
+    const dateExpiration = this._trouverEvenement(evenements, 'expiration')
 
     // Nameservers
     const nameservers = (rdap.nameservers ?? [])
       .map((ns) => ns.ldhName?.toLowerCase())
-      .filter(Boolean);
+      .filter(Boolean)
 
     // Hébergeur déduit du premier NS
-    const hebergeurProbable =
-      nameservers.length > 0 ? this._deduireHebergeur(nameservers[0]) : null;
+    const hebergeurProbable = nameservers.length > 0 ? this._deduireHebergeur(nameservers[0]) : null
 
     // Registrar
-    const registrar = this._trouverEntiteParRole(rdap.entities ?? [], 'registrar');
+    const registrar = this._trouverEntiteParRole(rdap.entities ?? [], 'registrar')
 
     const champs = {
       domaine: marquerProvenance(domaine, sourceInfo),
@@ -268,10 +267,10 @@ export default class RdapConnecteur extends BaseConnecteur {
       statut: marquerProvenance(rdap.status ?? [], sourceInfo),
       nameservers: marquerProvenance(nameservers, sourceInfo),
       hebergeurProbable: marquerProvenance(hebergeurProbable, sourceInfo),
-    };
+    }
 
     // Liens suggérés
-    const liensSuggeres = [];
+    const liensSuggeres = []
 
     // Hébergeur déduit
     if (hebergeurProbable) {
@@ -281,11 +280,11 @@ export default class RdapConnecteur extends BaseConnecteur {
         source: 'RDAP',
         url: urlRdap,
         date: new Date().toISOString(),
-      });
+      })
     }
 
     // Titulaire — omis si REDACTED
-    const nomTitulaire = this._trouverEntiteParRole(rdap.entities ?? [], 'registrant');
+    const nomTitulaire = this._trouverEntiteParRole(rdap.entities ?? [], 'registrant')
     if (nomTitulaire && !VALEURS_REDACTEES.has(nomTitulaire)) {
       liensSuggeres.push({
         vers: { type: 'Personne', identifiantExterne: nomTitulaire },
@@ -293,10 +292,10 @@ export default class RdapConnecteur extends BaseConnecteur {
         source: 'RDAP',
         url: urlRdap,
         date: new Date().toISOString(),
-      });
+      })
     }
 
-    return creerEntiteNormalisee('SiteWeb', champs, liensSuggeres);
+    return creerEntiteNormalisee('SiteWeb', champs, liensSuggeres)
   }
 
   /**
@@ -307,8 +306,8 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {string|null}
    */
   _trouverEvenement(evenements, action) {
-    const evt = evenements.find((e) => e.eventAction === action);
-    return evt?.eventDate ?? null;
+    const evt = evenements.find((e) => e.eventAction === action)
+    return evt?.eventDate ?? null
   }
 
   /**
@@ -319,12 +318,12 @@ export default class RdapConnecteur extends BaseConnecteur {
    * @returns {string|null}
    */
   _trouverEntiteParRole(entites, role) {
-    const entite = entites.find((e) => e.roles?.includes(role));
-    if (!entite) return null;
+    const entite = entites.find((e) => e.roles?.includes(role))
+    if (!entite) return null
 
-    const vcard = entite.vcardArray?.[1] ?? [];
-    const fn = vcard.find((champ) => champ[0] === 'fn');
-    return fn?.[3] ?? null;
+    const vcard = entite.vcardArray?.[1] ?? []
+    const fn = vcard.find((champ) => champ[0] === 'fn')
+    return fn?.[3] ?? null
   }
 
   /**
@@ -336,9 +335,9 @@ export default class RdapConnecteur extends BaseConnecteur {
    */
   _deduireHebergeur(ns) {
     for (const [suffixe, libelle] of MAPPING_HEBERGEURS_NS) {
-      if (ns.includes(suffixe)) return libelle;
+      if (ns.includes(suffixe)) return libelle
     }
-    return null;
+    return null
   }
 
   /**
@@ -350,10 +349,10 @@ export default class RdapConnecteur extends BaseConnecteur {
    */
   async _resolveNs(domaine) {
     try {
-      const serveurs = await dns.resolveNs(domaine);
-      return serveurs.map((ns) => ns.toLowerCase());
+      const serveurs = await dns.resolveNs(domaine)
+      return serveurs.map((ns) => ns.toLowerCase())
     } catch {
-      return [];
+      return []
     }
   }
 
@@ -364,6 +363,6 @@ export default class RdapConnecteur extends BaseConnecteur {
       source: 'RDAP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

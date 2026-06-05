@@ -32,17 +32,17 @@
  *   Civilité d'exercice, adresse, code postal, commune.
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
-import { createReadStream, existsSync, statSync, mkdirSync, readdirSync } from 'fs';
-import { createInterface } from 'readline';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { join, dirname, extname } from 'path';
-import { fileURLToPath } from 'url';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
+import { createReadStream, existsSync, statSync, mkdirSync, readdirSync } from 'fs'
+import { createInterface } from 'readline'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
+import { join, dirname, extname } from 'path'
+import { fileURLToPath } from 'url'
 
-const execFileAsync = promisify(execFile);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const execFileAsync = promisify(execFile)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /**
  * URL API data.gouv pour le dataset Annuaire Santé — résolution par recherche textuelle.
@@ -50,25 +50,25 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * selon les versions publiées par l'ANS.
  */
 const URL_API_DATAGOUV_RECHERCHE =
-  'https://www.data.gouv.fr/api/1/datasets/?q=annuaire+sante+RPPS+libre+acces&page_size=5';
+  'https://www.data.gouv.fr/api/1/datasets/?q=annuaire+sante+RPPS+libre+acces&page_size=5'
 
 /**
  * Slug connu pour le dataset Annuaire Santé — fallback si la recherche échoue.
  * Ce slug est stable depuis 2022 dans data.gouv.fr.
  */
 const URL_API_DATAGOUV_SLUG =
-  'https://www.data.gouv.fr/api/1/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professions/';
+  'https://www.data.gouv.fr/api/1/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professions/'
 
 /** Dossier de cache annuaire-santé */
-const CACHE_SANTE_DIR = join(__dirname, '../../../../backend/.cache/connecteurs/annuaire-sante');
-const CHEMIN_DATASET = join(CACHE_SANTE_DIR, 'annuaire_sante.data');
-const CHEMIN_CSV_DIR = join(CACHE_SANTE_DIR, 'csv');
+const CACHE_SANTE_DIR = join(__dirname, '../../../../backend/.cache/connecteurs/annuaire-sante')
+const CHEMIN_DATASET = join(CACHE_SANTE_DIR, 'annuaire_sante.data')
+const CHEMIN_CSV_DIR = join(CACHE_SANTE_DIR, 'csv')
 
 /** TTL cache disque 30 jours (en ms) */
-const TTL_30_JOURS_MS = 30 * 24 * 60 * 60 * 1000;
+const TTL_30_JOURS_MS = 30 * 24 * 60 * 60 * 1000
 
 /** Nombre maximum de résultats par recherche (garde-fou RGPD ADR-014) */
-const LIMITE_MAX_RESULTATS = 25;
+const LIMITE_MAX_RESULTATS = 25
 
 /**
  * Normalise une chaîne pour la recherche (minuscules, sans accents, sans ponctuation).
@@ -77,14 +77,14 @@ const LIMITE_MAX_RESULTATS = 25;
  * @returns {string}
  */
 function normaliserRecherche(chaine) {
-  if (!chaine) return '';
+  if (!chaine) return ''
   return chaine
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 /**
@@ -99,16 +99,16 @@ async function _fetchRessourcesDatagouv(urlApi, userAgent, signal) {
   const reponse = await fetch(urlApi, {
     signal,
     headers: { 'User-Agent': userAgent, Accept: 'application/json' },
-  });
-  if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
-  const donnees = await reponse.json();
+  })
+  if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
+  const donnees = await reponse.json()
   // L'API recherche renvoie { data: [{ resources: [...] }] }, le slug renvoie { resources: [...] }
   if (Array.isArray(donnees.data)) {
     // Résultat de recherche — prendre les ressources du premier dataset
-    const premier = donnees.data[0];
-    return premier?.resources ?? premier?.data ?? [];
+    const premier = donnees.data[0]
+    return premier?.resources ?? premier?.data ?? []
   }
-  return donnees.resources ?? [];
+  return donnees.resources ?? []
 }
 
 /**
@@ -120,27 +120,27 @@ async function _fetchRessourcesDatagouv(urlApi, userAgent, signal) {
  * @returns {{ url: string, estZip: boolean }|null}
  */
 function _selectionnerRessource(ressources) {
-  const hotesOk = ['www.data.gouv.fr', 'static.data.gouv.fr'];
+  const hotesOk = ['www.data.gouv.fr', 'static.data.gouv.fr']
 
   const filtrer = (pred) =>
     ressources.find((r) => {
-      if (!r.url) return false;
+      if (!r.url) return false
       try {
-        const { hostname } = new URL(r.url);
-        return hotesOk.includes(hostname) && pred(r);
+        const { hostname } = new URL(r.url)
+        return hotesOk.includes(hostname) && pred(r)
       } catch {
-        return false;
+        return false
       }
-    });
+    })
 
-  const ressourceZip = filtrer((r) => r.format?.toLowerCase() === 'zip');
+  const ressourceZip = filtrer((r) => r.format?.toLowerCase() === 'zip')
   const ressourceTxt = filtrer(
     (r) => r.format?.toLowerCase() === 'txt' || r.format?.toLowerCase() === 'csv',
-  );
+  )
 
-  if (ressourceZip?.url) return { url: ressourceZip.url, estZip: true };
-  if (ressourceTxt?.url) return { url: ressourceTxt.url, estZip: false };
-  return null;
+  if (ressourceZip?.url) return { url: ressourceZip.url, estZip: true }
+  if (ressourceTxt?.url) return { url: ressourceTxt.url, estZip: false }
+  return null
 }
 
 /**
@@ -156,26 +156,28 @@ function _selectionnerRessource(ressources) {
  * @returns {Promise<{ url: string, estZip: boolean }|null>}
  */
 async function resoudreUrlDataset(userAgent, timeoutMs) {
-  const controleur = new AbortController();
-  const minuterie = setTimeout(() => controleur.abort(), timeoutMs);
+  const controleur = new AbortController()
+  const minuterie = setTimeout(() => controleur.abort(), timeoutMs)
 
   try {
     // Stratégie 1 : recherche textuelle
-    let ressources = [];
+    let ressources = []
     try {
       ressources = await _fetchRessourcesDatagouv(
         URL_API_DATAGOUV_RECHERCHE,
         userAgent,
         controleur.signal,
-      );
+      )
     } catch (errRecherche) {
-      console.warn(`[annuaire-sante] Recherche textuelle data.gouv échouée (${errRecherche.message}), tentative par slug...`);
+      console.warn(
+        `[annuaire-sante] Recherche textuelle data.gouv échouée (${errRecherche.message}), tentative par slug...`,
+      )
     }
 
-    let selection = _selectionnerRessource(ressources);
+    let selection = _selectionnerRessource(ressources)
     if (selection) {
-      console.info(`[annuaire-sante] URL résolue via recherche data.gouv : ${selection.url}`);
-      return selection;
+      console.info(`[annuaire-sante] URL résolue via recherche data.gouv : ${selection.url}`)
+      return selection
     }
 
     // Stratégie 2 : slug direct
@@ -184,21 +186,23 @@ async function resoudreUrlDataset(userAgent, timeoutMs) {
         URL_API_DATAGOUV_SLUG,
         userAgent,
         controleur.signal,
-      );
-      selection = _selectionnerRessource(ressources);
+      )
+      selection = _selectionnerRessource(ressources)
       if (selection) {
-        console.info(`[annuaire-sante] URL résolue via slug data.gouv : ${selection.url}`);
-        return selection;
+        console.info(`[annuaire-sante] URL résolue via slug data.gouv : ${selection.url}`)
+        return selection
       }
     } catch (errSlug) {
-      console.warn(`[annuaire-sante] Résolution par slug échouée (${errSlug.message}).`);
+      console.warn(`[annuaire-sante] Résolution par slug échouée (${errSlug.message}).`)
     }
 
     // Aucune ressource exploitable trouvée
-    console.warn('[annuaire-sante] Aucune ressource TXT/CSV/ZIP exploitable trouvée sur data.gouv. Le connecteur retournera [] sans planter.');
-    return null;
+    console.warn(
+      '[annuaire-sante] Aucune ressource TXT/CSV/ZIP exploitable trouvée sur data.gouv. Le connecteur retournera [] sans planter.',
+    )
+    return null
   } finally {
-    clearTimeout(minuterie);
+    clearTimeout(minuterie)
   }
 }
 
@@ -214,14 +218,14 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.ANNUAIRE_SANTE_TTL_DATASET_MS) || TTL_30_JOURS_MS,
       timeoutMs: 180_000, // 3 min pour le téléchargement du dataset
-    });
+    })
 
     /** @type {Map<string, object>|null} Index professionnels par nom normalisé */
-    this._indexNom = null;
+    this._indexNom = null
     /** @type {Promise<void>|null} Promesse de chargement en cours */
-    this._promesseChargement = null;
+    this._promesseChargement = null
     /** @type {string|null} Séparateur détecté dans le CSV ';' ou '|' */
-    this._separateur = null;
+    this._separateur = null
   }
 
   /**
@@ -239,25 +243,25 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string, avertissement: string }>}
    */
   async rechercher(query, options = {}) {
-    const terme = String(query ?? '').trim();
+    const terme = String(query ?? '').trim()
     // Minimum 3 caractères — garde-fou RGPD (ADR-014)
-    if (terme.length < 3) return this._enveloppe([]);
+    if (terme.length < 3) return this._enveloppe([])
 
-    await this._assureIndex();
+    await this._assureIndex()
 
-    const termeNormalise = normaliserRecherche(terme);
+    const termeNormalise = normaliserRecherche(terme)
     // Limite stricte à 25 résultats max — garde-fou RGPD (ADR-014)
-    const limite = Math.min(Number(options.limite) || 10, LIMITE_MAX_RESULTATS);
-    const resultats = [];
+    const limite = Math.min(Number(options.limite) || 10, LIMITE_MAX_RESULTATS)
+    const resultats = []
 
-    for (const [cle, professionnel] of (this._indexNom ?? new Map())) {
+    for (const [cle, professionnel] of this._indexNom ?? new Map()) {
       if (cle.includes(termeNormalise)) {
-        resultats.push(this._mappage(professionnel));
-        if (resultats.length >= limite) break;
+        resultats.push(this._mappage(professionnel))
+        if (resultats.length >= limite) break
       }
     }
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -277,7 +281,7 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       dateRecuperation: new Date().toISOString(),
       version: this.version,
       note: 'Méthode detailler() désactivée pour ce connecteur (ADR-014 — garde-fou RGPD). Utiliser rechercher() par nom.',
-    };
+    }
   }
 
   /**
@@ -295,7 +299,7 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       dateRecuperation: new Date().toISOString(),
       version: this.version,
       note: 'Croisement avec Transparence Santé (conventions laboratoires) prévu en post-MVP.',
-    };
+    }
   }
 
   // --- Méthodes internes ---
@@ -307,18 +311,18 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _assureIndex() {
-    if (this._indexNom !== null) return;
+    if (this._indexNom !== null) return
 
     if (this._promesseChargement) {
-      await this._promesseChargement;
-      return;
+      await this._promesseChargement
+      return
     }
 
-    this._promesseChargement = this._chargerDataset();
+    this._promesseChargement = this._chargerDataset()
     try {
-      await this._promesseChargement;
+      await this._promesseChargement
     } finally {
-      this._promesseChargement = null;
+      this._promesseChargement = null
     }
   }
 
@@ -329,48 +333,50 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _chargerDataset() {
-    mkdirSync(CACHE_SANTE_DIR, { recursive: true });
-    mkdirSync(CHEMIN_CSV_DIR, { recursive: true });
+    mkdirSync(CACHE_SANTE_DIR, { recursive: true })
+    mkdirSync(CHEMIN_CSV_DIR, { recursive: true })
 
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
     if (this._datasetDoitEtreTelecharg()) {
-      console.info('[annuaire-sante] Résolution de l\'URL du dataset Annuaire Santé...');
-      const resolution = await resoudreUrlDataset(userAgent, 30_000);
+      console.info("[annuaire-sante] Résolution de l'URL du dataset Annuaire Santé...")
+      const resolution = await resoudreUrlDataset(userAgent, 30_000)
 
       if (!resolution) {
         // Aucune URL résolvable — initialiser un index vide pour ne pas planter
-        this._indexNom = new Map();
-        console.warn('[annuaire-sante] Dataset indisponible — le connecteur retourne [] sans planter.');
-        return;
+        this._indexNom = new Map()
+        console.warn(
+          '[annuaire-sante] Dataset indisponible — le connecteur retourne [] sans planter.',
+        )
+        return
       }
 
-      const { url, estZip } = resolution;
+      const { url, estZip } = resolution
 
-      console.info(`[annuaire-sante] Téléchargement du dataset (~50-100 Mo) depuis ${url}...`);
-      await this._telechargerDataset(url, userAgent, estZip);
+      console.info(`[annuaire-sante] Téléchargement du dataset (~50-100 Mo) depuis ${url}...`)
+      await this._telechargerDataset(url, userAgent, estZip)
 
       if (estZip) {
-        console.info('[annuaire-sante] Décompression...');
-        await this._decompresserZip();
+        console.info('[annuaire-sante] Décompression...')
+        await this._decompresserZip()
       }
-      console.info('[annuaire-sante] Téléchargement terminé. Indexation...');
+      console.info('[annuaire-sante] Téléchargement terminé. Indexation...')
     } else {
-      console.info('[annuaire-sante] Cache valide (< 30 jours). Vérification des fichiers...');
+      console.info('[annuaire-sante] Cache valide (< 30 jours). Vérification des fichiers...')
       if (!this._csvEstPresent()) {
         // Présent mais non décompressé — tenter la décompression
         if (existsSync(CHEMIN_DATASET)) {
-          await this._decompresserZip();
+          await this._decompresserZip()
         }
       }
     }
 
-    await this._construireIndex();
+    await this._construireIndex()
     console.info(
       `[annuaire-sante] Index construit : ${this._indexNom?.size ?? 0} professionnels indexés.`,
-    );
+    )
   }
 
   /**
@@ -379,10 +385,10 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {boolean}
    */
   _datasetDoitEtreTelecharg() {
-    const cheminRef = this._trouverFichierDonnees();
-    if (!cheminRef) return true;
-    const stats = statSync(cheminRef);
-    return Date.now() - stats.mtimeMs > this.ttlCache;
+    const cheminRef = this._trouverFichierDonnees()
+    if (!cheminRef) return true
+    const stats = statSync(cheminRef)
+    return Date.now() - stats.mtimeMs > this.ttlCache
   }
 
   /**
@@ -391,7 +397,7 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {boolean}
    */
   _csvEstPresent() {
-    return this._trouverFichierDonnees() !== null;
+    return this._trouverFichierDonnees() !== null
   }
 
   /**
@@ -402,55 +408,55 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    */
   _trouverFichierDonnees() {
     // Fichier direct (non zippé)
-    const extensionsAcceptees = ['.csv', '.txt', '.psv'];
+    const extensionsAcceptees = ['.csv', '.txt', '.psv']
 
     // Chercher dans le dossier CSV décompressé
     const chercher = (dossier, profondeur = 0) => {
-      if (profondeur > 3) return null;
-      let fichiers;
+      if (profondeur > 3) return null
+      let fichiers
       try {
-        fichiers = readdirSync(dossier);
+        fichiers = readdirSync(dossier)
       } catch {
-        return null;
+        return null
       }
 
       for (const f of fichiers) {
-        const ext = extname(f).toLowerCase();
+        const ext = extname(f).toLowerCase()
         if (extensionsAcceptees.includes(ext) && f.toLowerCase().includes('annuaire')) {
-          return join(dossier, f);
+          return join(dossier, f)
         }
       }
 
       // Sous-dossiers
       for (const f of fichiers) {
-        const chemin = join(dossier, f);
+        const chemin = join(dossier, f)
         try {
           if (statSync(chemin).isDirectory()) {
-            const trouve = chercher(chemin, profondeur + 1);
-            if (trouve) return trouve;
+            const trouve = chercher(chemin, profondeur + 1)
+            if (trouve) return trouve
           }
         } catch {
           // Ignorer
         }
       }
 
-      return null;
-    };
+      return null
+    }
 
-    const dansCsvDir = chercher(CHEMIN_CSV_DIR);
-    if (dansCsvDir) return dansCsvDir;
+    const dansCsvDir = chercher(CHEMIN_CSV_DIR)
+    if (dansCsvDir) return dansCsvDir
 
     // Fichier brut téléchargé directement (non ZIP)
     if (existsSync(CHEMIN_DATASET)) {
       try {
-        statSync(CHEMIN_DATASET);
-        return CHEMIN_DATASET;
+        statSync(CHEMIN_DATASET)
+        return CHEMIN_DATASET
       } catch {
-        return null;
+        return null
       }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -464,43 +470,39 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    */
   async _telechargerDataset(urlDataset, userAgent, estZip) {
     // Validation anti-SSRF sur l'URL construite dynamiquement
-    const url = new URL(urlDataset);
-    const hotesAutorises = ['www.data.gouv.fr', 'static.data.gouv.fr'];
+    const url = new URL(urlDataset)
+    const hotesAutorises = ['www.data.gouv.fr', 'static.data.gouv.fr']
     if (!hotesAutorises.includes(url.hostname)) {
-      throw new Error(
-        `[annuaire-sante] SSRF bloqué — hôte non autorisé : ${url.hostname}`,
-      );
+      throw new Error(`[annuaire-sante] SSRF bloqué — hôte non autorisé : ${url.hostname}`)
     }
 
-    const { consommer } = await import('../rate-limit.js');
-    await consommer(this.nom);
+    const { consommer } = await import('../rate-limit.js')
+    await consommer(this.nom)
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
-    const cheminDestination = estZip
-      ? join(CACHE_SANTE_DIR, 'annuaire_sante.zip')
-      : CHEMIN_DATASET;
+    const cheminDestination = estZip ? join(CACHE_SANTE_DIR, 'annuaire_sante.zip') : CHEMIN_DATASET
 
     try {
       const reponse = await fetch(urlDataset, {
         signal: controleur.signal,
         headers: { 'User-Agent': userAgent },
-      });
+      })
 
       if (!reponse.ok) {
-        throw new Error(`[annuaire-sante] HTTP ${reponse.status} lors du téléchargement`);
+        throw new Error(`[annuaire-sante] HTTP ${reponse.status} lors du téléchargement`)
       }
 
-      const { createWriteStream } = await import('fs');
-      const { pipeline } = await import('stream/promises');
-      const fluxSortie = createWriteStream(cheminDestination);
-      await pipeline(reponse.body, fluxSortie);
+      const { createWriteStream } = await import('fs')
+      const { pipeline } = await import('stream/promises')
+      const fluxSortie = createWriteStream(cheminDestination)
+      await pipeline(reponse.body, fluxSortie)
 
       // Mémoriser le chemin pour la décompression éventuelle
-      this._cheminZipTelecharge = cheminDestination;
+      this._cheminZipTelecharge = cheminDestination
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 
@@ -510,20 +512,21 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _decompresserZip() {
-    const cheminZip =
-      this._cheminZipTelecharge ?? join(CACHE_SANTE_DIR, 'annuaire_sante.zip');
+    const cheminZip = this._cheminZipTelecharge ?? join(CACHE_SANTE_DIR, 'annuaire_sante.zip')
 
     if (!existsSync(cheminZip)) {
-      throw new Error(`[annuaire-sante] Fichier ZIP introuvable pour la décompression : ${cheminZip}`);
+      throw new Error(
+        `[annuaire-sante] Fichier ZIP introuvable pour la décompression : ${cheminZip}`,
+      )
     }
 
     try {
       await execFileAsync('/usr/bin/unzip', ['-o', cheminZip, '-d', CHEMIN_CSV_DIR], {
         maxBuffer: 10 * 1024 * 1024,
-      });
+      })
     } catch (err) {
       if (err.code !== 1) {
-        throw new Error(`[annuaire-sante] Décompression échouée : ${err.message}`);
+        throw new Error(`[annuaire-sante] Décompression échouée : ${err.message}`)
       }
     }
   }
@@ -535,37 +538,37 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _construireIndex() {
-    this._indexNom = new Map();
+    this._indexNom = new Map()
 
-    const cheminFichier = this._trouverFichierDonnees();
+    const cheminFichier = this._trouverFichierDonnees()
     if (!cheminFichier) {
-      console.warn('[annuaire-sante] Aucun fichier de données trouvé après téléchargement.');
-      return;
+      console.warn('[annuaire-sante] Aucun fichier de données trouvé après téléchargement.')
+      return
     }
 
     // Détecter le séparateur sur la première ligne
-    this._separateur = await this._detecterSeparateur(cheminFichier);
-    console.info(`[annuaire-sante] Séparateur détecté : '${this._separateur}'`);
+    this._separateur = await this._detecterSeparateur(cheminFichier)
+    console.info(`[annuaire-sante] Séparateur détecté : '${this._separateur}'`)
 
     await this._lireFichierFiltreParLigne(cheminFichier, (professionnel) => {
       const nomExercice = (
-        professionnel['Nom d\'exercice'] ??
+        professionnel["Nom d'exercice"] ??
         professionnel['nom_exercice'] ??
         professionnel['Nom'] ??
         professionnel['NOM'] ??
         ''
-      ).trim();
+      ).trim()
 
-      if (!nomExercice) return;
+      if (!nomExercice) return
 
-      const cle = normaliserRecherche(nomExercice);
-      if (!cle) return;
+      const cle = normaliserRecherche(nomExercice)
+      if (!cle) return
 
       // Stocker la première occurrence par nom normalisé
       if (!this._indexNom.has(cle)) {
-        this._indexNom.set(cle, professionnel);
+        this._indexNom.set(cle, professionnel)
       }
-    });
+    })
   }
 
   /**
@@ -576,21 +579,21 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    */
   async _detecterSeparateur(chemin) {
     return new Promise((resolve) => {
-      const flux = createReadStream(chemin, { encoding: 'utf8', end: 1024 });
-      const rl = createInterface({ input: flux, crlfDelay: Infinity });
+      const flux = createReadStream(chemin, { encoding: 'utf8', end: 1024 })
+      const rl = createInterface({ input: flux, crlfDelay: Infinity })
 
       rl.once('line', (ligne) => {
-        rl.close();
-        flux.destroy();
+        rl.close()
+        flux.destroy()
         // Compter les occurrences des deux séparateurs candidats
-        const nbPv = (ligne.match(/;/g) ?? []).length;
-        const nbPipe = (ligne.match(/\|/g) ?? []).length;
-        resolve(nbPipe > nbPv ? '|' : ';');
-      });
+        const nbPv = (ligne.match(/;/g) ?? []).length
+        const nbPipe = (ligne.match(/\|/g) ?? []).length
+        resolve(nbPipe > nbPv ? '|' : ';')
+      })
 
-      rl.on('error', () => resolve(';'));
-      flux.on('error', () => resolve(';'));
-    });
+      rl.on('error', () => resolve(';'))
+      flux.on('error', () => resolve(';'))
+    })
   }
 
   /**
@@ -602,39 +605,39 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _lireFichierFiltreParLigne(chemin, callback) {
-    const sep = this._separateur ?? ';';
+    const sep = this._separateur ?? ';'
 
     return new Promise((resolve, reject) => {
-      const flux = createReadStream(chemin, { encoding: 'utf8' });
-      const rl = createInterface({ input: flux, crlfDelay: Infinity });
+      const flux = createReadStream(chemin, { encoding: 'utf8' })
+      const rl = createInterface({ input: flux, crlfDelay: Infinity })
 
-      let enTetes = null;
+      let enTetes = null
 
       rl.on('line', (ligne) => {
-        if (!ligne.trim()) return;
+        if (!ligne.trim()) return
 
         if (enTetes === null) {
-          enTetes = this._parserLigne(ligne, sep);
-          return;
+          enTetes = this._parserLigne(ligne, sep)
+          return
         }
 
-        const valeurs = this._parserLigne(ligne, sep);
-        const obj = {};
+        const valeurs = this._parserLigne(ligne, sep)
+        const obj = {}
         for (let i = 0; i < enTetes.length; i++) {
-          obj[enTetes[i]] = valeurs[i] ?? '';
+          obj[enTetes[i]] = valeurs[i] ?? ''
         }
 
         try {
-          callback(obj);
+          callback(obj)
         } catch {
           // Ignorer les erreurs de callback pour ne pas interrompre le streaming
         }
-      });
+      })
 
-      rl.on('close', resolve);
-      rl.on('error', reject);
-      flux.on('error', reject);
-    });
+      rl.on('close', resolve)
+      rl.on('error', reject)
+      flux.on('error', reject)
+    })
   }
 
   /**
@@ -646,29 +649,29 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {string[]}
    */
   _parserLigne(ligne, separateur) {
-    const champs = [];
-    let courant = '';
-    let dansGuillemets = false;
+    const champs = []
+    let courant = ''
+    let dansGuillemets = false
 
     for (let i = 0; i < ligne.length; i++) {
-      const c = ligne[i];
+      const c = ligne[i]
 
       if (c === '"') {
         if (dansGuillemets && ligne[i + 1] === '"') {
-          courant += '"';
-          i++;
+          courant += '"'
+          i++
         } else {
-          dansGuillemets = !dansGuillemets;
+          dansGuillemets = !dansGuillemets
         }
       } else if (c === separateur && !dansGuillemets) {
-        champs.push(courant.trim());
-        courant = '';
+        champs.push(courant.trim())
+        courant = ''
       } else {
-        courant += c;
+        courant += c
       }
     }
-    champs.push(courant.trim());
-    return champs;
+    champs.push(courant.trim())
+    return champs
   }
 
   /**
@@ -682,52 +685,53 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappage(professionnel) {
-    const urlSource = 'https://annuaire.sante.fr/';
-    const sourceInfo = { source: 'Annuaire Santé RPPS', url: urlSource };
+    const urlSource = 'https://annuaire.sante.fr/'
+    const sourceInfo = { source: 'Annuaire Santé RPPS', url: urlSource }
 
     const badgeProvenance = {
       source: 'Annuaire Santé RPPS',
-      avertissement: "Source : Annuaire Santé RPPS — Vérifier que la personne exerce bien une influence publique avant d'importer (article 85 RGPD).",
+      avertissement:
+        "Source : Annuaire Santé RPPS — Vérifier que la personne exerce bien une influence publique avant d'importer (article 85 RGPD).",
       statut: 'EN_ATTENTE',
-    };
+    }
 
     // Extraction des champs — noms de colonnes variables selon la version du dataset
     const nom = (
-      professionnel['Nom d\'exercice'] ??
+      professionnel["Nom d'exercice"] ??
       professionnel['nom_exercice'] ??
       professionnel['Nom'] ??
       professionnel['NOM'] ??
       ''
-    ).trim();
+    ).trim()
 
     const prenom = (
-      professionnel['Prénom d\'exercice'] ??
+      professionnel["Prénom d'exercice"] ??
       professionnel['prenom_exercice'] ??
       professionnel['Prénom'] ??
       professionnel['PRENOM'] ??
       ''
-    ).trim();
+    ).trim()
 
     const profession = (
       professionnel['Profession'] ??
       professionnel['profession'] ??
       professionnel['Libellé Profession'] ??
       ''
-    ).trim();
+    ).trim()
 
     const specialite = (
       professionnel['Spécialité ordinale'] ??
       professionnel['Libellé Spécialité ordinale'] ??
       professionnel['specialite'] ??
       ''
-    ).trim();
+    ).trim()
 
     const modeExercice = (
       professionnel["Mode d'exercice"] ??
       professionnel['mode_exercice'] ??
       professionnel['Libellé Mode exercice'] ??
       ''
-    ).trim();
+    ).trim()
 
     const rpps = (
       professionnel['Identifiant PP'] ??
@@ -735,14 +739,16 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       professionnel['idpp'] ??
       professionnel['rpps'] ??
       ''
-    ).trim();
+    ).trim()
 
     // Rôle principal : profession + spécialité + mode d'exercice
-    const partiesRole = [profession, specialite, modeExercice].filter(Boolean);
-    const rolePrincipal = partiesRole.join(' — ') || null;
+    const partiesRole = [profession, specialite, modeExercice].filter(Boolean)
+    const rolePrincipal = partiesRole.join(' — ') || null
 
     // Bio : numéro RPPS + mode d'exercice (pas de données identifiantes inutiles)
-    const bio = rpps ? `RPPS : ${rpps}${modeExercice ? ` — Mode d'exercice : ${modeExercice}` : ''}` : null;
+    const bio = rpps
+      ? `RPPS : ${rpps}${modeExercice ? ` — Mode d'exercice : ${modeExercice}` : ''}`
+      : null
 
     const champs = {
       nom: marquerProvenance(nom || null, sourceInfo),
@@ -753,9 +759,9 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       qualiteInfluence: marquerProvenance('AUTRE', sourceInfo),
       statut: marquerProvenance('EN_ATTENTE', sourceInfo),
       badgeProvenance: marquerProvenance(badgeProvenance, sourceInfo),
-    };
+    }
 
-    return creerEntiteNormalisee('Personne', champs, []);
+    return creerEntiteNormalisee('Personne', champs, [])
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -765,7 +771,8 @@ export default class AnnuaireSanteConnecteur extends BaseConnecteur {
       source: 'Annuaire Santé RPPS',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-      avertissement: "Source : Annuaire Santé RPPS — Vérifier que la personne exerce bien une influence publique avant d'importer (article 85 RGPD).",
-    };
+      avertissement:
+        "Source : Annuaire Santé RPPS — Vérifier que la personne exerce bien une influence publique avant d'importer (article 85 RGPD).",
+    }
   }
 }

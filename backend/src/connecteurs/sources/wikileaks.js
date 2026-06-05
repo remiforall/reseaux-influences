@@ -24,8 +24,8 @@
 
 export default class WikiLeaksConnecteur {
   constructor() {
-    this.nom = 'wikileaks';
-    this.version = '0.0.0-stub';
+    this.nom = 'wikileaks'
+    this.version = '0.0.0-stub'
   }
 
   /**
@@ -43,7 +43,7 @@ export default class WikiLeaksConnecteur {
         'Connecteur désactivé par défaut — risque juridique français (art. 323-3 du Code pénal recel). ' +
         'À activer manuellement APRÈS audit juridique externe (ADR-010).',
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -56,7 +56,7 @@ export default class WikiLeaksConnecteur {
       source: 'WikiLeaks (désactivé)',
       avertissement: 'Connecteur désactivé — voir ADR-010.',
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -69,6 +69,6 @@ export default class WikiLeaksConnecteur {
       source: 'WikiLeaks (désactivé)',
       avertissement: 'Connecteur désactivé — voir ADR-010.',
       version: this.version,
-    };
+    }
   }
 }

@@ -6,7 +6,9 @@ const sourceSchema = z.object({
   url: z.string().url(),
   titre: z.string().min(1),
   media: z.string().optional(),
-  typeMedia: z.enum(['PRESSE_ECRITE', 'TELEVISION', 'RADIO', 'WEB', 'DOCUMENT_OFFICIEL']).optional(),
+  typeMedia: z
+    .enum(['PRESSE_ECRITE', 'TELEVISION', 'RADIO', 'WEB', 'DOCUMENT_OFFICIEL'])
+    .optional(),
   langue: z.string().default('fr'),
   paysMedia: z.string().optional(),
   datePublication: z.string().optional(),

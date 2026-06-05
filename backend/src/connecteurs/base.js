@@ -13,8 +13,8 @@
  * - l'écriture en cache après succès
  */
 
-import { lireCache, ecrireCache, hashCle } from './cache.js';
-import { consommer, creerBucket } from './rate-limit.js';
+import { lireCache, ecrireCache, hashCle } from './cache.js'
+import { consommer, creerBucket } from './rate-limit.js'
 
 // ---------------------------------------------------------------------------
 // M-03 — Whitelist des hôtes autorisés par connecteur
@@ -47,7 +47,7 @@ const HOSTS_AUTORISES = {
   // --- Connecteurs sphère associative + professionnels de santé (ADR-014) ---
   associations: ['media.interieur.gouv.fr', 'www.data.gouv.fr'],
   'annuaire-sante': ['www.data.gouv.fr', 'static.data.gouv.fr'],
-};
+}
 
 /**
  * Vérifie qu'un hostname est dans la whitelist du connecteur.
@@ -57,8 +57,8 @@ const HOSTS_AUTORISES = {
  * @returns {boolean}
  */
 function estHostAutorise(connecteurNom, hostname) {
-  const liste = HOSTS_AUTORISES[connecteurNom] ?? [];
-  return liste.some((h) => (h instanceof RegExp ? h.test(hostname) : h === hostname));
+  const liste = HOSTS_AUTORISES[connecteurNom] ?? []
+  return liste.some((h) => (h instanceof RegExp ? h.test(hostname) : h === hostname))
 }
 
 /**
@@ -80,7 +80,9 @@ function estHostAutorise(connecteurNom, hostname) {
  */
 function estIpPrivee(hostname) {
   // Couvre : 10/8, 172.16-31/12, 192.168/16, 169.254/16, 127/8, ::1, fc::/7 (ULA), fe80::/10
-  return /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|127\.|::1$|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:|fe80:)/i.test(hostname);
+  return /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|127\.|::1$|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:|fe80:)/i.test(
+    hostname,
+  )
 }
 
 /**
@@ -92,24 +94,24 @@ function estIpPrivee(hostname) {
  * @throws {Error} Si la destination est interdite
  */
 function validerUrlDestination(connecteurNom, urlStr) {
-  let url;
+  let url
   try {
-    url = new URL(urlStr);
+    url = new URL(urlStr)
   } catch {
-    throw new Error(`[${connecteurNom}] URL malformée : ${urlStr}`);
+    throw new Error(`[${connecteurNom}] URL malformée : ${urlStr}`)
   }
 
-  const { hostname } = url;
+  const { hostname } = url
 
   if (estIpPrivee(hostname)) {
-    throw new Error(`[${connecteurNom}] SSRF bloqué — destination IP privée : ${hostname}`);
+    throw new Error(`[${connecteurNom}] SSRF bloqué — destination IP privée : ${hostname}`)
   }
 
   if (!estHostAutorise(connecteurNom, hostname)) {
     throw new Error(
       `[${connecteurNom}] SSRF bloqué — hôte non autorisé : ${hostname}. ` +
-      `Ajouter à HOSTS_AUTORISES['${connecteurNom}'] si légitime.`,
-    );
+        `Ajouter à HOSTS_AUTORISES['${connecteurNom}'] si légitime.`,
+    )
   }
 }
 
@@ -125,13 +127,13 @@ export class BaseConnecteur {
    * }} config
    */
   constructor({ nom, version, baseUrl, rateLimit, ttlCache, timeoutMs }) {
-    this.nom = nom;
-    this.version = version;
-    this.baseUrl = baseUrl;
-    this.ttlCache = ttlCache ?? (Number(process.env.CACHE_TTL_MS) || 86_400_000);
-    this.timeoutMs = timeoutMs ?? 25_000;
+    this.nom = nom
+    this.version = version
+    this.baseUrl = baseUrl
+    this.ttlCache = ttlCache ?? (Number(process.env.CACHE_TTL_MS) || 86_400_000)
+    this.timeoutMs = timeoutMs ?? 25_000
 
-    creerBucket(nom, rateLimit);
+    creerBucket(nom, rateLimit)
   }
 
   /**
@@ -142,7 +144,7 @@ export class BaseConnecteur {
    * @returns {Promise<{ resultats: import('./normaliseur.js').EntiteNormalisee[], source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(_query, _options) {
-    throw new Error(`[${this.nom}] rechercher() non implémenté`);
+    throw new Error(`[${this.nom}] rechercher() non implémenté`)
   }
 
   /**
@@ -152,7 +154,7 @@ export class BaseConnecteur {
    * @returns {Promise<{ entite: import('./normaliseur.js').EntiteNormalisee, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(_id) {
-    throw new Error(`[${this.nom}] detailler() non implémenté`);
+    throw new Error(`[${this.nom}] detailler() non implémenté`)
   }
 
   /**
@@ -162,7 +164,7 @@ export class BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(_id) {
-    throw new Error(`[${this.nom}] listerLiens() non implémenté`);
+    throw new Error(`[${this.nom}] listerLiens() non implémenté`)
   }
 
   /**
@@ -180,25 +182,25 @@ export class BaseConnecteur {
    * @throws {Error} En cas d'erreur HTTP non récupérable, timeout, ou destination SSRF
    */
   async _appelHttp(url, options = {}) {
-    const { cacheMethode = 'GET', cacheArgs = null, ...fetchOptions } = options;
+    const { cacheMethode = 'GET', cacheArgs = null, ...fetchOptions } = options
 
     // M-03 — Valider l'URL avant même de chercher en cache
-    validerUrlDestination(this.nom, url);
+    validerUrlDestination(this.nom, url)
 
-    const cle = hashCle(this.nom, cacheMethode, { url, args: cacheArgs });
-    const cacheHit = await lireCache(cle, this.ttlCache);
-    if (cacheHit !== null) return cacheHit;
+    const cle = hashCle(this.nom, cacheMethode, { url, args: cacheArgs })
+    const cacheHit = await lireCache(cle, this.ttlCache)
+    if (cacheHit !== null) return cacheHit
 
-    await consommer(this.nom);
+    await consommer(this.nom)
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
     // SEC-I-02 — User-Agent sans email perso ; utiliser ENRICHISSEMENT_USER_AGENT si fourni,
     // sinon tomber sur l'adresse fonctionnelle générique (ADR-001).
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
     try {
       const reponse = await fetch(url, {
@@ -209,33 +211,33 @@ export class BaseConnecteur {
           Accept: 'application/json',
           ...(fetchOptions.headers ?? {}),
         },
-      });
+      })
 
       // M-03 — Vérifier l'URL finale après redirection (si redirect:'follow' par défaut)
       if (reponse.url && reponse.url !== url) {
         try {
-          validerUrlDestination(this.nom, reponse.url);
+          validerUrlDestination(this.nom, reponse.url)
         } catch {
           throw new Error(
             `[${this.nom}] SSRF bloqué — redirection vers URL non autorisée : ${reponse.url}`,
-          );
+          )
         }
       }
 
       if (!reponse.ok) {
-        const erreur = new Error(`[${this.nom}] HTTP ${reponse.status} sur ${url}`);
-        erreur.status = reponse.status;
-        throw erreur;
+        const erreur = new Error(`[${this.nom}] HTTP ${reponse.status} sur ${url}`)
+        erreur.status = reponse.status
+        throw erreur
       }
 
-      const donnees = await reponse.json();
-      await ecrireCache(cle, donnees);
-      return donnees;
+      const donnees = await reponse.json()
+      await ecrireCache(cle, donnees)
+      return donnees
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 }
 
 // Exports internes pour les tests
-export { estHostAutorise, estIpPrivee, validerUrlDestination };
+export { estHostAutorise, estIpPrivee, validerUrlDestination }

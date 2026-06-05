@@ -11,7 +11,7 @@
  */
 
 /** @type {Map<string, { tokens: number, capacite: number, debit: number, dernierAppelNs: bigint }>} */
-const buckets = new Map();
+const buckets = new Map()
 
 /**
  * Crée ou réinitialise un bucket de rate-limit pour un connecteur donné.
@@ -27,7 +27,7 @@ export function creerBucket(nom, { debit, capacite }) {
     capacite,
     debit,
     dernierAppelNs: process.hrtime.bigint(),
-  });
+  })
 }
 
 /**
@@ -41,32 +41,32 @@ export function creerBucket(nom, { debit, capacite }) {
  * @throws {Error} Si le bucket n'a pas été créé préalablement
  */
 export async function consommer(nom) {
-  const bucket = buckets.get(nom);
+  const bucket = buckets.get(nom)
   if (!bucket) {
-    throw new Error(`[rate-limit] Bucket non initialisé pour le connecteur "${nom}"`);
+    throw new Error(`[rate-limit] Bucket non initialisé pour le connecteur "${nom}"`)
   }
 
   // Recharge basée sur le temps écoulé depuis le dernier appel
-  const maintenant = process.hrtime.bigint();
-  const ecouleSec = Number(maintenant - bucket.dernierAppelNs) / 1e9;
-  bucket.tokens = Math.min(bucket.capacite, bucket.tokens + ecouleSec * bucket.debit);
-  bucket.dernierAppelNs = maintenant;
+  const maintenant = process.hrtime.bigint()
+  const ecouleSec = Number(maintenant - bucket.dernierAppelNs) / 1e9
+  bucket.tokens = Math.min(bucket.capacite, bucket.tokens + ecouleSec * bucket.debit)
+  bucket.dernierAppelNs = maintenant
 
   if (bucket.tokens >= 1) {
-    bucket.tokens -= 1;
-    return;
+    bucket.tokens -= 1
+    return
   }
 
   // Calcul du délai pour obtenir exactement 1 token
-  const msAttente = Math.ceil(((1 - bucket.tokens) / bucket.debit) * 1000);
-  await new Promise((resolve) => setTimeout(resolve, msAttente));
+  const msAttente = Math.ceil(((1 - bucket.tokens) / bucket.debit) * 1000)
+  await new Promise((resolve) => setTimeout(resolve, msAttente))
 
   // Après l'attente, on recharge et consomme
-  const maintenant2 = process.hrtime.bigint();
-  const ecouleSec2 = Number(maintenant2 - bucket.dernierAppelNs) / 1e9;
-  bucket.tokens = Math.min(bucket.capacite, bucket.tokens + ecouleSec2 * bucket.debit);
-  bucket.dernierAppelNs = maintenant2;
-  bucket.tokens = Math.max(0, bucket.tokens - 1);
+  const maintenant2 = process.hrtime.bigint()
+  const ecouleSec2 = Number(maintenant2 - bucket.dernierAppelNs) / 1e9
+  bucket.tokens = Math.min(bucket.capacite, bucket.tokens + ecouleSec2 * bucket.debit)
+  bucket.dernierAppelNs = maintenant2
+  bucket.tokens = Math.max(0, bucket.tokens - 1)
 }
 
 /**
@@ -76,14 +76,14 @@ export async function consommer(nom) {
  * @returns {{ tokens: number, capacite: number, debit: number }|null}
  */
 export function obtenirEtatBucket(nom) {
-  const bucket = buckets.get(nom);
-  if (!bucket) return null;
-  return { tokens: bucket.tokens, capacite: bucket.capacite, debit: bucket.debit };
+  const bucket = buckets.get(nom)
+  if (!bucket) return null
+  return { tokens: bucket.tokens, capacite: bucket.capacite, debit: bucket.debit }
 }
 
 /**
  * Supprime tous les buckets (utile pour l'isolation des tests).
  */
 export function reinitialiserBuckets() {
-  buckets.clear();
+  buckets.clear()
 }

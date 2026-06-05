@@ -12,12 +12,10 @@ function Accueil() {
   return (
     <div className="max-w-4xl mx-auto">
       <section className="text-center py-12">
-        <h1 className="text-4xl font-bold text-primary mb-4">
-          Réseaux d'Influence
-        </h1>
+        <h1 className="text-4xl font-bold text-primary mb-4">Réseaux d'Influence</h1>
         <p className="text-xl text-gray-600 mb-8">
-          Cartographiez les liens d'influence entre personnes publiques,
-          vérifiés par des sources médiatiques et validés par la communauté.
+          Cartographiez les liens d'influence entre personnes publiques, vérifiés par des sources
+          médiatiques et validés par la communauté.
         </p>
         <div className="flex justify-center space-x-4">
           <a
@@ -42,37 +40,36 @@ function Accueil() {
             Contribuez
           </h2>
           <p className="text-gray-600">
-            Proposez des liens entre personnes publiques, sourcés par des
-            articles de presse, documents officiels ou vidéos vérifiables.
+            Proposez des liens entre personnes publiques, sourcés par des articles de presse,
+            documents officiels ou vidéos vérifiables.
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="font-bold text-lg mb-2 text-primary">Validez</h2>
           <p className="text-gray-600">
-            Vérifiez les liens proposés par la communauté. Validez au moins 5
-            liens pour pouvoir soumettre les vôtres et gagnez des badges.
+            Vérifiez les liens proposés par la communauté. Validez au moins 5 liens pour pouvoir
+            soumettre les vôtres et gagnez des badges.
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="font-bold text-lg mb-2 text-primary">Explorez</h2>
           <p className="text-gray-600">
-            Naviguez dans le graphe interactif des réseaux d'influence.
-            Filtrez par type de relation, pays ou score de confiance.
+            Naviguez dans le graphe interactif des réseaux d'influence. Filtrez par type de
+            relation, pays ou score de confiance.
           </p>
         </div>
       </section>
 
       <section className="bg-white rounded-lg shadow p-6 my-8">
-        <h2 className="text-2xl font-bold text-primary mb-4">
-          Comment ça marche ?
-        </h2>
+        <h2 className="text-2xl font-bold text-primary mb-4">Comment ça marche ?</h2>
         <ol className="space-y-3 text-gray-700">
           <li className="flex items-start">
             <span className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 font-bold">
               1
             </span>
             <span>
-              <strong>Inscrivez-vous</strong> avec votre email pour créer votre profil de contributeur.
+              <strong>Inscrivez-vous</strong> avec votre email pour créer votre profil de
+              contributeur.
             </span>
           </li>
           <li className="flex items-start">
@@ -80,7 +77,8 @@ function Accueil() {
               2
             </span>
             <span>
-              <strong>Validez 5 liens</strong> existants en indiquant s'ils sont vrais, faux ou indécis.
+              <strong>Validez 5 liens</strong> existants en indiquant s'ils sont vrais, faux ou
+              indécis.
             </span>
           </li>
           <li className="flex items-start">
@@ -88,7 +86,8 @@ function Accueil() {
               3
             </span>
             <span>
-              <strong>Soumettez un lien</strong> entre deux personnes publiques avec une source vérifiable.
+              <strong>Soumettez un lien</strong> entre deux personnes publiques avec une source
+              vérifiable.
             </span>
           </li>
           <li className="flex items-start">

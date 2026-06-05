@@ -4,25 +4,24 @@
  * liens suggeres (chambre, parti), cas vide, resilience sur erreur reseau.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 
 await jest.unstable_mockModule('../../../src/connecteurs/cache.js', () => ({
   hashCle: () => 'hash-test',
   lireCache: jest.fn().mockResolvedValue(null),
   ecrireCache: jest.fn().mockResolvedValue(undefined),
   reinitialiserEtatCache: jest.fn(),
-}));
+}))
 
 await jest.unstable_mockModule('../../../src/connecteurs/rate-limit.js', () => ({
   creerBucket: jest.fn(),
   consommer: jest.fn().mockResolvedValue(undefined),
   reinitialiserBuckets: jest.fn(),
   obtenirEtatBucket: jest.fn(),
-}));
+}))
 
-const { default: ParlementairesConnecteur } = await import(
-  '../../../src/connecteurs/sources/parlementaires.js'
-);
+const { default: ParlementairesConnecteur } =
+  await import('../../../src/connecteurs/sources/parlementaires.js')
 
 /** Fixture synthese NosDéputés.fr */
 const FIXTURE_SYNTHESE_DEPUTES = {
@@ -46,7 +45,7 @@ const FIXTURE_SYNTHESE_DEPUTES = {
       },
     },
   ],
-};
+}
 
 /** Fixture synthese NosSénateurs.fr */
 const FIXTURE_SYNTHESE_SENATEURS = {
@@ -66,74 +65,82 @@ const FIXTURE_SYNTHESE_SENATEURS = {
       },
     },
   ],
-};
+}
 
 describe('ParlementairesConnecteur — rechercher()', () => {
   it('retourne un tableau vide pour une query trop courte', async () => {
-    const connecteur = new ParlementairesConnecteur();
-    const resultat = await connecteur.rechercher('a');
-    expect(resultat.resultats).toHaveLength(0);
-    expect(resultat.source).toBe('NosDéputes/NosSénateurs');
-  });
+    const connecteur = new ParlementairesConnecteur()
+    const resultat = await connecteur.rechercher('a')
+    expect(resultat.resultats).toHaveLength(0)
+    expect(resultat.source).toBe('NosDéputes/NosSénateurs')
+  })
 
   it('retourne un tableau vide pour une query vide', async () => {
-    const connecteur = new ParlementairesConnecteur();
-    const resultat = await connecteur.rechercher('');
-    expect(resultat.resultats).toHaveLength(0);
-  });
+    const connecteur = new ParlementairesConnecteur()
+    const resultat = await connecteur.rechercher('')
+    expect(resultat.resultats).toHaveLength(0)
+  })
 
   it('trouve un depute par son nom depuis la fixture', async () => {
-    const connecteur = new ParlementairesConnecteur();
+    const connecteur = new ParlementairesConnecteur()
     // Injecter directement les index pour eviter les appels reseau
-    connecteur._indexDeputes = connecteur._construireIndex(FIXTURE_SYNTHESE_DEPUTES, 'deputes', 'depute');
-    connecteur._indexSenateurs = new Map();
+    connecteur._indexDeputes = connecteur._construireIndex(
+      FIXTURE_SYNTHESE_DEPUTES,
+      'deputes',
+      'depute',
+    )
+    connecteur._indexSenateurs = new Map()
 
-    const resultat = await connecteur.rechercher('Dupont');
-    expect(resultat.resultats).toHaveLength(1);
-    const entite = resultat.resultats[0];
-    expect(entite.type).toBe('Personne');
-    expect(entite.champs.nom.valeur).toBe('Dupont');
-    expect(entite.champs.prenom.valeur).toBe('Jean');
-    expect(entite.champs.pays.valeur).toBe('France');
-    expect(entite.champs.qualiteInfluence.valeur).toBe('ELU');
-    expect(entite.champs.nom.source).toBe('NosDéputés.fr');
-  });
+    const resultat = await connecteur.rechercher('Dupont')
+    expect(resultat.resultats).toHaveLength(1)
+    const entite = resultat.resultats[0]
+    expect(entite.type).toBe('Personne')
+    expect(entite.champs.nom.valeur).toBe('Dupont')
+    expect(entite.champs.prenom.valeur).toBe('Jean')
+    expect(entite.champs.pays.valeur).toBe('France')
+    expect(entite.champs.qualiteInfluence.valeur).toBe('ELU')
+    expect(entite.champs.nom.source).toBe('NosDéputés.fr')
+  })
 
   it('trouve un senateur par son nom depuis la fixture', async () => {
-    const connecteur = new ParlementairesConnecteur();
-    connecteur._indexDeputes = new Map();
+    const connecteur = new ParlementairesConnecteur()
+    connecteur._indexDeputes = new Map()
     connecteur._indexSenateurs = connecteur._construireIndex(
       FIXTURE_SYNTHESE_SENATEURS,
       'senateurs',
       'senateur',
-    );
+    )
 
-    const resultat = await connecteur.rechercher('Martin', { chambre: 'SENAT' });
-    expect(resultat.resultats).toHaveLength(1);
-    expect(resultat.resultats[0].champs.nom.source).toBe('NosSénateurs.fr');
-  });
+    const resultat = await connecteur.rechercher('Martin', { chambre: 'SENAT' })
+    expect(resultat.resultats).toHaveLength(1)
+    expect(resultat.resultats[0].champs.nom.source).toBe('NosSénateurs.fr')
+  })
 
-  it("genere des liens vers la chambre et le parti", async () => {
-    const connecteur = new ParlementairesConnecteur();
-    connecteur._indexDeputes = connecteur._construireIndex(FIXTURE_SYNTHESE_DEPUTES, 'deputes', 'depute');
-    connecteur._indexSenateurs = new Map();
+  it('genere des liens vers la chambre et le parti', async () => {
+    const connecteur = new ParlementairesConnecteur()
+    connecteur._indexDeputes = connecteur._construireIndex(
+      FIXTURE_SYNTHESE_DEPUTES,
+      'deputes',
+      'depute',
+    )
+    connecteur._indexSenateurs = new Map()
 
-    const resultat = await connecteur.rechercher('Dupont');
-    const liens = resultat.resultats[0].liensSuggeres;
+    const resultat = await connecteur.rechercher('Dupont')
+    const liens = resultat.resultats[0].liensSuggeres
 
-    const typesLiens = liens.map((l) => l.typeLienCode);
-    expect(typesLiens).toContain('MANDAT_ELECTIF');
-    expect(typesLiens).toContain('AFFILIATION_PARTI');
+    const typesLiens = liens.map((l) => l.typeLienCode)
+    expect(typesLiens).toContain('MANDAT_ELECTIF')
+    expect(typesLiens).toContain('AFFILIATION_PARTI')
 
-    const lienChambre = liens.find((l) => l.typeLienCode === 'MANDAT_ELECTIF');
-    expect(lienChambre.vers.identifiantExterne).toBe('Assemblee nationale');
-  });
+    const lienChambre = liens.find((l) => l.typeLienCode === 'MANDAT_ELECTIF')
+    expect(lienChambre.vers.identifiantExterne).toBe('Assemblee nationale')
+  })
 
-  it("retourne un tableau vide quand les deux endpoints sont en erreur", async () => {
-    const connecteur = new ParlementairesConnecteur();
-    connecteur._appelHttp = jest.fn().mockRejectedValue(new Error("Network error"));
+  it('retourne un tableau vide quand les deux endpoints sont en erreur', async () => {
+    const connecteur = new ParlementairesConnecteur()
+    connecteur._appelHttp = jest.fn().mockRejectedValue(new Error('Network error'))
 
-    const resultat = await connecteur.rechercher('Dupont');
-    expect(resultat.resultats).toHaveLength(0);
-  });
-});
+    const resultat = await connecteur.rechercher('Dupont')
+    expect(resultat.resultats).toHaveLength(0)
+  })
+})

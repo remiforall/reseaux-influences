@@ -26,8 +26,8 @@
 
 export default class DdoSecretsConnecteur {
   constructor() {
-    this.nom = 'ddosecrets';
-    this.version = '0.0.0-stub';
+    this.nom = 'ddosecrets'
+    this.version = '0.0.0-stub'
   }
 
   /**
@@ -45,7 +45,7 @@ export default class DdoSecretsConnecteur {
         'Connecteur désactivé par défaut — risque juridique français (art. 323-3 du Code pénal, RGPD). ' +
         'À activer manuellement APRÈS audit juridique externe et analyse dataset par dataset (ADR-010).',
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -58,7 +58,7 @@ export default class DdoSecretsConnecteur {
       source: 'DDoSecrets (désactivé)',
       avertissement: 'Connecteur désactivé — voir ADR-010.',
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -71,6 +71,6 @@ export default class DdoSecretsConnecteur {
       source: 'DDoSecrets (désactivé)',
       avertissement: 'Connecteur désactivé — voir ADR-010.',
       version: this.version,
-    };
+    }
   }
 }

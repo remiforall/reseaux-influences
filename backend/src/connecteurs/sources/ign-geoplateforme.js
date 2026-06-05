@@ -25,9 +25,9 @@
  *   - Ce stub ne gère pas les tuiles XYZ (TMS) — uniquement WMS-R.
  */
 
-import { BaseConnecteur } from '../base.js';
+import { BaseConnecteur } from '../base.js'
 
-const ENDPOINT_WMS_R = 'https://data.geopf.fr/wms-r';
+const ENDPOINT_WMS_R = 'https://data.geopf.fr/wms-r'
 
 /** Couches WMS-R disponibles sur la Géoplateforme IGN. */
 export const COUCHES_DISPONIBLES = {
@@ -36,7 +36,7 @@ export const COUCHES_DISPONIBLES = {
   LIMITES_ADMIN: 'ADMINISTRATIVEUNITS.BOUNDARIES',
   PARCELLAIRE: 'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',
   PENTES: 'ELEVATION.SLOPES',
-};
+}
 
 export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
   constructor() {
@@ -47,7 +47,7 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
       // Rate-limit fictif — ce connecteur ne fait pas d'appels HTTP
       rateLimit: { debit: 999, capacite: 999 },
       ttlCache: 0,
-    });
+    })
   }
 
   /**
@@ -61,7 +61,7 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
       source: 'IGN Géoplateforme',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -70,9 +70,7 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
    * @param {string} _id
    */
   async detailler(_id) {
-    throw new Error(
-      '[ign-geoplateforme] detailler() non supporté — utiliser obtenirUrlFondCarte()',
-    );
+    throw new Error('[ign-geoplateforme] detailler() non supporté — utiliser obtenirUrlFondCarte()')
   }
 
   /**
@@ -86,7 +84,7 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
       source: 'IGN Géoplateforme',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -124,13 +122,13 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
       WIDTH: String(width),
       HEIGHT: String(height),
       FORMAT: 'image/png',
-    });
+    })
 
     if (bbox) {
-      params.set('BBOX', `${bbox.minx},${bbox.miny},${bbox.maxx},${bbox.maxy}`);
+      params.set('BBOX', `${bbox.minx},${bbox.miny},${bbox.maxx},${bbox.maxy}`)
     }
 
-    return `${ENDPOINT_WMS_R}?${params.toString()}`;
+    return `${ENDPOINT_WMS_R}?${params.toString()}`
   }
 
   /**
@@ -141,6 +139,6 @@ export default class IgnGeoplateformeConnecteur extends BaseConnecteur {
    * @returns {string}
    */
   obtenirUrlBaseWms() {
-    return ENDPOINT_WMS_R;
+    return ENDPOINT_WMS_R
   }
 }

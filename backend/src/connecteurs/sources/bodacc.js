@@ -21,14 +21,14 @@
  *   - Les codes SIREN ne sont pas systematiquement presents dans toutes les annonces.
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
 const ENDPOINT_BASE =
-  'https://bodacc-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/annonces-commerciales/records';
+  'https://bodacc-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/annonces-commerciales/records'
 
 /** Nombre maximal de resultats par requete (limite API). */
-const LIMITE_PAR_PAGE = 10;
+const LIMITE_PAR_PAGE = 10
 
 export default class BodaccConnecteur extends BaseConnecteur {
   constructor() {
@@ -42,7 +42,7 @@ export default class BodaccConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 20_000,
-    });
+    })
   }
 
   /**
@@ -54,10 +54,10 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query, options = {}) {
-    const terme = String(query ?? '').trim();
-    if (terme.length < 2) return this._enveloppe([]);
+    const terme = String(query ?? '').trim()
+    if (terme.length < 2) return this._enveloppe([])
 
-    const limite = Math.min(Number(options.limit) || LIMITE_PAR_PAGE, 100);
+    const limite = Math.min(Number(options.limit) || LIMITE_PAR_PAGE, 100)
 
     // Recherche full-text OpenDataSoft v2.1 : ?q=...
     // (la clause `where ... like ...` est limitée aux types numériques/dates côté
@@ -65,23 +65,21 @@ export default class BodaccConnecteur extends BaseConnecteur {
     const url =
       `${ENDPOINT_BASE}?q=${encodeURIComponent(terme)}` +
       `&limit=${limite}` +
-      `&order_by=dateparution%20desc`;
+      `&order_by=dateparution%20desc`
 
     const donnees = await this._appelHttp(url, {
       cacheMethode: 'rechercher',
       cacheArgs: { terme, limite },
       headers: { Accept: 'application/json', 'Accept-Encoding': 'gzip' },
-    });
+    })
 
-    const annonces = donnees.results ?? [];
+    const annonces = donnees.results ?? []
 
     // Regrouper les annonces par denomination pour creer une entite Organisation par societe
-    const parSociete = this._regrouperParSociete(annonces);
-    const resultats = [...parSociete.values()].map((groupe) =>
-      this._mappageOrganisation(groupe),
-    );
+    const parSociete = this._regrouperParSociete(annonces)
+    const resultats = [...parSociete.values()].map((groupe) => this._mappageOrganisation(groupe))
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -91,48 +89,48 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(siren) {
-    const sirenPropre = String(siren ?? '').replace(/\s/g, '');
+    const sirenPropre = String(siren ?? '').replace(/\s/g, '')
     if (!/^\d{9}$/.test(sirenPropre)) {
       return {
         entite: null,
         source: 'BODACC',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
     // Le SIREN apparaît dans plusieurs champs BODACC (numeroImmatriculation,
     // numeroRegistre…). On utilise la recherche full-text qui matche tous les champs.
     const url =
       `${ENDPOINT_BASE}?q=${encodeURIComponent(sirenPropre)}` +
-      '&limit=20&order_by=dateparution%20desc';
+      '&limit=20&order_by=dateparution%20desc'
 
     const donnees = await this._appelHttp(url, {
       cacheMethode: 'detailler',
       cacheArgs: sirenPropre,
       headers: { Accept: 'application/json', 'Accept-Encoding': 'gzip' },
-    });
+    })
 
-    const annonces = donnees.results ?? [];
+    const annonces = donnees.results ?? []
     if (annonces.length === 0) {
       return {
         entite: null,
         source: 'BODACC',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
-    const parSociete = this._regrouperParSociete(annonces);
-    const groupe = [...parSociete.values()][0];
-    const entite = this._mappageOrganisation(groupe);
+    const parSociete = this._regrouperParSociete(annonces)
+    const groupe = [...parSociete.values()][0]
+    const entite = this._mappageOrganisation(groupe)
 
     return {
       entite,
       source: 'BODACC',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -143,14 +141,14 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(siren) {
-    const detail = await this.detailler(siren);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(siren)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'BODACC',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Methodes internes ---
@@ -162,22 +160,19 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {Map<string, object[]>}
    */
   _regrouperParSociete(annonces) {
-    const groupes = new Map();
+    const groupes = new Map()
 
     for (const annonce of annonces) {
       const cle =
-        annonce.numeroImmatriculation ??
-        annonce.denomination ??
-        annonce.registre ??
-        'inconnu';
+        annonce.numeroImmatriculation ?? annonce.denomination ?? annonce.registre ?? 'inconnu'
 
       if (!groupes.has(cle)) {
-        groupes.set(cle, []);
+        groupes.set(cle, [])
       }
-      groupes.get(cle).push(annonce);
+      groupes.get(cle).push(annonce)
     }
 
-    return groupes;
+    return groupes
   }
 
   /**
@@ -187,30 +182,27 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageOrganisation(annonces) {
-    const premiere = annonces[0];
-    const siren = premiere.numeroImmatriculation ?? null;
-    const denomination = premiere.denomination ?? premiere.registre ?? 'Inconnue';
+    const premiere = annonces[0]
+    const siren = premiere.numeroImmatriculation ?? null
+    const denomination = premiere.denomination ?? premiere.registre ?? 'Inconnue'
 
     const urlSource = siren
       ? `https://bodacc-datadila.opendatasoft.com/?q=${siren}`
-      : `https://bodacc-datadila.opendatasoft.com/?q=${encodeURIComponent(denomination)}`;
-    const sourceInfo = { source: 'BODACC', url: urlSource };
+      : `https://bodacc-datadila.opendatasoft.com/?q=${encodeURIComponent(denomination)}`
+    const sourceInfo = { source: 'BODACC', url: urlSource }
 
     // Construire le resume des evenements recents
     const evenementsRecents = annonces.slice(0, 5).map((a) => ({
       date: a.dateparution ?? null,
       type: a.typeavis ?? a.familleavis ?? 'Annonce',
       texte: a.acte ?? a.jugement ?? a.commercant ?? null,
-    }));
+    }))
 
     const descriptionEvenements = evenementsRecents
       .map((e) => `[${e.date ?? '?'}] ${e.type} — ${e.texte ?? ''}`)
-      .join(' | ');
+      .join(' | ')
 
-    const ville =
-      premiere.ville ??
-      premiere.cp_ville ??
-      null;
+    const ville = premiere.ville ?? premiere.cp_ville ?? null
 
     const champs = {
       nom: marquerProvenance(denomination, sourceInfo),
@@ -224,12 +216,12 @@ export default class BodaccConnecteur extends BaseConnecteur {
       ),
       evenementsRecents: marquerProvenance(evenementsRecents, sourceInfo),
       historiqueResume: marquerProvenance(descriptionEvenements || null, sourceInfo),
-    };
+    }
 
     // Liens suggesres : dirigeants mentionnes dans les actes
-    const liensSuggeres = this._extraireLiensDirigeants(annonces, sourceInfo);
+    const liensSuggeres = this._extraireLiensDirigeants(annonces, sourceInfo)
 
-    return creerEntiteNormalisee('Organisation', champs, liensSuggeres);
+    return creerEntiteNormalisee('Organisation', champs, liensSuggeres)
   }
 
   /**
@@ -240,31 +232,27 @@ export default class BodaccConnecteur extends BaseConnecteur {
    * @returns {Array}
    */
   _extraireLiensDirigeants(annonces, sourceInfo) {
-    const liens = [];
-    const maintenant = new Date().toISOString();
-    const vus = new Set();
+    const liens = []
+    const maintenant = new Date().toISOString()
+    const vus = new Set()
 
     for (const annonce of annonces) {
       // Champs potentiels selon le type d'annonce
-      const personnesTexte =
-        annonce.representant ??
-        annonce.commercant ??
-        annonce.acte ??
-        '';
+      const personnesTexte = annonce.representant ?? annonce.commercant ?? annonce.acte ?? ''
 
-      if (!personnesTexte || typeof personnesTexte !== 'string') continue;
+      if (!personnesTexte || typeof personnesTexte !== 'string') continue
 
       // Heuristique simple : rechercher des patterns "M./Mme NOM Prenom"
       const matchsNoms = personnesTexte.match(
         /\b(?:M\.|Mme\.?|Monsieur|Madame)\s+([A-Z][A-Z\-']{1,30})\s+([A-Z][a-z][A-Za-z\-']{1,30})/g,
-      );
+      )
 
-      if (!matchsNoms) continue;
+      if (!matchsNoms) continue
 
       for (const nomComplet of matchsNoms) {
-        const propre = nomComplet.replace(/^(?:M\.|Mme\.?|Monsieur|Madame)\s+/, '').trim();
-        if (vus.has(propre)) continue;
-        vus.add(propre);
+        const propre = nomComplet.replace(/^(?:M\.|Mme\.?|Monsieur|Madame)\s+/, '').trim()
+        if (vus.has(propre)) continue
+        vus.add(propre)
 
         liens.push({
           vers: { type: 'Personne', identifiantExterne: propre },
@@ -272,11 +260,11 @@ export default class BodaccConnecteur extends BaseConnecteur {
           source: sourceInfo.source,
           url: sourceInfo.url,
           date: maintenant,
-        });
+        })
       }
     }
 
-    return liens;
+    return liens
   }
 
   /** Enveloppe un tableau de resultats dans la forme de retour standard. */
@@ -286,6 +274,6 @@ export default class BodaccConnecteur extends BaseConnecteur {
       source: 'BODACC',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

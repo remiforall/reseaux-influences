@@ -314,17 +314,18 @@ Le périmètre OSINT MVP (ADR-003) couvrait Wikidata, RDAP et les APIs IGN. Ces 
 
 Ajout de 5 connecteurs s'appuyant exclusivement sur des sources open data françaises :
 
-| Connecteur | Source | Statut |
-|---|---|---|
-| `hatvp.js` | HATVP — déclarations d'intérêts et patrimoine | Fonctionnel (parseur XML regex) |
-| `transparence-sante.js` | Transparence Santé (Sunshine Act FR) | Stub — post-MVP (voir ci-dessous) |
-| `bodacc.js` | BODACC — annonces commerciales (OpenDataSoft) | Fonctionnel |
-| `parlementaires.js` | NosDéputés.fr + NosSénateurs.fr | Fonctionnel |
-| `dataesr.js` | DataESR — structures de recherche publiques | Fonctionnel |
+| Connecteur              | Source                                        | Statut                            |
+| ----------------------- | --------------------------------------------- | --------------------------------- |
+| `hatvp.js`              | HATVP — déclarations d'intérêts et patrimoine | Fonctionnel (parseur XML regex)   |
+| `transparence-sante.js` | Transparence Santé (Sunshine Act FR)          | Stub — post-MVP (voir ci-dessous) |
+| `bodacc.js`             | BODACC — annonces commerciales (OpenDataSoft) | Fonctionnel                       |
+| `parlementaires.js`     | NosDéputés.fr + NosSénateurs.fr               | Fonctionnel                       |
+| `dataesr.js`            | DataESR — structures de recherche publiques   | Fonctionnel                       |
 
 ### Détail des écarts et reports
 
 **Transparence Santé (stub)** : L'exploration des endpoints (2026-05-12) montre que :
+
 - L'API OpenDataSoft renvoie des millions de lignes sans endpoint de recherche textuelle performant
 - Le dataset CSV complet dépasse 500 Mo (incompatible avec le contexte Infomaniak mutualisé 512 Mo RAM)
 - Un endpoint de recherche par bénéficiaire existe sur le site mais n'est pas documenté en API publique stable
@@ -371,14 +372,14 @@ La Passe 1 (ADR-012) a couvert les sources institutionnelles françaises (HATVP,
 
 Ajout de 6 connecteurs :
 
-| Connecteur | Source | Type | Statut |
-|---|---|---|---|
+| Connecteur               | Source                              | Type                    | Statut      |
+| ------------------------ | ----------------------------------- | ----------------------- | ----------- |
 | `icij-offshore-leaks.js` | ICIJ Panama/Paradise/Pandora Papers | Dataset bulk ZIP ~73 Mo | Fonctionnel |
-| `open-sanctions.js` | OpenSanctions — 5 sub-datasets FR | Datasets bulk JSONL | Fonctionnel |
-| `anticor.js` | Anticor — flux RSS articles | RSS XML (veille) | Fonctionnel |
-| `cour-des-comptes.js` | Cour des comptes — rapports RSS | RSS XML (veille) | Fonctionnel |
-| `wikileaks.js` | WikiLeaks | STUB DÉSACTIVÉ | Stub propre |
-| `ddosecrets.js` | DDoSecrets | STUB DÉSACTIVÉ | Stub propre |
+| `open-sanctions.js`      | OpenSanctions — 5 sub-datasets FR   | Datasets bulk JSONL     | Fonctionnel |
+| `anticor.js`             | Anticor — flux RSS articles         | RSS XML (veille)        | Fonctionnel |
+| `cour-des-comptes.js`    | Cour des comptes — rapports RSS     | RSS XML (veille)        | Fonctionnel |
+| `wikileaks.js`           | WikiLeaks                           | STUB DÉSACTIVÉ          | Stub propre |
+| `ddosecrets.js`          | DDoSecrets                          | STUB DÉSACTIVÉ          | Stub propre |
 
 ### Garde-fous éthiques et juridiques
 
@@ -391,6 +392,7 @@ Jamais de basculement automatique en `VALIDE`. Un humain doit valider chaque lie
 
 **2. Badge BadgeProvenance explicite**
 Chaque entité porte un badge `badgeProvenance` avec :
+
 - La source exacte (ex: "ICIJ Offshore Leaks — Panama Papers")
 - L'avertissement : "Une mention n'implique pas d'illégalité. Vérifier avant publication."
 - L'état : `EN_ATTENTE`
@@ -407,6 +409,7 @@ RSS Anticor / Cour des comptes : cache 6 heures (flux d'actualité).
 ### Statut juridique par source
 
 **ICIJ Offshore Leaks (Panama, Paradise, Pandora Papers)** :
+
 - Données publiées par un consortium de 600 journalistes dans 90 pays
 - Jurisprudence française (TGI Paris) et européenne valident leur exploitation journalistique
 - Précédents : Le Monde, OCCRP, süddeutsche Zeitung ont publié sans condamnation
@@ -414,45 +417,53 @@ RSS Anticor / Cour des comptes : cache 6 heures (flux d'actualité).
 - Risque résiduel : mentions de personnes privées (non publiques) → ne pas importer
 
 **OpenSanctions (fr_assemblee, fr_senat, fr_maires, fr_amf, fr_tresor)** :
+
 - Sources primaires sont des données officielles françaises (Journal Officiel, AMF, Trésor)
 - OpenSanctions agrège et structure ces données open data
 - Base légale RGPD : art. 6.1.e (mission d'intérêt public) + art. 85
 - Licence CC BY-NC 4.0 — usage non-commercial confirmé (projet alpha non monétisé)
 
 **Anticor RSS** :
+
 - Articles d'une association anti-corruption agréée par le Ministère de la Justice
 - Données publiques, licence ouverte
 - Usage : veille éditoriale uniquement (pas d'import d'entités)
 
 **Cour des comptes RSS** :
+
 - Documents officiels de la Cour des comptes (institution constitutionnelle)
 - Données publiques, domaine public
 - typeMedia `DOCUMENT_OFFICIEL` — citations légalement sans restriction
 
 **WikiLeaks (STUB)** :
+
 - Désactivé — art. 323-3 Code pénal (recel données accès frauduleux)
 - Certains datasets peuvent être légitimement utilisables en journalisme, mais nécessitent
   une analyse au cas par cas par un juriste avant activation
 
 **DDoSecrets (STUB)** :
+
 - Désactivé — mêmes risques que WikiLeaks + variabilité élevée selon les datasets
 - Activation requiert : audit juridique + identification précise des datasets visés
 
 ### Architecture technique
 
 **ICIJ** :
+
 - Téléchargement unique du ZIP (~73 Mo) via `fetch` natif + `execFile('/usr/bin/unzip', [...])` (anti-injection shell — pas de `exec` avec interpolation)
 - Filtrage en streaming ligne par ligne (CSV) pour ne garder que les nodes FR/DOM-TOM/Monaco/Andorre
 - Index en mémoire Map<nomNormalise, node> + Map<id, node>
 - Cache disque : `backend/.cache/connecteurs/icij/` (isolé du cache standard)
 
 **OpenSanctions** :
+
 - 5 datasets téléchargés séquentiellement (JSONL FtM)
 - Parser JSONL ligne par ligne avec `text.split('\n')` + `JSON.parse`
 - Index commun Map<nomNormalise, {entite, dataset}>
 - Cache disque : clé hashée par dataset via `hashCle` standard
 
 **Stubs WikiLeaks / DDoSecrets** :
+
 - N'étendent PAS `BaseConnecteur` (pas de `creerBucket` inutile, pas d'entrée HOSTS_AUTORISES)
 - Retournent des objets propres `{ resultats: [], avertissement: '...', version: '0.0.0-stub' }`
 - Chargés normalement par le registry — ne produisent aucun résultat
@@ -465,6 +476,7 @@ RSS Anticor / Cour des comptes : cache 6 heures (flux d'actualité).
 anticor:               ['www.anticor.org', 'anticor.org']
 'cour-des-comptes':    ['www.ccomptes.fr']
 ```
+
 WikiLeaks et DDoSecrets n'ont pas d'entrée (aucun appel réseau possible depuis les stubs).
 
 ### Conséquences
@@ -507,9 +519,9 @@ Les Passes 1 et 2 ont couvert les acteurs institutionnels français (élus, entr
 
 Ajout de 2 connecteurs :
 
-| Connecteur | Source | Type | Statut |
-|---|---|---|---|
-| `associations.js` | RNA Waldec — Ministère de l'Intérieur | Dataset bulk ZIP ~200 Mo | Fonctionnel |
+| Connecteur          | Source                                   | Type                        | Statut      |
+| ------------------- | ---------------------------------------- | --------------------------- | ----------- |
+| `associations.js`   | RNA Waldec — Ministère de l'Intérieur    | Dataset bulk ZIP ~200 Mo    | Fonctionnel |
 | `annuaire-sante.js` | Annuaire Santé RPPS — data.gouv.fr (ANS) | Dataset bulk ZIP ~50-100 Mo | Fonctionnel |
 
 ### Garde-fous éthiques et juridiques renforcés
@@ -520,6 +532,7 @@ Ajout de 2 connecteurs :
 Le Ministère de l'Intérieur a retiré les noms de dirigeants d'associations du dataset public après les décisions CJUE 2022 sur les données personnelles dans les registres publics. Le connecteur retourne donc uniquement les entités `Organisation` sans liens auto-générés vers des personnes physiques.
 
 Ce comportement est **intentionnel et documenté** — il ne s'agit pas d'un bug. L'enrichissement en dirigeants se fera par croisement ultérieur avec :
+
 1. Le BODACC (dirigeants d'associations déclarant des actes commerciaux)
 2. Le JOAFE (Journal Officiel des Associations et Fondations d'Entreprise) — intégration post-MVP, après accord DILA sur les conditions d'accès aux données nominatives
 
@@ -556,6 +569,7 @@ Cohérent avec ADR-006 et ADR-013. Aucun import automatique en `VALIDE`.
 ### Architecture technique
 
 **RNA Waldec** :
+
 - Résolution URL via `https://www.data.gouv.fr/api/1/datasets/repertoire-national-des-associations/`
 - Téléchargement streaming → `backend/.cache/connecteurs/rna/rna_waldec.zip`
 - Décompression via `execFile('/usr/bin/unzip', [...])` (anti-injection shell)
@@ -564,6 +578,7 @@ Cohérent avec ADR-006 et ADR-013. Aucun import automatique en `VALIDE`.
 - Cache disque 30 jours (configurable via `ASSOCIATIONS_TTL_DATASET_MS`)
 
 **Annuaire Santé RPPS** :
+
 - Résolution URL via `https://www.data.gouv.fr/api/1/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professions/`
 - Téléchargement streaming → `backend/.cache/connecteurs/annuaire-sante/`
 - Décompression si ZIP via `execFile('/usr/bin/unzip', [...])`
@@ -616,6 +631,7 @@ La Passe 4 avait introduit les colonnes géographiques (`lieuNaissance*`, `siege
 #### Pivot recherche Wikidata : SPARQL CONTAINS → wbsearchentities + SPARQL VALUES (L3)
 
 **Stratégie** :
+
 1. Appel REST `wbsearchentities` (`www.wikidata.org/w/api.php?action=wbsearchentities`) → top 10 Q-IDs en < 1 s (API indexée utilisée par la barre de recherche Wikipedia)
 2. SPARQL `VALUES ?entite { wd:Q123 ... }` ciblé uniquement sur ces IDs → récupération type + description en < 2 s supplémentaires
 3. Fallback gracieux : si SPARQL échoue, retourner les résultats REST seuls (type non filtré)
@@ -628,20 +644,21 @@ La Passe 4 avait introduit les colonnes géographiques (`lieuNaissance*`, `siege
 
 Trois nouvelles routes dans `backend/src/routes/entites.js` :
 
-| Route | Source | Données |
-|---|---|---|
-| `GET /api/entites/:type/:id/foncier` | DVF Etalab | Transactions immobilières 12 mois, prix médian, surface médiane |
-| `GET /api/entites/:type/:id/cadastre` | IGN Cadastre | Parcelle principale + 5 attenantes |
-| `GET /api/entites/:type/:id/urbanisme` | IGN GPU | Zone PLU au point de géoloc |
+| Route                                  | Source       | Données                                                         |
+| -------------------------------------- | ------------ | --------------------------------------------------------------- |
+| `GET /api/entites/:type/:id/foncier`   | DVF Etalab   | Transactions immobilières 12 mois, prix médian, surface médiane |
+| `GET /api/entites/:type/:id/cadastre`  | IGN Cadastre | Parcelle principale + 5 attenantes                              |
+| `GET /api/entites/:type/:id/urbanisme` | IGN GPU      | Zone PLU au point de géoloc                                     |
 
 **Garde-fous RGPD** :
+
 - DVF : aucun nom de propriétaire (loi ELAN 2018)
 - Cadastre : parcelle géographique uniquement
 - GPU : zonage réglementaire public
 - Entités `EN_ATTENTE` réservées aux utilisateurs authentifiés (ADR-010)
 - `optionalAuth` sur toutes les routes : pas d'obligation de connexion pour les fiches `VALIDE`
 
-#### Champs lieuNaissance* peuplés à l'import (L1)
+#### Champs lieuNaissance\* peuplés à l'import (L1)
 
 `CHAMPS_AUTORISES.Personne` étendu, `tx.personne.create` complété avec les 4 champs géographiques (conversion en `Number()` pour `lat`/`lon` au cas où la valeur serait une string SPARQL).
 
@@ -686,16 +703,19 @@ La Passe 3 a livré 150+ tests verts mais avec des connecteurs cassés en runtim
 ### Décision — 6 lots
 
 **L1 — Fix connecteurs runtime** :
+
 - `associations.js` : le ZIP `rna_import` contient ~100 CSV par département (pas un seul fichier `rna_waldec`). Correction : itération sur tous les fichiers `rna_import_*_dpt_*.csv`, filtre sur `position = 'A'` (format import) et non `etat_asso = 'A'` (format waldec), mappage des colonnes réelles (`titre`, `objet`, `adr1/adr2/adr3`, `adrs_codepostal`, `libcom`, `siteweb`, `date_creat`). BOM UTF-8 retirée sur la clé `id`.
 - `annuaire-sante.js` : URL fallback 404 remplacée par une résolution dynamique en 2 passes (recherche textuelle data.gouv + slug direct). Si aucune URL résoluble : index vide, `rechercher()` retourne `[]` sans planter.
 
 **L2 — Migration Prisma** :
+
 - `Personne` : ajout `lieuNaissance`, `lieuNaissanceCodeInsee`, `lieuNaissanceLat`, `lieuNaissanceLon`
 - `Organisation` : ajout `siegeLat`, `siegeLon`, `siegeCodeInsee`, `adresseSiege`
 - Nouveaux modèles : `Evenement` (avec enum `TypeEvenement`, 14 valeurs) et `ParticipationEvenement` (polymorphe Personne/Organisation/SiteWeb, cohérent ADR-002)
 - `TypeLien` : ajout `ANCIEN_MANDAT` et `EX_CONJOINT` dans le seed
 
 **L3 — Backend services et routes** :
+
 - `wikidata.js` : requête SPARQL étendue pour P19 (lieu de naissance) + P625 (coordonnées), P569/P570 (dates naissance/décès), dates début/fin sur tous les mandats
 - `geocoder.js` : service d'appel à l'API Adresse BAN (IGN / data.gouv.fr) pour géocodage en live + en lot
 - Route `GET /api/graphe/timeline/:entiteId` : agrégat des liens par période (year/month), avec liste des Evenement liés
@@ -703,10 +723,12 @@ La Passe 3 a livré 150+ tests verts mais avec des connecteurs cassés en runtim
 - Route `POST /api/enrichissement/recherche-globale` : recherche locale d'abord, puis connecteurs externes si 0 résultat et utilisateur authentifié
 
 **L4/L5 — Frontend composants** :
+
 - `CarteChaleur.jsx` : Leaflet + leaflet.heat, fond IGN Géoplateforme WMTS, légende CUD-safe, alternative tableau accessible AAA
 - `TimelineActivite.jsx` : histogramme D3, curseur `<input type="range">` natif, marqueurs événements, alternative tableau AAA
 
 **L6 — Frontend pages** :
+
 - `Graphe.jsx` : 4 vues via `role="tablist"` (Graphe / Tableau / Carte / Timeline), curseur temporel global qui filtre les arêtes, état partagé
 - `SelecteurEntite.jsx` : dropdown secondaire "Sources publiques", modale d'import avec qualiteInfluencePublique obligatoire (ADR-006), annonce aria-live
 

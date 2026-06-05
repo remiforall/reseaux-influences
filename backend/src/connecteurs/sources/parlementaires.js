@@ -29,13 +29,13 @@
  *   - NosSénateurs.fr peut etre indisponible ponctuellement (hebergement beneovle).
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const URL_DEPUTES = 'https://www.nosdeputes.fr/synthese/data/json';
-const URL_SENATEURS = 'https://www.nossenateurs.fr/synthese/data/json';
-const URL_DEPUTE_DETAIL = (slug) => `https://www.nosdeputes.fr/${slug}/json`;
-const URL_SENATEUR_DETAIL = (slug) => `https://www.nossenateurs.fr/${slug}/json`;
+const URL_DEPUTES = 'https://www.nosdeputes.fr/synthese/data/json'
+const URL_SENATEURS = 'https://www.nossenateurs.fr/synthese/data/json'
+const URL_DEPUTE_DETAIL = (slug) => `https://www.nosdeputes.fr/${slug}/json`
+const URL_SENATEUR_DETAIL = (slug) => `https://www.nossenateurs.fr/${slug}/json`
 
 /**
  * Normalise une chaine pour la recherche (minuscules, sans accents).
@@ -50,7 +50,7 @@ function normaliserRecherche(chaine) {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 export default class ParlementairesConnecteur extends BaseConnecteur {
@@ -65,14 +65,14 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 30_000,
-    });
+    })
 
     /** @type {Map<string, object>|null} Index deputes par nom normalise */
-    this._indexDeputes = null;
+    this._indexDeputes = null
     /** @type {Map<string, object>|null} Index senateurs par nom normalise */
-    this._indexSenateurs = null;
+    this._indexSenateurs = null
     /** @type {Promise<void>|null} */
-    this._promesseChargement = null;
+    this._promesseChargement = null
   }
 
   /**
@@ -84,21 +84,21 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query, options = {}) {
-    const terme = String(query ?? '').trim();
-    if (terme.length < 2) return this._enveloppe([]);
+    const terme = String(query ?? '').trim()
+    if (terme.length < 2) return this._enveloppe([])
 
-    const chambre = options.chambre ?? 'TOUS';
-    await this._assureIndex(chambre);
+    const chambre = options.chambre ?? 'TOUS'
+    await this._assureIndex(chambre)
 
-    const termeNormalise = normaliserRecherche(terme);
-    const resultats = [];
+    const termeNormalise = normaliserRecherche(terme)
+    const resultats = []
 
     if (chambre === 'AN' || chambre === 'TOUS') {
       if (this._indexDeputes) {
         for (const [cle, data] of this._indexDeputes) {
           if (cle.includes(termeNormalise)) {
-            resultats.push(this._mappageParlementaire(data, 'AN'));
-            if (resultats.length >= 10) break;
+            resultats.push(this._mappageParlementaire(data, 'AN'))
+            if (resultats.length >= 10) break
           }
         }
       }
@@ -108,14 +108,14 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
       if (this._indexSenateurs) {
         for (const [cle, data] of this._indexSenateurs) {
           if (cle.includes(termeNormalise)) {
-            resultats.push(this._mappageParlementaire(data, 'SENAT'));
-            if (resultats.length >= 10) break;
+            resultats.push(this._mappageParlementaire(data, 'SENAT'))
+            if (resultats.length >= 10) break
           }
         }
       }
     }
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -126,17 +126,17 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(id) {
-    const [slug, chambre] = id.includes('#') ? id.split('#') : [id, 'AN'];
+    const [slug, chambre] = id.includes('#') ? id.split('#') : [id, 'AN']
 
-    const url = chambre === 'SENAT' ? URL_SENATEUR_DETAIL(slug) : URL_DEPUTE_DETAIL(slug);
-    const chambreEffective = chambre === 'SENAT' ? 'SENAT' : 'AN';
+    const url = chambre === 'SENAT' ? URL_SENATEUR_DETAIL(slug) : URL_DEPUTE_DETAIL(slug)
+    const chambreEffective = chambre === 'SENAT' ? 'SENAT' : 'AN'
 
-    let donnees;
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'detailler',
         cacheArgs: { slug, chambre: chambreEffective },
-      });
+      })
     } catch (err) {
       if (err.status === 404) {
         return {
@@ -144,21 +144,21 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
           source: 'NosDéputes/NosSénateurs',
           dateRecuperation: new Date().toISOString(),
           version: this.version,
-        };
+        }
       }
-      throw err;
+      throw err
     }
 
     // La reponse detail a le meme format que la synthese : { depute: {...} } ou { senateur: {...} }
-    const data = donnees.depute ?? donnees.senateur ?? null;
-    const entite = data ? this._mappageParlementaire(data, chambreEffective) : null;
+    const data = donnees.depute ?? donnees.senateur ?? null
+    const entite = data ? this._mappageParlementaire(data, chambreEffective) : null
 
     return {
       entite,
       source: 'NosDéputes/NosSénateurs',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -168,14 +168,14 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(id) {
-    const detail = await this.detailler(id);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(id)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'NosDéputes/NosSénateurs',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Methodes internes ---
@@ -187,22 +187,21 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _assureIndex(chambre) {
-    const besoinAN = (chambre === 'AN' || chambre === 'TOUS') && this._indexDeputes === null;
-    const besoinSENAT =
-      (chambre === 'SENAT' || chambre === 'TOUS') && this._indexSenateurs === null;
+    const besoinAN = (chambre === 'AN' || chambre === 'TOUS') && this._indexDeputes === null
+    const besoinSENAT = (chambre === 'SENAT' || chambre === 'TOUS') && this._indexSenateurs === null
 
-    if (!besoinAN && !besoinSENAT) return;
+    if (!besoinAN && !besoinSENAT) return
 
     if (this._promesseChargement) {
-      await this._promesseChargement;
-      return;
+      await this._promesseChargement
+      return
     }
 
-    this._promesseChargement = this._charger(besoinAN, besoinSENAT);
+    this._promesseChargement = this._charger(besoinAN, besoinSENAT)
     try {
-      await this._promesseChargement;
+      await this._promesseChargement
     } finally {
-      this._promesseChargement = null;
+      this._promesseChargement = null
     }
   }
 
@@ -214,19 +213,19 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _charger(chargerAN, chargerSENAT) {
-    const taches = [];
+    const taches = []
 
     if (chargerAN) {
       taches.push(
         this._appelHttp(URL_DEPUTES, { cacheMethode: 'synthese', cacheArgs: 'AN' })
           .then((donnees) => {
-            this._indexDeputes = this._construireIndex(donnees, 'deputes', 'depute');
+            this._indexDeputes = this._construireIndex(donnees, 'deputes', 'depute')
           })
           .catch((err) => {
-            console.error(`[parlementaires] Echec chargement deputes : ${err.message}`);
-            this._indexDeputes = new Map();
+            console.error(`[parlementaires] Echec chargement deputes : ${err.message}`)
+            this._indexDeputes = new Map()
           }),
-      );
+      )
     }
 
     if (chargerSENAT) {
@@ -234,10 +233,10 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
       // renvoie désormais du HTML statique au lieu du JSON attendu. On force un
       // index vide sans tenter d'appel HTTP pour éviter les `fetch failed`.
       // À remplacer post-MVP par senat.fr opendata ou data.gouv.fr.
-      this._indexSenateurs = new Map();
+      this._indexSenateurs = new Map()
     }
 
-    await Promise.all(taches);
+    await Promise.all(taches)
   }
 
   /**
@@ -249,23 +248,23 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {Map<string, object>}
    */
   _construireIndex(donnees, cle, sousCle) {
-    const index = new Map();
-    const items = donnees[cle] ?? [];
+    const index = new Map()
+    const items = donnees[cle] ?? []
 
     for (const item of items) {
-      const data = item[sousCle] ?? item;
-      if (!data) continue;
+      const data = item[sousCle] ?? item
+      if (!data) continue
 
-      const nom = data.nom_de_famille ?? data.nom ?? '';
-      const prenom = data.prenom ?? '';
-      const nomComplet = normaliserRecherche(`${nom} ${prenom}`);
+      const nom = data.nom_de_famille ?? data.nom ?? ''
+      const prenom = data.prenom ?? ''
+      const nomComplet = normaliserRecherche(`${nom} ${prenom}`)
 
       if (nomComplet && !index.has(nomComplet)) {
-        index.set(nomComplet, data);
+        index.set(nomComplet, data)
       }
     }
 
-    return index;
+    return index
   }
 
   /**
@@ -276,29 +275,29 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageParlementaire(data, chambre) {
-    const estDeputee = chambre === 'AN';
+    const estDeputee = chambre === 'AN'
     const urlSource = estDeputee
       ? `https://www.nosdeputes.fr/${data.slug ?? ''}`
-      : `https://www.nossenateurs.fr/${data.slug ?? ''}`;
-    const sourceNom = estDeputee ? 'NosDéputés.fr' : 'NosSénateurs.fr';
-    const sourceInfo = { source: sourceNom, url: urlSource };
+      : `https://www.nossenateurs.fr/${data.slug ?? ''}`
+    const sourceNom = estDeputee ? 'NosDéputés.fr' : 'NosSénateurs.fr'
+    const sourceInfo = { source: sourceNom, url: urlSource }
 
     // Role principal
-    const circo = data.circonscription ?? data.num_deptmt ?? null;
+    const circo = data.circonscription ?? data.num_deptmt ?? null
     const rolePrincipal = estDeputee
       ? `Député·e${circo ? ` (${circo})` : ''}`
-      : `Sénateur·rice${circo ? ` (${circo})` : ''}`;
+      : `Sénateur·rice${circo ? ` (${circo})` : ''}`
 
     // Bio : mandats successifs
-    const bioParties = [];
+    const bioParties = []
     if (data.mandat_debut) {
-      bioParties.push(`Mandat depuis le ${data.mandat_debut}`);
+      bioParties.push(`Mandat depuis le ${data.mandat_debut}`)
     }
     if (data.mandat_fin) {
-      bioParties.push(`fin le ${data.mandat_fin}`);
+      bioParties.push(`fin le ${data.mandat_fin}`)
     }
     if (data.groupe_sigle) {
-      bioParties.push(`Groupe ${data.groupe_sigle}`);
+      bioParties.push(`Groupe ${data.groupe_sigle}`)
     }
 
     const champs = {
@@ -312,23 +311,23 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
       qualiteInfluence: marquerProvenance('ELU', sourceInfo),
       groupeParlementaire: marquerProvenance(data.groupe_sigle ?? null, sourceInfo),
       slug: marquerProvenance(data.slug ?? null, sourceInfo),
-    };
+    }
 
-    const liensSuggeres = [];
-    const maintenant = new Date().toISOString();
+    const liensSuggeres = []
+    const maintenant = new Date().toISOString()
 
     // Lien vers la chambre (AN ou Senat)
-    const nomChambre = estDeputee ? "Assemblee nationale" : "Senat";
+    const nomChambre = estDeputee ? 'Assemblee nationale' : 'Senat'
     liensSuggeres.push({
       vers: { type: 'Organisation', identifiantExterne: nomChambre },
       typeLienCode: 'MANDAT_ELECTIF',
       source: sourceNom,
       url: urlSource,
       date: maintenant,
-    });
+    })
 
     // Lien vers le parti de rattachement financier
-    const parti = data.parti_ratt_financier ?? data.groupe_sigle ?? null;
+    const parti = data.parti_ratt_financier ?? data.groupe_sigle ?? null
     if (parti) {
       liensSuggeres.push({
         vers: { type: 'Organisation', identifiantExterne: parti },
@@ -336,13 +335,13 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
         source: sourceNom,
         url: urlSource,
         date: maintenant,
-      });
+      })
     }
 
     // Liens vers les sites web declares
-    const sitesWeb = data.sites_web ?? [];
+    const sitesWeb = data.sites_web ?? []
     for (const site of sitesWeb.slice(0, 2)) {
-      const url = site.site_web ?? site.url ?? site;
+      const url = site.site_web ?? site.url ?? site
       if (typeof url === 'string' && url.startsWith('http')) {
         liensSuggeres.push({
           vers: { type: 'SiteWeb', identifiantExterne: url },
@@ -350,11 +349,11 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
           source: sourceNom,
           url: urlSource,
           date: maintenant,
-        });
+        })
       }
     }
 
-    return creerEntiteNormalisee('Personne', champs, liensSuggeres);
+    return creerEntiteNormalisee('Personne', champs, liensSuggeres)
   }
 
   /** Enveloppe un tableau de resultats dans la forme de retour standard. */
@@ -364,6 +363,6 @@ export default class ParlementairesConnecteur extends BaseConnecteur {
       source: 'NosDéputes/NosSénateurs',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

@@ -17,10 +17,10 @@ const DEFAUT_CONNECTEURS =
   'wikidata,rdap,recherche-entreprises,ign-ban,ign-dvf,ign-carto-cadastre,ign-carto-gpu,ign-geoplateforme,' +
   'hatvp,transparence-sante,bodacc,parlementaires,dataesr,' +
   'icij-offshore-leaks,open-sanctions,anticor,cour-des-comptes,wikileaks,ddosecrets,' +
-  'associations,annuaire-sante';
+  'associations,annuaire-sante'
 
 /** @type {Map<string, import('./base.js').BaseConnecteur>|null} */
-let registryInstancie = null;
+let registryInstancie = null
 
 /**
  * Charge et instancie les connecteurs actifs.
@@ -32,45 +32,45 @@ let registryInstancie = null;
  * @returns {Promise<Map<string, import('./base.js').BaseConnecteur>>}
  */
 export async function chargerConnecteurs() {
-  if (registryInstancie !== null) return registryInstancie;
+  if (registryInstancie !== null) return registryInstancie
 
-  const csv = process.env.ENRICHISSEMENT_CONNECTEURS_ACTIFS?.trim() || DEFAUT_CONNECTEURS;
+  const csv = process.env.ENRICHISSEMENT_CONNECTEURS_ACTIFS?.trim() || DEFAUT_CONNECTEURS
 
   const noms = csv
     .split(',')
     .map((n) => n.trim())
-    .filter(Boolean);
+    .filter(Boolean)
 
-  const registry = new Map();
+  const registry = new Map()
 
   for (const nom of noms) {
     // Garde-fou Pappers : désactivé si clé API absente
     if (nom === 'pappers') {
       if (!process.env.PAPPERS_API_KEY) {
-        console.info('[registry] Connecteur "pappers" ignoré — PAPPERS_API_KEY non définie.');
-        continue;
+        console.info('[registry] Connecteur "pappers" ignoré — PAPPERS_API_KEY non définie.')
+        continue
       }
     }
 
     try {
-      const module = await import(`./sources/${nom}.js`);
-      const ConnecteurClasse = module.default ?? Object.values(module)[0];
+      const module = await import(`./sources/${nom}.js`)
+      const ConnecteurClasse = module.default ?? Object.values(module)[0]
 
       if (typeof ConnecteurClasse !== 'function') {
         console.warn(
           `[registry] Le module "sources/${nom}.js" n'exporte pas de classe. Connecteur ignoré.`,
-        );
-        continue;
+        )
+        continue
       }
 
-      registry.set(nom, new ConnecteurClasse());
+      registry.set(nom, new ConnecteurClasse())
     } catch (err) {
-      console.warn(`[registry] Échec du chargement du connecteur "${nom}" : ${err.message}`);
+      console.warn(`[registry] Échec du chargement du connecteur "${nom}" : ${err.message}`)
     }
   }
 
-  registryInstancie = registry;
-  return registry;
+  registryInstancie = registry
+  return registry
 }
 
 /**
@@ -81,8 +81,8 @@ export async function chargerConnecteurs() {
  * @returns {Promise<import('./base.js').BaseConnecteur|undefined>}
  */
 export async function obtenirConnecteur(nom) {
-  const registry = await chargerConnecteurs();
-  return registry.get(nom);
+  const registry = await chargerConnecteurs()
+  return registry.get(nom)
 }
 
 /**
@@ -91,8 +91,8 @@ export async function obtenirConnecteur(nom) {
  * @returns {Promise<string[]>}
  */
 export async function listerConnecteurs() {
-  const registry = await chargerConnecteurs();
-  return [...registry.keys()];
+  const registry = await chargerConnecteurs()
+  return [...registry.keys()]
 }
 
 /**
@@ -100,5 +100,5 @@ export async function listerConnecteurs() {
  * Le prochain appel à `chargerConnecteurs()` recharge depuis le `.env`.
  */
 export function reinitialiserRegistry() {
-  registryInstancie = null;
+  registryInstancie = null
 }

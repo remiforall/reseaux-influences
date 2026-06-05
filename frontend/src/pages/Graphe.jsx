@@ -22,12 +22,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  getGrapheEgo,
-  getTypesLiens,
-  getGrapheTimeline,
-  getGrapheHeatmap,
-} from '../api/client'
+import { getGrapheEgo, getTypesLiens, getGrapheTimeline, getGrapheHeatmap } from '../api/client'
 import GrapheD3 from '../components/graphe/GrapheD3'
 import TableauGraphe from '../components/graphe/TableauGraphe'
 import FiltresGraphe from '../components/graphe/FiltresGraphe'
@@ -150,10 +145,10 @@ function Graphe() {
       } catch (err) {
         const msg =
           err.response?.status === 401
-            ? "Vous devez être connecté pour consulter le graphe."
+            ? 'Vous devez être connecté pour consulter le graphe.'
             : err.response?.status === 404
               ? "Entité introuvable. Vérifiez l'identifiant."
-              : "Impossible de charger le graphe. Réessayez ultérieurement."
+              : 'Impossible de charger le graphe. Réessayez ultérieurement.'
         setErreur(msg)
       } finally {
         setLoading(false)
@@ -302,7 +297,10 @@ function Graphe() {
 
       {/* ── Curseur temporel global ── */}
       {entiteRacineId && dateCurseurMin && dateCurseurMax && dateCurseurMin !== dateCurseurMax && (
-        <section aria-labelledby="section-filtre-temporel" className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+        <section
+          aria-labelledby="section-filtre-temporel"
+          className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2"
+        >
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 id="section-filtre-temporel" className="text-sm font-semibold text-gray-800">
               Filtre temporel
@@ -329,7 +327,9 @@ function Graphe() {
               min={0}
               max={datesAretes.length - 1}
               step={1}
-              value={dateSelectionnee ? datesAretes.indexOf(dateSelectionnee) : datesAretes.length - 1}
+              value={
+                dateSelectionnee ? datesAretes.indexOf(dateSelectionnee) : datesAretes.length - 1
+              }
               onChange={(e) => {
                 const idx = Number(e.target.value)
                 setDateSelectionnee(datesAretes[idx] ?? null)
@@ -346,8 +346,8 @@ function Graphe() {
 
           {dateSelectionnee && (
             <p className="text-xs text-blue-700" aria-live="polite">
-              Affichage des liens actifs au {dateSelectionnee}
-              {' '}— {aretesFiltrées.length} lien{aretesFiltrées.length > 1 ? 's' : ''} visible{aretesFiltrées.length > 1 ? 's' : ''}
+              Affichage des liens actifs au {dateSelectionnee} — {aretesFiltrées.length} lien
+              {aretesFiltrées.length > 1 ? 's' : ''} visible{aretesFiltrées.length > 1 ? 's' : ''}
             </p>
           )}
         </section>
@@ -356,7 +356,9 @@ function Graphe() {
       {/* Aucune entité sélectionnée */}
       {!entiteRacineId && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-10 text-center text-gray-500 space-y-2">
-          <p className="text-4xl" aria-hidden="true">◉</p>
+          <p className="text-4xl" aria-hidden="true">
+            ◉
+          </p>
           <p className="font-medium">Sélectionnez une entité pour explorer son réseau.</p>
           <p className="text-sm">
             Utilisez le champ ci-dessus pour chercher une personne ou une organisation.

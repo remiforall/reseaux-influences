@@ -23,7 +23,7 @@ export function marquerProvenance(valeur, { source, url = null, date = null }) {
     source,
     url,
     date: date ?? new Date().toISOString(),
-  };
+  }
 }
 
 /**
@@ -49,7 +49,7 @@ export function creerEntiteNormalisee(type, champs, liensSuggeres = []) {
     type,
     champs,
     liensSuggeres,
-  };
+  }
 }
 
 /**
@@ -64,4 +64,4 @@ export const TYPES_ENTITES_VALIDES = [
   'TransactionFonciere',
   'Parcelle',
   'ZoneUrbanisme',
-];
+]

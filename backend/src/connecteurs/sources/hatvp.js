@@ -20,16 +20,16 @@
  *   - Seules les declarations publiees sont indexees.
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const URL_XML = 'https://www.hatvp.fr/livraison/merge/declarations.xml';
+const URL_XML = 'https://www.hatvp.fr/livraison/merge/declarations.xml'
 
 /** TTL cache specifique : 7 jours (le dataset HATVP est mensuel). */
-const TTL_HATVP_MS = 7 * 24 * 60 * 60 * 1000;
+const TTL_HATVP_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Regex d'extraction d'un bloc declaration complet. */
-const REGEX_DECLARATION = /<declaration>([\s\S]*?)<\/declaration>/gi;
+const REGEX_DECLARATION = /<declaration>([\s\S]*?)<\/declaration>/gi
 
 /**
  * Construit une regex d'extraction de la valeur d'une balise simple.
@@ -38,7 +38,7 @@ const REGEX_DECLARATION = /<declaration>([\s\S]*?)<\/declaration>/gi;
  * @returns {RegExp}
  */
 function regexChamp(balise) {
-  return new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'i');
+  return new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'i')
 }
 
 /**
@@ -49,15 +49,17 @@ function regexChamp(balise) {
  * @returns {string|null}
  */
 function extraireChamp(bloc, balise) {
-  const m = regexChamp(balise).exec(bloc);
-  if (!m) return null;
-  return m[1]
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .trim() || null;
+  const m = regexChamp(balise).exec(bloc)
+  if (!m) return null
+  return (
+    m[1]
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .trim() || null
+  )
 }
 
 /**
@@ -68,18 +70,14 @@ function extraireChamp(bloc, balise) {
  * @returns {string[]}
  */
 function extraireChampsTous(bloc, balise) {
-  const regex = new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'gi');
-  const resultats = [];
-  let m;
+  const regex = new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'gi')
+  const resultats = []
+  let m
   while ((m = regex.exec(bloc)) !== null) {
-    const valeur = m[1]
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .trim();
-    if (valeur) resultats.push(valeur);
+    const valeur = m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim()
+    if (valeur) resultats.push(valeur)
   }
-  return resultats;
+  return resultats
 }
 
 /**
@@ -95,7 +93,7 @@ function normaliserRecherche(chaine) {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 export default class HatvpConnecteur extends BaseConnecteur {
@@ -110,14 +108,14 @@ export default class HatvpConnecteur extends BaseConnecteur {
       },
       ttlCache: TTL_HATVP_MS,
       timeoutMs: 120_000, // Le fichier XML fait ~78 Mo
-    });
+    })
 
     /** @type {Map<string, object>|null} Index par nom normalise */
-    this._indexNom = null;
+    this._indexNom = null
     /** @type {boolean} Garde-fou anti-double chargement concurrent */
-    this._chargementEnCours = false;
+    this._chargementEnCours = false
     /** @type {Promise<void>|null} Promesse du chargement en cours */
-    this._promesseChargement = null;
+    this._promesseChargement = null
   }
 
   /**
@@ -128,23 +126,23 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query, _options = {}) {
-    const terme = String(query ?? '').trim();
-    if (terme.length < 2) return this._enveloppe([]);
+    const terme = String(query ?? '').trim()
+    if (terme.length < 2) return this._enveloppe([])
 
-    await this._assureIndex();
-    if (!this._indexNom || this._indexNom.size === 0) return this._enveloppe([]);
+    await this._assureIndex()
+    if (!this._indexNom || this._indexNom.size === 0) return this._enveloppe([])
 
-    const termeNormalise = normaliserRecherche(terme);
-    const resultats = [];
+    const termeNormalise = normaliserRecherche(terme)
+    const resultats = []
 
     for (const [cleNom, declaration] of this._indexNom) {
       if (cleNom.includes(termeNormalise)) {
-        resultats.push(this._mappageDeclaration(declaration));
-        if (resultats.length >= 10) break;
+        resultats.push(this._mappageDeclaration(declaration))
+        if (resultats.length >= 10) break
       }
     }
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -154,23 +152,23 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(id) {
-    await this._assureIndex();
+    await this._assureIndex()
     if (!this._indexNom) {
       return {
         entite: null,
         source: 'HATVP',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
-    const idNormalise = normaliserRecherche(id);
-    let trouvee = null;
+    const idNormalise = normaliserRecherche(id)
+    let trouvee = null
 
     for (const [cle, declaration] of this._indexNom) {
       if (cle === idNormalise || cle.startsWith(idNormalise)) {
-        trouvee = declaration;
-        break;
+        trouvee = declaration
+        break
       }
     }
 
@@ -179,7 +177,7 @@ export default class HatvpConnecteur extends BaseConnecteur {
       source: 'HATVP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -189,14 +187,14 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(id) {
-    const detail = await this.detailler(id);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(id)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'HATVP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Methodes internes ---
@@ -209,18 +207,18 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _assureIndex() {
-    if (this._indexNom !== null) return;
+    if (this._indexNom !== null) return
 
     if (this._promesseChargement) {
-      await this._promesseChargement;
-      return;
+      await this._promesseChargement
+      return
     }
 
-    this._promesseChargement = this._charger();
+    this._promesseChargement = this._charger()
     try {
-      await this._promesseChargement;
+      await this._promesseChargement
     } finally {
-      this._promesseChargement = null;
+      this._promesseChargement = null
     }
   }
 
@@ -231,12 +229,12 @@ export default class HatvpConnecteur extends BaseConnecteur {
    */
   async _charger() {
     try {
-      const xmlTexte = await this._telechargerXmlBrut(URL_XML);
-      this._indexNom = this._construireIndex(xmlTexte);
+      const xmlTexte = await this._telechargerXmlBrut(URL_XML)
+      this._indexNom = this._construireIndex(xmlTexte)
     } catch (err) {
-      console.error(`[hatvp] Echec du chargement XML : ${err.message}`);
+      console.error(`[hatvp] Echec du chargement XML : ${err.message}`)
       // Index vide pour ne pas bloquer indefiniment les appels suivants
-      this._indexNom = new Map();
+      this._indexNom = new Map()
     }
   }
 
@@ -248,15 +246,15 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Promise<string>}
    */
   async _telechargerXmlBrut(url) {
-    const { validerUrlDestination } = await import('../base.js');
-    validerUrlDestination('hatvp', url);
+    const { validerUrlDestination } = await import('../base.js')
+    validerUrlDestination('hatvp', url)
 
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
     try {
       const reponse = await fetch(url, {
@@ -265,15 +263,15 @@ export default class HatvpConnecteur extends BaseConnecteur {
           'User-Agent': userAgent,
           Accept: 'application/xml, text/xml, */*',
         },
-      });
+      })
 
       if (!reponse.ok) {
-        throw new Error(`HTTP ${reponse.status} sur ${url}`);
+        throw new Error(`HTTP ${reponse.status} sur ${url}`)
       }
 
-      return await reponse.text();
+      return await reponse.text()
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 
@@ -284,22 +282,22 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {Map<string, object>}
    */
   _construireIndex(xmlTexte) {
-    const index = new Map();
-    const regex = new RegExp(REGEX_DECLARATION.source, 'gi');
-    let match;
+    const index = new Map()
+    const regex = new RegExp(REGEX_DECLARATION.source, 'gi')
+    let match
 
     while ((match = regex.exec(xmlTexte)) !== null) {
-      const bloc = match[1];
-      const declaration = this._parserBloc(bloc);
-      if (!declaration.nom) continue;
+      const bloc = match[1]
+      const declaration = this._parserBloc(bloc)
+      if (!declaration.nom) continue
 
-      const cle = normaliserRecherche(`${declaration.nom} ${declaration.prenom ?? ''}`);
+      const cle = normaliserRecherche(`${declaration.nom} ${declaration.prenom ?? ''}`)
       if (!index.has(cle)) {
-        index.set(cle, declaration);
+        index.set(cle, declaration)
       }
     }
 
-    return index;
+    return index
   }
 
   /**
@@ -309,17 +307,17 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {object}
    */
   _parserBloc(bloc) {
-    const mandats = extraireChampsTous(bloc, 'libelle');
-    const participations = extraireChampsTous(bloc, 'denomination');
+    const mandats = extraireChampsTous(bloc, 'libelle')
+    const participations = extraireChampsTous(bloc, 'denomination')
 
     // Heuristique qualite : ELU si mandat electif detecte, sinon HAUT_FONCTIONNAIRE
-    const textesMandats = mandats.join(' ');
+    const textesMandats = mandats.join(' ')
     const qualite =
       /\b(depute|senateur|maire|conseiller|president|elu|assemblee|senat|parlament)/i.test(
         textesMandats,
       )
         ? 'ELU'
-        : 'HAUT_FONCTIONNAIRE';
+        : 'HAUT_FONCTIONNAIRE'
 
     return {
       nom: extraireChamp(bloc, 'nom'),
@@ -328,11 +326,9 @@ export default class HatvpConnecteur extends BaseConnecteur {
       fonctionPrincipale: extraireChamp(bloc, 'fonctionPrincipale') ?? mandats[0] ?? null,
       mandats,
       participations,
-      parti:
-        extraireChamp(bloc, 'partipolitique') ??
-        extraireChamp(bloc, 'parti'),
+      parti: extraireChamp(bloc, 'partipolitique') ?? extraireChamp(bloc, 'parti'),
       qualite,
-    };
+    }
   }
 
   /**
@@ -342,14 +338,14 @@ export default class HatvpConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageDeclaration(declaration) {
-    const sourceInfo = { source: 'HATVP', url: URL_XML };
+    const sourceInfo = { source: 'HATVP', url: URL_XML }
 
-    const bioParties = [];
+    const bioParties = []
     if (declaration.mandats.length > 0) {
-      bioParties.push(`Mandats : ${declaration.mandats.slice(0, 5).join(', ')}`);
+      bioParties.push(`Mandats : ${declaration.mandats.slice(0, 5).join(', ')}`)
     }
     if (declaration.participations.length > 0) {
-      bioParties.push(`Participations : ${declaration.participations.slice(0, 5).join(', ')}`);
+      bioParties.push(`Participations : ${declaration.participations.slice(0, 5).join(', ')}`)
     }
 
     const champs = {
@@ -360,10 +356,10 @@ export default class HatvpConnecteur extends BaseConnecteur {
       rolePrincipal: marquerProvenance(declaration.fonctionPrincipale, sourceInfo),
       bio: marquerProvenance(bioParties.join(' — ') || null, sourceInfo),
       qualiteInfluence: marquerProvenance(declaration.qualite, sourceInfo),
-    };
+    }
 
-    const liensSuggeres = [];
-    const maintenant = new Date().toISOString();
+    const liensSuggeres = []
+    const maintenant = new Date().toISOString()
 
     // Mandats electifs -> institutions
     for (const mandat of declaration.mandats.slice(0, 3)) {
@@ -373,7 +369,7 @@ export default class HatvpConnecteur extends BaseConnecteur {
         source: 'HATVP',
         url: URL_XML,
         date: maintenant,
-      });
+      })
     }
 
     // Participations dans des entreprises -> DIRIGEANT
@@ -384,7 +380,7 @@ export default class HatvpConnecteur extends BaseConnecteur {
         source: 'HATVP',
         url: URL_XML,
         date: maintenant,
-      });
+      })
     }
 
     // Affiliation parti politique
@@ -395,10 +391,10 @@ export default class HatvpConnecteur extends BaseConnecteur {
         source: 'HATVP',
         url: URL_XML,
         date: maintenant,
-      });
+      })
     }
 
-    return creerEntiteNormalisee('Personne', champs, liensSuggeres);
+    return creerEntiteNormalisee('Personne', champs, liensSuggeres)
   }
 
   /** Enveloppe un tableau de resultats dans la forme de retour standard. */
@@ -408,6 +404,6 @@ export default class HatvpConnecteur extends BaseConnecteur {
       source: 'HATVP',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

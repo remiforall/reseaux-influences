@@ -10,22 +10,22 @@
 
 ## 1. Ce qui est librement accessible (déjà intégré)
 
-| Donnée | Source | Statut |
-|---|---|---|
-| Géométries parcellaires | API Carto IGN, Etalab Cadastre | Open data |
-| Transactions immobilières (prix, surface, type) | DVF Etalab (DGFiP) | Open data, **anonymisé** |
-| Zonage urbanisme PLU/PPR | API Carto GPU (IGN) | Open data |
-| Diagnostics énergétiques DPE | ADEME open data | Open data, par adresse |
+| Donnée                                          | Source                         | Statut                   |
+| ----------------------------------------------- | ------------------------------ | ------------------------ |
+| Géométries parcellaires                         | API Carto IGN, Etalab Cadastre | Open data                |
+| Transactions immobilières (prix, surface, type) | DVF Etalab (DGFiP)             | Open data, **anonymisé** |
+| Zonage urbanisme PLU/PPR                        | API Carto GPU (IGN)            | Open data                |
+| Diagnostics énergétiques DPE                    | ADEME open data                | Open data, par adresse   |
 
 Ces sources permettent de localiser, mesurer et chiffrer une parcelle, **mais jamais d'identifier nominativement son propriétaire**.
 
 ## 2. Ce qui n'est PAS librement accessible
 
-| Donnée | Détenteur | Raison de la restriction |
-|---|---|---|
-| **Nom du propriétaire** d'une parcelle | DGFiP — fichier MAJIC | Secret fiscal (art. L. 103 LPF) + RGPD |
-| Composition et valeur du patrimoine foncier d'une personne nominative | DGFiP — fichiers fonciers FF | Idem |
-| Historique des mutations nominatives | DGFiP | Idem |
+| Donnée                                                                | Détenteur                    | Raison de la restriction               |
+| --------------------------------------------------------------------- | ---------------------------- | -------------------------------------- |
+| **Nom du propriétaire** d'une parcelle                                | DGFiP — fichier MAJIC        | Secret fiscal (art. L. 103 LPF) + RGPD |
+| Composition et valeur du patrimoine foncier d'une personne nominative | DGFiP — fichiers fonciers FF | Idem                                   |
+| Historique des mutations nominatives                                  | DGFiP                        | Idem                                   |
 
 ## 3. Cadre juridique de l'accès dérogatoire
 
@@ -54,6 +54,7 @@ L'accès au cadastre nominatif est régi par plusieurs textes superposés :
 ### Voie A — Demande individuelle CADA / DGFiP (recommandée pour Rémi en solo)
 
 **Procédure** :
+
 1. Identification d'un **cas concret précis** justifiant la demande (ex. enquête sur un dirigeant nommément cité)
 2. Courrier motivé à la **Direction départementale des finances publiques (DDFiP)** de la zone concernée
 3. En cas de refus : saisine de la **CADA** (Commission d'accès aux documents administratifs)
@@ -127,7 +128,7 @@ contact@posthack.com
 Service de la publicité foncière et de l'enregistrement (SPFE)
 **{{adresse DDFiP du département concerné}}**
 
-*Lettre recommandée avec accusé de réception*
+_Lettre recommandée avec accusé de réception_
 
 {{Ville}}, le {{date}}
 
@@ -144,18 +145,21 @@ Je sollicite, en ma qualité de **journaliste indépendant**, la communication d
 Cette demande s'inscrit dans le cadre d'une enquête journalistique portant sur {{objet précis de l'enquête, par ex. « les réseaux d'influence économique de M. X, déjà cité dans Le Monde du JJ/MM/AAAA »}}. La parcelle en cause apparaît dans {{source publique : BODACC du JJ/MM, transaction DVF du JJ/MM, mention dans la presse de…}}, ce qui justifie la pertinence de l'identification de son propriétaire pour la fiabilité de l'enquête.
 
 **Fondement juridique** :
+
 - Article L. 107 A du Livre des procédures fiscales
 - Article 85 du Règlement général sur la protection des données (UE) 2016/679
 - Article 80 de la loi n° 78-17 du 6 janvier 1978 modifiée
 - Avis CADA n° 20183594 du 19 décembre 2018 (accès journalistique aux fichiers fonciers)
 
 **Engagements** :
+
 - L'information communiquée ne sera utilisée que pour la finalité de l'enquête précitée
 - Aucune republication brute de la donnée nominative ne sera effectuée
 - L'information sera référencée comme « DDFiP {{département}}, courrier du JJ/MM/AAAA » dans toute publication
 - La donnée sera détruite à l'issue de l'enquête, au plus tard 12 mois après communication
 
 **Pièces jointes** :
+
 - Pièce d'identité du demandeur
 - Extrait Kbis de PostHack (SIREN 900 477 571)
 - Note d'intention de l'enquête (2 pages)
