@@ -10,6 +10,9 @@
     "db:push": "npx prisma db push",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
+    "db:seed:demo": "node bin/seed-demo.js",
+    "db:seed:enrichi": "node bin/seed-enrichi.js",
+    "db:seed:complement-geo": "node bin/seed-complement-geo.js",
     "db:studio": "npx prisma studio",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "lint": "eslint src/"
