@@ -1,0 +1,12 @@
+/* TEAM */
+Porteur du projet : Rémi Vincent (Posthack)
+Site : https://reseauxinfluences.fr
+Contact : contact@reseauxinfluences.fr
+
+/* SITE */
+Last update : 2026-05-11
+Standards : HTML5, CSS3, ES2022
+Components : React 18, Fastify 5, Prisma 6, D3 7
+Software : Hugo · Vite · Tailwind · Node.js 20
+Hébergeur : Infomaniak (Genève, CH)
+Site basé sur le projet historique InfluenceNetwork (Owni.fr, Nicolas Kayser-Bril).
