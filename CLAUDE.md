@@ -219,13 +219,13 @@ JWT bearer dans `Authorization: Bearer <token>`, vérifié par `backend/src/midd
 2. **Mélange `?? || ` sans parenthèses** = SyntaxError :
 
    ```js
-   ttlCache ?? (Number(env) || 86_400_000); // pas ttlCache ?? Number(env) || 86_400_000
+   ttlCache ?? (Number(env) || 86_400_000) // pas ttlCache ?? Number(env) || 86_400_000
    ```
 
 3. **`import prisma from '../utils/prisma.js'`** → ❌ default import. Le module exporte `export const prisma`, donc :
 
    ```js
-   import { prisma } from '../utils/prisma.js';
+   import { prisma } from '../utils/prisma.js'
    ```
 
 4. **`findUnique` sur champ non-`@unique`** → ❌ utiliser `findFirst`. Cas typique : `wikidataId` n'est pas unique sur Personne/Organisation.
@@ -245,7 +245,7 @@ JWT bearer dans `Authorization: Bearer <token>`, vérifié par `backend/src/midd
 ## Conventions
 
 - **Langue** : tout en français (commits, commentaires, UI, JSDoc, noms métier)
-- **Prettier** (`.prettierrc` racine) : single quotes, semis, trailing commas all, printWidth 100
+- **Prettier** (`.prettierrc` racine) : single quotes, **sans semis** (`semi: false`), trailing commas all, printWidth 100
 - **ESLint flat config** par sous-projet (`backend/eslint.config.js`, `frontend/eslint.config.js`)
 - **Accessibilité** : WCAG 2.1 **AAA** visée (audit externe planifié avant ouverture publique)
 - **Souveraineté** : zéro CDN externe, hébergement FR/CH
