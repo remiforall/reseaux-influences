@@ -1,0 +1,28 @@
+# Réseaux d'Influence
+
+> Plateforme collaborative française de cartographie des réseaux d'influence
+> interpersonnels et transnationaux. Chaque lien entre personnes publiques,
+> organisations et sites web est documenté par une source vérifiable et validé
+> par consensus communautaire (≥ 5 validations, ratio ≥ 70 %).
+
+Méthodologie : exception journalisme et recherche d'intérêt public
+(art. 85 RGPD + art. 80 loi Informatique et Libertés). Données issues de sources
+publiques officielles (Wikidata, RDAP, IGN, presse vérifiable). Identifiants
+canoniques alignés sur Wikidata quand disponibles.
+
+## Fiches d'entités
+
+- [Personnes publiques](https://reseauxinfluences.fr/personnes)
+- [Organisations](https://reseauxinfluences.fr/organisations)
+- [Sites web](https://reseauxinfluences.fr/sites)
+
+## Liens d'influence documentés
+
+- [Liens validés par la communauté](https://reseauxinfluences.fr/liens)
+- [Graphe interactif](https://reseauxinfluences.fr/graphe)
+
+## Méthodologie et gouvernance
+
+- [Mentions légales et base RGPD](https://reseauxinfluences.fr/mentions-legales)
+- [Méthodologie de validation par consensus](https://reseauxinfluences.fr/methodologie)
+- [Charte éditoriale](https://reseauxinfluences.fr/charte)
