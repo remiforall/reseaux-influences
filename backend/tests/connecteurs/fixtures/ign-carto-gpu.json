@@ -1,0 +1,39 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [2.348, 48.8528],
+            [2.3495, 48.8528],
+            [2.3495, 48.8542],
+            [2.348, 48.8542],
+            [2.348, 48.8528]
+          ]
+        ]
+      },
+      "properties": {
+        "partition": "DU_75056",
+        "libelle": "Zone urbaine générale",
+        "libelong": "Zone urbaine générale — secteur UG",
+        "typezone": "U",
+        "nomfic": "RA75056_ZONE_URBA.json",
+        "urlfic": "https://www.geoportail-urbanisme.gouv.fr/document/75056/RA75056_ZONE_URBA.json",
+        "idurba": "75056_PLU_20231201",
+        "datappro": "2023-12-01",
+        "datvalid": "2023-12-01",
+        "typedoc": "PLU",
+        "destdomi": "Habitat",
+        "srcgeom": "BDParcellaire",
+        "insee": "75056",
+        "collection": "zone_urba"
+      }
+    }
+  ],
+  "totalFeatures": 1,
+  "numberMatched": 1,
+  "numberReturned": 1
+}

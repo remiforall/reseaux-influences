@@ -1,0 +1,34 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [2.3486, 48.8533],
+            [2.3491, 48.8533],
+            [2.3491, 48.8537],
+            [2.3486, 48.8537],
+            [2.3486, 48.8533]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "75114000A0012",
+        "commune": "75114",
+        "prefixe": "000",
+        "section": "A",
+        "numero": "0012",
+        "contenance": 312,
+        "idu": "75114000A0012",
+        "created": "2010-01-01",
+        "updated": "2023-01-01"
+      }
+    }
+  ],
+  "totalFeatures": 1,
+  "numberMatched": 1,
+  "numberReturned": 1
+}
