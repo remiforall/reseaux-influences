@@ -54,6 +54,8 @@ const URL_API_DATAGOUV =
 const CACHE_RNA_DIR = join(__dirname, '../../../../backend/.cache/connecteurs/rna');
 const CHEMIN_ZIP = join(CACHE_RNA_DIR, 'rna_import.zip');
 const CHEMIN_CSV_DIR = join(CACHE_RNA_DIR, 'csv');
+/** Bundle CA Certigna (autorité FR) pour vérifier le TLS de media.interieur.gouv.fr */
+const CHEMIN_CA_CERTIGNA = join(__dirname, '../../../certs/certigna-bundle.pem');
 
 /** TTL cache disque 30 jours (en ms) */
 const TTL_30_JOURS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -337,20 +339,16 @@ export default class AssociationsConnecteur extends BaseConnecteur {
 
     try {
       if (url.hostname === 'media.interieur.gouv.fr') {
-        // Contournement TLS pour media.interieur.gouv.fr — la chaîne de
-        // certificats utilise l'autorité française Certigna, absente du
-        // store CA Node ET macOS par défaut, et le serveur ne sert pas la
-        // chaîne intermédiaire complète. On délègue à curl système avec -k
-        // (insecure). Risque MITM accepté car :
-        //   - URL hardcodée (pas d'input utilisateur, pas de SSRF)
-        //   - Hostname strictement whitelisté ci-dessus
-        //   - Contenu validé après téléchargement (unzip + parsing CSV strict)
-        //   - Donnée publique non sensible (RNA open data)
-        //   - Limité à ce seul download, pas global
+        // media.interieur.gouv.fr utilise l'autorité française Certigna, absente
+        // des stores CA Node ET macOS, et ne sert pas la chaîne intermédiaire
+        // complète. On fournit explicitement le bundle CA Certigna à curl via
+        // --cacert : la vérification TLS reste ACTIVE (plus de -k), donc pas de
+        // risque MITM. SSRF déjà bloqué (hostname whitelisté) et contenu revalidé
+        // après download (unzip + parsing CSV strict).
         clearTimeout(minuterie);
         await execFileAsync(
           '/usr/bin/curl',
-          ['-sLk', '--max-time', '600', '-A', userAgent, '-o', CHEMIN_ZIP, urlZip],
+          ['-sL', '--cacert', CHEMIN_CA_CERTIGNA, '--max-time', '600', '-A', userAgent, '-o', CHEMIN_ZIP, urlZip],
           { maxBuffer: 1_000_000_000 },
         );
         return;
