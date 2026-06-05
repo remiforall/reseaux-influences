@@ -5,3 +5,44 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* ============================================================
+   Utilitaires accessibilité — requis WCAG AAA
+   ============================================================ */
+
+/** Masque visuellement tout en restant lisible par les lecteurs d'écran */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/**
+ * Anneau de focus visible AAA : contraste ≥ 4.5:1 par rapport
+ * à la couleur de fond adjacente.
+ * amber-700 #b45309 sur blanc = 4.69:1 (conforme WCAG AA 1.4.11).
+ * box-shadow blanc crée un halo qui renforce la lisibilité sur fonds colorés.
+ */
+.focus-visible-ring:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px #ffffff;
+}
+
+/** Désactive toute animation si l'utilisateur a demandé moins de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
