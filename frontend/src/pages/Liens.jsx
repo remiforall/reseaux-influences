@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getLiens } from '../api/client'
 import ValidationForm from '../components/ValidationForm'
+import { urlExterneSure } from '../utils/securite'
 
 function Liens() {
   const [liens, setLiens] = useState([])
@@ -69,9 +70,9 @@ function Liens() {
                 <span>Validations : {lien.nb_validations_total}</span>
               </div>
 
-              {lien.source_detail && (
+              {lien.source_detail && urlExterneSure(lien.source_detail.url) && (
                 <a
-                  href={lien.source_detail.url}
+                  href={urlExterneSure(lien.source_detail.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-secondary text-sm hover:underline"

@@ -28,6 +28,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { echapperHtml } from '../../utils/securite'
 
 // Fix icônes Leaflet avec Vite (les assets ne sont pas résolus automatiquement)
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
@@ -189,8 +190,9 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
       })
         .addTo(carte)
         .bindPopup(
-          `<strong>${point.libelle ?? point.entiteId}</strong><br>
-          Poids : <strong>${point.poids.toFixed(2)}</strong> (${couleurInfo.libelle})`,
+          // libelle/entiteId proviennent de sources externes → échappement HTML obligatoire (XSS)
+          `<strong>${echapperHtml(point.libelle ?? point.entiteId)}</strong><br>
+          Poids : <strong>${point.poids.toFixed(2)}</strong> (${echapperHtml(couleurInfo.libelle)})`,
         )
 
       if (onPointClick) {
