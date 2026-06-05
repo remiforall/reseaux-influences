@@ -240,6 +240,10 @@ export default async function grapheRoutes(fastify) {
     // Validation de la granularité
     const granulariteValide = granularite === 'month' ? 'month' : 'year'
 
+    // Un anonyme ne voit que les données modérées VALIDE ; un user authentifié voit
+    // aussi EN_ATTENTE (SEC-I-03 / M-02 — symétrie avec /ego)
+    const statutAutorise = request.utilisateur ? { in: ['VALIDE', 'EN_ATTENTE'] } : 'VALIDE'
+
     // Construction du filtre de dates
     const filtreDate = {}
     if (dateDbutStr) {
@@ -253,6 +257,7 @@ export default async function grapheRoutes(fastify) {
 
     // Récupérer tous les liens de l'entité avec leur date
     const whereClause = {
+      statut: statutAutorise,
       OR: [
         { personneAId: entiteId },
         { personneBId: entiteId },
@@ -317,6 +322,7 @@ export default async function grapheRoutes(fastify) {
     try {
       const participations = await prisma.participationEvenement.findMany({
         where: {
+          evenement: { statut: statutAutorise },
           OR: [
             { personneId: entiteId },
             { organisationId: entiteId },
@@ -381,7 +387,11 @@ export default async function grapheRoutes(fastify) {
       if (!isNaN(d.getTime())) filtreDate.lte = d
     }
 
+    // Un anonyme ne voit que les données modérées VALIDE (SEC-I-03 / M-02 — symétrie /ego)
+    const statutAutorise = request.utilisateur ? { in: ['VALIDE', 'EN_ATTENTE'] } : 'VALIDE'
+
     const whereClause = {
+      statut: statutAutorise,
       OR: [
         { personneAId: entiteId },
         { personneBId: entiteId },
