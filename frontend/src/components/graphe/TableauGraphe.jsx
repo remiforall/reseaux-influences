@@ -30,6 +30,7 @@
  * }} props
  */
 import { useState, useMemo } from 'react'
+import { urlExterneSure } from '../../utils/securite'
 
 const COLONNES = [
   { cle: 'source', libelle: 'Entité source' },
@@ -186,9 +187,9 @@ function TableauGraphe({ noeuds = [], aretes = [], onSelectionEntite }) {
                 <StatutBadge statut={row.statutCode} libelle={row.statut} />
               </td>
               <td className="px-4 py-3 text-gray-600">
-                {row.sourceLienUrl ? (
+                {urlExterneSure(row.sourceLienUrl) ? (
                   <a
-                    href={row.sourceLienUrl}
+                    href={urlExterneSure(row.sourceLienUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-secondary underline focus-visible-ring rounded"

@@ -19,7 +19,11 @@
  *   className?: string,
  * }} props
  */
+import { urlExterneSure } from '../../utils/securite'
+
 function BadgeProvenance({ source, url, date, className = '' }) {
+  // url provient d'une source externe → ne rendre un lien que si le schéma est http(s)
+  const urlSure = urlExterneSure(url)
   /** Calcule palette + icône selon la source déclarée */
   const getStyle = (src) => {
     const s = (src ?? '').toLowerCase()
@@ -74,10 +78,10 @@ function BadgeProvenance({ source, url, date, className = '' }) {
     </span>
   )
 
-  if (url) {
+  if (urlSure) {
     return (
       <a
-        href={url}
+        href={urlSure}
         target="_blank"
         rel="noopener noreferrer"
         className="focus-visible-ring rounded"
