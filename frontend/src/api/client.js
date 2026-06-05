@@ -58,6 +58,24 @@ export const getClassement = (params) => api.get('/utilisateurs/classement/top',
 export const getGraphe = (params) => api.get('/graphe', { params })
 export const getGraphePersonne = (id, params) => api.get(`/graphe/personne/${id}`, { params })
 export const getGrapheEntite = (id, params) => api.get(`/graphe/entite/${id}`, { params })
+export const getGrapheEgo = (entiteId, params) => api.get(`/graphe/ego/${entiteId}`, { params })
+
+// Enrichissement OSINT
+export const getEnrichissementConnecteurs = () => api.get('/enrichissement/connecteurs')
+export const postEnrichissementRechercher = (body) => api.post('/enrichissement/rechercher', body)
+export const postEnrichissementImporter = (body) => api.post('/enrichissement/importer', body)
+export const postEnrichissementRechercheGlobale = (body) => api.post('/enrichissement/recherche-globale', body)
+export const getIgnGeoplateformeWmsConfig = () =>
+  api.get('/enrichissement/connecteurs/ign-geoplateforme/wms-config')
+
+// Graphe — timeline et heatmap (Passe 4)
+export const getGrapheTimeline = (entiteId, params) => api.get(`/graphe/timeline/${entiteId}`, { params })
+export const getGrapheHeatmap = (entiteId, params) => api.get(`/graphe/heatmap/${entiteId}`, { params })
+
+// Fiche enrichie IGN (Passe 5 — L4/L6)
+export const getEntiteFoncier = (type, id) => api.get(`/entites/${type}/${id}/foncier`)
+export const getEntiteCadastre = (type, id) => api.get(`/entites/${type}/${id}/cadastre`)
+export const getEntiteUrbanisme = (type, id) => api.get(`/entites/${type}/${id}/urbanisme`)
 
 // Export
 export const getExportJSON = (params) => api.get('/export/json', { params })
