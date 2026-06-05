@@ -8,7 +8,9 @@ export default {
     extend: {
       colors: {
         primary: '#1a365d',
-        secondary: '#2b6cb0',
+        /* secondary aligné pour un contraste ≥ 7:1 sur blanc (WCAG AAA 1.4.6)
+         * #1e4d8c sur blanc ≈ 7.1:1 vs #2b6cb0 ≈ 5.27:1 */
+        secondary: '#1e4d8c',
         accent: '#ed8936',
       },
     },
