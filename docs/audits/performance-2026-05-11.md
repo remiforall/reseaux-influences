@@ -39,12 +39,12 @@ Au lieu de `import * as d3 from 'd3'`, importer chaque sous-paquet :
 
 ```js
 // frontend/src/components/graphe/GrapheD3.jsx
-import { select } from 'd3-selection';
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force';
-import { zoom, zoomIdentity } from 'd3-zoom';
-import { drag } from 'd3-drag';
+import { select } from 'd3-selection'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force'
+import { zoom, zoomIdentity } from 'd3-zoom'
+import { drag } from 'd3-drag'
 // transition pour zoom.transition() :
-import 'd3-transition';
+import 'd3-transition'
 ```
 
 Le package `d3` v7 est un méta-package qui réexporte 30+ sous-modules (`d3-array`, `d3-scale`, `d3-shape`, `d3-color`, `d3-geo`, etc.). Ce composant n'utilise que **selection, force, zoom, drag, transition**. Les autres représentent ~200 kB minifié inutiles.
@@ -55,15 +55,21 @@ Le package `d3` v7 est un méta-package qui réexporte 30+ sous-modules (`d3-arr
 
 ```js
 // frontend/src/App.jsx
-import { lazy, Suspense } from 'react';
-const Accueil = lazy(() => import('./pages/Accueil'));
-const Liens = lazy(() => import('./pages/Liens'));
-const Graphe = lazy(() => import('./pages/Graphe'));
-const Profil = lazy(() => import('./pages/Profil'));
-const Enrichissement = lazy(() => import('./pages/Enrichissement'));
+import { lazy, Suspense } from 'react'
+const Accueil = lazy(() => import('./pages/Accueil'))
+const Liens = lazy(() => import('./pages/Liens'))
+const Graphe = lazy(() => import('./pages/Graphe'))
+const Profil = lazy(() => import('./pages/Profil'))
+const Enrichissement = lazy(() => import('./pages/Enrichissement'))
 
 // dans <Routes>, wrapper avec :
-<Suspense fallback={<p role="status" aria-live="polite">Chargement…</p>}>
+;<Suspense
+  fallback={
+    <p role="status" aria-live="polite">
+      Chargement…
+    </p>
+  }
+>
   <Routes>...</Routes>
 </Suspense>
 ```
@@ -86,12 +92,13 @@ export default defineConfig({
       },
     },
   },
-});
+})
 ```
 
 Permet le cache navigateur granulaire : un changement applicatif ne re-télécharge pas react ni d3.
 
 **Budget recommandé** :
+
 - JS initial (sans D3) : < 130 kB minifié / < 45 kB gzip
 - Chunk d3-vendor : < 80 kB minifié / < 30 kB gzip
 - Chunk graphe (lazy) : < 30 kB minifié / < 10 kB gzip
@@ -103,6 +110,7 @@ Permet le cache navigateur granulaire : un changement applicatif ne re-télécha
 ### Cache fichier disque (`connecteurs/cache.js`)
 
 Bonnes pratiques relevées :
+
 - SHA-256 calculé via `node:crypto` natif, **une seule fois** par appel (cache.js:62-64) — OK.
 - Initialisation paresseuse + dégradation gracieuse mémoire si disque inaccessible — OK.
 - Lecture cache **avant** consommation du token rate-limit (base.js:88-91) — bonne séquence.
@@ -114,14 +122,15 @@ Problèmes mineurs :
 `const cacheMemoire = new Map()` croît indéfiniment si le disque est down. Sur un mutualisé Infomaniak avec quota, ce mode est plausible. Risque : OOM sur process longue durée.
 
 Fix :
+
 ```js
-const TAILLE_MAX_MEMOIRE = 500;
+const TAILLE_MAX_MEMOIRE = 500
 function ecrireCacheMemoire(cle, entree) {
   if (cacheMemoire.size >= TAILLE_MAX_MEMOIRE) {
-    const premiereClef = cacheMemoire.keys().next().value;
-    cacheMemoire.delete(premiereClef); // FIFO simple
+    const premiereClef = cacheMemoire.keys().next().value
+    cacheMemoire.delete(premiereClef) // FIFO simple
   }
-  cacheMemoire.set(cle, entree);
+  cacheMemoire.set(cle, entree)
 }
 ```
 
@@ -150,28 +159,28 @@ Recommandation : ajouter un timeout d'enveloppe au service, configurable (défau
 
 ```js
 // services/enrichissement.js
-const TIMEOUT_GLOBAL_MS = Number(process.env.ENRICHISSEMENT_TIMEOUT_GLOBAL_MS) || 15_000;
+const TIMEOUT_GLOBAL_MS = Number(process.env.ENRICHISSEMENT_TIMEOUT_GLOBAL_MS) || 15_000
 
 const promesseAvecTimeout = (promesse, nom) =>
   Promise.race([
     promesse,
     new Promise((_, reject) =>
       setTimeout(() => {
-        const err = new Error(`[${nom}] timeout enveloppe ${TIMEOUT_GLOBAL_MS}ms`);
-        err.name = 'AbortError';
-        err.connecteurNom = nom;
-        reject(err);
+        const err = new Error(`[${nom}] timeout enveloppe ${TIMEOUT_GLOBAL_MS}ms`)
+        err.name = 'AbortError'
+        err.connecteurNom = nom
+        reject(err)
       }, TIMEOUT_GLOBAL_MS),
     ),
-  ]);
+  ])
 
-const promesses = nomsCibles.map(nom => {
-  const connecteur = registry.get(nom);
+const promesses = nomsCibles.map((nom) => {
+  const connecteur = registry.get(nom)
   return promesseAvecTimeout(
-    connecteur.rechercher(query, { types, ...options }).then(r => ({ nom, resultat: r })),
+    connecteur.rechercher(query, { types, ...options }).then((r) => ({ nom, resultat: r })),
     nom,
-  );
-});
+  )
+})
 ```
 
 Le statut renvoyé sera `timeout` au lieu de bloquer 30 s sur un connecteur lent. UX : un utilisateur préfère « 6 sources sur 7 ont répondu en 2 s » à « tout en 30 s ».
@@ -280,6 +289,7 @@ await tx.personne.findFirst({ where: { nom: { search: identifiantExterne } } })
 **HAUTE — Une requête Prisma par itération BFS**.
 
 Pour profondeur 2 sur un nœud avec 10 voisins (cas plausible), le code émet :
+
 - 1 requête (profondeur 0, nœud racine) → trouve 10 voisins
 - 10 requêtes (profondeur 1, chaque voisin) → trouve potentiellement 50 voisins de niveau 2
 - = **11 round-trips DB sur la route**
@@ -291,13 +301,13 @@ Sur MySQL avec 10 ms de latence par requête : ~110 ms uniquement en network DB.
 ```js
 // Pseudo-code de refactor
 async function bfsEgoBatch(entiteIdInitial, profondeurMax, where) {
-  let frontiere = new Set([entiteIdInitial]);
-  const visites = new Set([entiteIdInitial]);
-  const tousLesLiens = [];
+  let frontiere = new Set([entiteIdInitial])
+  const visites = new Set([entiteIdInitial])
+  const tousLesLiens = []
 
   for (let niveau = 0; niveau < profondeurMax; niveau++) {
-    if (frontiere.size === 0) break;
-    const ids = [...frontiere];
+    if (frontiere.size === 0) break
+    const ids = [...frontiere]
 
     // UNE requête pour tout le niveau
     const liens = await prisma.lien.findMany({
@@ -313,25 +323,25 @@ async function bfsEgoBatch(entiteIdInitial, profondeurMax, where) {
         ],
       },
       include: lienIncludes,
-    });
+    })
 
-    tousLesLiens.push(...liens);
+    tousLesLiens.push(...liens)
 
     // Construire la prochaine frontière (voisins non visités)
-    const prochaineFrontiere = new Set();
+    const prochaineFrontiere = new Set()
     for (const lien of liens) {
       for (const cote of ['A', 'B']) {
-        const ent = getNomEntite(lien, cote);
+        const ent = getNomEntite(lien, cote)
         if (ent && !visites.has(ent.id)) {
-          visites.add(ent.id);
-          prochaineFrontiere.add(ent.id);
+          visites.add(ent.id)
+          prochaineFrontiere.add(ent.id)
         }
       }
     }
-    frontiere = prochaineFrontiere;
+    frontiere = prochaineFrontiere
   }
 
-  return tousLesLiens;
+  return tousLesLiens
 }
 ```
 
@@ -346,6 +356,7 @@ Les `include: lienIncludes` (graphe.js:49-70) sélectionnent ~25 champs au total
 **MOYENNE — Transaction longue avec requêtes séquentielles**.
 
 La transaction (l.210) contient :
+
 - 1 `create` entité principale
 - N `findFirst` + 0-N `create` pour les sources (l.276-302) — **séquentiel** dans `for...of`
 - M `findFirst` + 0-M `create` pour les cibles de liens (l.305-351) — **séquentiel**
@@ -387,6 +398,7 @@ Attention : Prisma `$transaction(async tx => ...)` sur MySQL n'est **pas réelle
 ### Page Enrichissement (`frontend/src/pages/Enrichissement.jsx`)
 
 #### Bonnes pratiques
+
 - `getEnrichissementConnecteurs` chargé en `useEffect` au mount (l.53-67) avec dégradation propre — OK, **n'empêche pas le first paint**.
 - Le formulaire reste fonctionnel même si l'appel échoue (l.59-61).
 - `RegionAnnonces` avec `aria-live` — **accessibilité préservée**.
@@ -401,10 +413,10 @@ Recommandation : précharger côté backend dans `server.js` au démarrage (idem
 
 ```js
 // backend/src/server.js (dans le bootstrap)
-import { chargerConnecteurs } from './connecteurs/registry.js';
+import { chargerConnecteurs } from './connecteurs/registry.js'
 fastify.ready(async () => {
-  await chargerConnecteurs(); // warm-up
-});
+  await chargerConnecteurs() // warm-up
+})
 ```
 
 **Gain** : 50-200 ms sur la première visite de `/enrichissement` après redémarrage.
@@ -418,6 +430,7 @@ fastify.ready(async () => {
 **MOYENNE — Re-filter coûteux à chaque changement de filtres** :
 
 Lignes 118-129 :
+
 ```js
 const noeudsFiltrés = noeuds.filter(...)
 const idNoeudsFiltrés = new Set(noeudsFiltrés.map(...))
@@ -446,6 +459,7 @@ const { noeudsFiltrés, aretesFiltrées } = useMemo(() => {
 `GrapheD3.jsx:48-289` — l'`useEffect` dépend de `[noeuds, aretes, centreId, idDesc, onSelectionNoeud]`. Le `svg.selectAll('*').remove()` (l.56) **wipe tout le SVG**, **arrête et recrée la simulation**, et **relance la convergence force-directed**.
 
 Conséquences :
+
 - À chaque changement de filtres (utilisateur décoche un type d'entité), la simulation redémarre de zéro. **Pas de continuité visuelle**.
 - L'utilisateur perd ses positions de drag manuels.
 - Sur 500 nœuds, recréer le DOM + relancer la simulation coûte ~200-500 ms. Le navigateur jank.
@@ -454,6 +468,7 @@ Conséquences :
 ### Combien de nœuds avant que ça devienne problématique ?
 
 Test empirique D3 v7 + Chrome desktop :
+
 - **< 100 nœuds, 300 arêtes** : recréation < 100 ms, imperceptible.
 - **300-500 nœuds, 1 000 arêtes** : recréation 200-500 ms, **jank perçu** mais utilisable.
 - **> 1 000 nœuds, 3 000 arêtes** : recréation > 1 s, simulation patine à 30 fps, drag laggy. **Inutilisable**.
@@ -468,12 +483,14 @@ Sur une ego-network profondeur 2, un nœud type « Emmanuel Macron » peut gén�
 Côté `Graphe.jsx:138-141`, le callback dépend de `noeuds` qui change à chaque chargement. Mieux : utiliser `noeudsRef`.
 
 ```js
-const noeudsRef = useRef(noeuds);
-useEffect(() => { noeudsRef.current = noeuds; }, [noeuds]);
+const noeudsRef = useRef(noeuds)
+useEffect(() => {
+  noeudsRef.current = noeuds
+}, [noeuds])
 const handleSelectionNoeud = useCallback((id) => {
-  const noeud = noeudsRef.current.find((n) => n.id === id);
-  setNoeudSelectionne(noeud ?? null);
-}, []); // ← jamais recréé
+  const noeud = noeudsRef.current.find((n) => n.id === id)
+  setNoeudSelectionne(noeud ?? null)
+}, []) // ← jamais recréé
 ```
 
 Gain : un changement de filtre ne déclenche plus la recréation SVG via `onSelectionNoeud`.
@@ -485,14 +502,14 @@ L'événement `drag` se déclenche ~60 fois/sec et déclenche `simulation.alphaT
 Vrai gain : **simplifier le tick** quand `event.active` (en cours de drag) :
 
 ```js
-let dernierTick = 0;
+let dernierTick = 0
 simulation.on('tick', () => {
-  const maintenant = performance.now();
+  const maintenant = performance.now()
   // Throttle à 30 fps pendant le drag (60 fps au repos)
-  if (drag.active && maintenant - dernierTick < 33) return;
-  dernierTick = maintenant;
+  if (drag.active && maintenant - dernierTick < 33) return
+  dernierTick = maintenant
   // ... mise à jour DOM
-});
+})
 ```
 
 **MOYENNE — Diff incrémental au lieu de wipe** :
@@ -515,6 +532,7 @@ Gain : changement de filtre ne réinitialise pas la simulation, l'utilisateur ga
 **MOYENNE — Web worker pour la simulation** :
 
 D3 force-simulation fonctionne sans DOM si on l'isole. Le pattern :
+
 - Main thread : DOM + interactions + rendu SVG
 - Worker : simulation + calcul positions
 
@@ -564,24 +582,24 @@ Coût d'effort : 4-6 h. Gain : ne bloque jamais le main thread pendant la conver
 
 Budget de performance à instrumenter :
 
-| Métrique | Cible | Mesure |
-| --- | --- | --- |
-| Bundle JS initial (gzip) | < 80 kB | `npm run build` + `gzip -c | wc -c` |
-| Bundle Graphe lazy (gzip) | < 30 kB | idem |
-| LCP `/` | < 1.5 s | Lighthouse mobile 4G |
-| TTFB `/api/enrichissement/connecteurs` | < 100 ms | `time curl -H "Authorization: ..."` |
-| `POST /api/enrichissement/rechercher` | < 5 s (P95) | Logs Fastify |
-| `GET /api/graphe/ego/:id?profondeur=2` | < 500 ms (P95, < 1000 liens) | idem |
-| Re-render Graphe sur filtre | < 50 ms | Chrome DevTools Performance |
+| Métrique                               | Cible                        | Mesure                              |
+| -------------------------------------- | ---------------------------- | ----------------------------------- | ------ |
+| Bundle JS initial (gzip)               | < 80 kB                      | `npm run build` + `gzip -c          | wc -c` |
+| Bundle Graphe lazy (gzip)              | < 30 kB                      | idem                                |
+| LCP `/`                                | < 1.5 s                      | Lighthouse mobile 4G                |
+| TTFB `/api/enrichissement/connecteurs` | < 100 ms                     | `time curl -H "Authorization: ..."` |
+| `POST /api/enrichissement/rechercher`  | < 5 s (P95)                  | Logs Fastify                        |
+| `GET /api/graphe/ego/:id?profondeur=2` | < 500 ms (P95, < 1000 liens) | idem                                |
+| Re-render Graphe sur filtre            | < 50 ms                      | Chrome DevTools Performance         |
 
 À ajouter dans `backend/src/server.js` :
 
 ```js
 fastify.addHook('onResponse', async (request, reply) => {
   if (reply.elapsedTime > 1000) {
-    fastify.log.warn({ route: request.url, ms: reply.elapsedTime }, 'requête lente');
+    fastify.log.warn({ route: request.url, ms: reply.elapsedTime }, 'requête lente')
   }
-});
+})
 ```
 
 ---

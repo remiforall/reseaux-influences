@@ -42,9 +42,11 @@ export async function traiterValidation(utilisateurId, lienId, verdict) {
 
   // Mettre à jour les compteurs du lien
   const champCompteur =
-    verdict === 'VRAI' ? 'nbValidationsVrai'
-    : verdict === 'FAUX' ? 'nbValidationsFaux'
-    : 'nbValidationsIndecis'
+    verdict === 'VRAI'
+      ? 'nbValidationsVrai'
+      : verdict === 'FAUX'
+        ? 'nbValidationsFaux'
+        : 'nbValidationsIndecis'
 
   const lien = await prisma.lien.update({
     where: { id: lienId },
@@ -53,9 +55,7 @@ export async function traiterValidation(utilisateurId, lienId, verdict) {
 
   // Recalculer le score de confiance
   const totalVraiFaux = lien.nbValidationsVrai + lien.nbValidationsFaux
-  const scoreConfiance = totalVraiFaux > 0
-    ? (lien.nbValidationsVrai / totalVraiFaux) * 100
-    : 0
+  const scoreConfiance = totalVraiFaux > 0 ? (lien.nbValidationsVrai / totalVraiFaux) * 100 : 0
 
   await prisma.lien.update({
     where: { id: lienId },
@@ -120,9 +120,10 @@ async function verifierConsensus(lienId) {
     if (lien.creeParId) {
       const configPts = await prisma.configGamification.findUnique({
         where: {
-          cle: nouveauStatut === 'VALIDE'
-            ? 'points_par_soumission_acceptee'
-            : 'points_par_soumission_rejetee',
+          cle:
+            nouveauStatut === 'VALIDE'
+              ? 'points_par_soumission_acceptee'
+              : 'points_par_soumission_rejetee',
         },
       })
       const pts = parseInt(configPts?.valeur || '0', 10)
@@ -265,10 +266,12 @@ async function verifierConditionBadge(utilisateurId, conditions) {
     const rang = await prisma.utilisateur.count({
       where: {
         dateInscription: {
-          lte: (await prisma.utilisateur.findUnique({
-            where: { id: utilisateurId },
-            select: { dateInscription: true },
-          }))?.dateInscription,
+          lte: (
+            await prisma.utilisateur.findUnique({
+              where: { id: utilisateurId },
+              select: { dateInscription: true },
+            })
+          )?.dateInscription,
         },
       },
     })

@@ -15,9 +15,7 @@ function LegendeGraphe({ className = '' }) {
       aria-label="Légende du graphe"
       className={`bg-white border border-gray-200 rounded-lg p-4 text-sm space-y-4 ${className}`}
     >
-      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-        Légende
-      </h2>
+      <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Légende</h2>
 
       {/* Types de nœuds */}
       <section aria-labelledby="legende-noeuds">
@@ -34,7 +32,11 @@ function LegendeGraphe({ className = '' }) {
                 className="w-4 h-4 rounded-sm flex-shrink-0"
               />
               {/* Icône textuelle */}
-              <span aria-hidden="true" style={{ color: couleur }} className="font-bold text-base leading-none">
+              <span
+                aria-hidden="true"
+                style={{ color: couleur }}
+                className="font-bold text-base leading-none"
+              >
                 {icone}
               </span>
               {/* Texte */}

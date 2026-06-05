@@ -27,7 +27,8 @@ function BadgeProvenance({ source, url, date, className = '' }) {
   /** Calcule palette + icône selon la source déclarée */
   const getStyle = (src) => {
     const s = (src ?? '').toLowerCase()
-    if (s.includes('wikidata')) return { bg: 'bg-blue-100', text: 'text-blue-800', icone: 'W', label: 'Wikidata' }
+    if (s.includes('wikidata'))
+      return { bg: 'bg-blue-100', text: 'text-blue-800', icone: 'W', label: 'Wikidata' }
     if (s.includes('pappers') || s.includes('rne') || s.includes('sirene'))
       return { bg: 'bg-amber-100', text: 'text-amber-800', icone: 'P', label: 'Pappers/RNE' }
     if (s.includes('rdap') || s.includes('dns'))
@@ -45,7 +46,11 @@ function BadgeProvenance({ source, url, date, className = '' }) {
    */
   const dateIso = date ?? null
   const dateAffichee = dateIso
-    ? new Date(dateIso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    ? new Date(dateIso).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
     : null
 
   const ariaLabel = [

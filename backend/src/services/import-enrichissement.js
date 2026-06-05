@@ -16,8 +16,8 @@
  *   5. Enregistrer l'audit RGPD DANS la transaction (C-02 : atomicité garantie).
  */
 
-import { prisma } from '../utils/prisma.js';
-import { enregistrerAudit } from '../connecteurs/audit.js';
+import { prisma } from '../utils/prisma.js'
+import { enregistrerAudit } from '../connecteurs/audit.js'
 
 /**
  * Whitelist des champs acceptés par type d'entité.
@@ -25,14 +25,48 @@ import { enregistrerAudit } from '../connecteurs/audit.js';
  */
 const CHAMPS_AUTORISES = {
   Personne: [
-    'nom', 'prenom', 'pays', 'nationalite', 'dateNaissance', 'rolePrincipal', 'bio',
-    'photoUrl', 'wikipediaUrl', 'wikidataId',
+    'nom',
+    'prenom',
+    'pays',
+    'nationalite',
+    'dateNaissance',
+    'rolePrincipal',
+    'bio',
+    'photoUrl',
+    'wikipediaUrl',
+    'wikidataId',
     // Géolocalisation lieu de naissance (L1 Passe 5 — données issues de Wikidata P19/P625)
-    'lieuNaissance', 'lieuNaissanceCodeInsee', 'lieuNaissanceLat', 'lieuNaissanceLon',
+    'lieuNaissance',
+    'lieuNaissanceCodeInsee',
+    'lieuNaissanceLat',
+    'lieuNaissanceLon',
   ],
-  Organisation: ['nom', 'sigle', 'typeOrganisation', 'pays', 'siteWeb', 'description', 'logoUrl', 'dateCreation', 'dateFin', 'wikipediaUrl', 'wikidataId', 'adresseSiege'],
-  SiteWeb: ['domaine', 'url', 'titre', 'description', 'dateEnregistrement', 'dateExpiration', 'registrar', 'hebergeurProbable', 'nameservers'],
-};
+  Organisation: [
+    'nom',
+    'sigle',
+    'typeOrganisation',
+    'pays',
+    'siteWeb',
+    'description',
+    'logoUrl',
+    'dateCreation',
+    'dateFin',
+    'wikipediaUrl',
+    'wikidataId',
+    'adresseSiege',
+  ],
+  SiteWeb: [
+    'domaine',
+    'url',
+    'titre',
+    'description',
+    'dateEnregistrement',
+    'dateExpiration',
+    'registrar',
+    'hebergeurProbable',
+    'nameservers',
+  ],
+}
 
 /**
  * Valide qu'une URL est bien http(s) avant de l'insérer en base (SEC-I-01).
@@ -48,11 +82,11 @@ const CHAMPS_AUTORISES = {
  * @returns {Date|null}
  */
 function parseDate(valeur) {
-  if (!valeur) return null;
-  if (valeur instanceof Date) return Number.isNaN(valeur.getTime()) ? null : valeur;
-  if (typeof valeur !== 'string') return null;
-  const v = valeur.trim();
-  if (!v) return null;
+  if (!valeur) return null
+  if (valeur instanceof Date) return Number.isNaN(valeur.getTime()) ? null : valeur
+  if (typeof valeur !== 'string') return null
+  const v = valeur.trim()
+  if (!v) return null
   // YYYY ou YYYY-MM ou YYYY-MM-DD ou ISO complet
   const date = /^\d{4}$/.test(v)
     ? new Date(`${v}-01-01T00:00:00Z`)
@@ -60,18 +94,18 @@ function parseDate(valeur) {
       ? new Date(`${v}-01T00:00:00Z`)
       : /^\d{4}-\d{2}-\d{2}$/.test(v)
         ? new Date(`${v}T00:00:00Z`)
-        : new Date(v);
-  return Number.isNaN(date.getTime()) ? null : date;
+        : new Date(v)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function validerUrl(url) {
-  if (!url) return null;
+  if (!url) return null
   try {
-    const u = new URL(url);
-    if (u.protocol === 'http:' || u.protocol === 'https:') return url;
-    return null;
+    const u = new URL(url)
+    if (u.protocol === 'http:' || u.protocol === 'https:') return url
+    return null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -87,27 +121,27 @@ function validerUrl(url) {
  * @returns {Promise<{ id: string, type: string }|null>}
  */
 async function resoudreCible(cible, tx) {
-  const { type, wikidataId, domaine } = cible;
+  const { type, wikidataId, domaine } = cible
 
   if (type === 'Personne') {
-    if (!wikidataId) return null;
-    const entite = await tx.personne.findFirst({ where: { wikidataId }, select: { id: true } });
-    return entite ? { id: entite.id, type: 'Personne' } : null;
+    if (!wikidataId) return null
+    const entite = await tx.personne.findFirst({ where: { wikidataId }, select: { id: true } })
+    return entite ? { id: entite.id, type: 'Personne' } : null
   }
 
   if (type === 'Organisation') {
-    if (!wikidataId) return null;
-    const entite = await tx.organisation.findFirst({ where: { wikidataId }, select: { id: true } });
-    return entite ? { id: entite.id, type: 'Organisation' } : null;
+    if (!wikidataId) return null
+    const entite = await tx.organisation.findFirst({ where: { wikidataId }, select: { id: true } })
+    return entite ? { id: entite.id, type: 'Organisation' } : null
   }
 
   if (type === 'SiteWeb') {
-    if (!domaine) return null;
-    const entite = await tx.siteWeb.findFirst({ where: { domaine } }, { select: { id: true } });
-    return entite ? { id: entite.id, type: 'SiteWeb' } : null;
+    if (!domaine) return null
+    const entite = await tx.siteWeb.findFirst({ where: { domaine } }, { select: { id: true } })
+    return entite ? { id: entite.id, type: 'SiteWeb' } : null
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -119,19 +153,25 @@ async function resoudreCible(cible, tx) {
  * @returns {Promise<{ id: string, type: string }>}
  */
 async function creerCibleEnAttente(cible, utilisateurId, tx) {
-  const { type, identifiantExterne, wikidataId } = cible;
+  const { type, identifiantExterne, wikidataId } = cible
 
   if (type === 'Personne') {
     // Extraire prénom/nom approximatifs depuis l'identifiant
-    const parties = identifiantExterne.split(' ');
-    const nom = parties.slice(-1)[0] ?? identifiantExterne;
-    const prenom = parties.length > 1 ? parties.slice(0, -1).join(' ') : null;
+    const parties = identifiantExterne.split(' ')
+    const nom = parties.slice(-1)[0] ?? identifiantExterne
+    const prenom = parties.length > 1 ? parties.slice(0, -1).join(' ') : null
 
     const nouvelle = await tx.personne.create({
-      data: { nom, prenom, statut: 'EN_ATTENTE', creeParId: utilisateurId, wikidataId: wikidataId ?? null },
+      data: {
+        nom,
+        prenom,
+        statut: 'EN_ATTENTE',
+        creeParId: utilisateurId,
+        wikidataId: wikidataId ?? null,
+      },
       select: { id: true },
-    });
-    return { id: nouvelle.id, type: 'Personne' };
+    })
+    return { id: nouvelle.id, type: 'Personne' }
   }
 
   if (type === 'Organisation') {
@@ -144,8 +184,8 @@ async function creerCibleEnAttente(cible, utilisateurId, tx) {
         wikidataId: wikidataId ?? null,
       },
       select: { id: true },
-    });
-    return { id: nouvelle.id, type: 'Organisation' };
+    })
+    return { id: nouvelle.id, type: 'Organisation' }
   }
 
   if (type === 'SiteWeb') {
@@ -156,11 +196,11 @@ async function creerCibleEnAttente(cible, utilisateurId, tx) {
         creeParId: utilisateurId,
       },
       select: { id: true },
-    });
-    return { id: nouvelle.id, type: 'SiteWeb' };
+    })
+    return { id: nouvelle.id, type: 'SiteWeb' }
   }
 
-  throw new Error(`Type d'entité cible inconnu : ${type}`);
+  throw new Error(`Type d'entité cible inconnu : ${type}`)
 }
 
 /**
@@ -171,15 +211,15 @@ async function creerCibleEnAttente(cible, utilisateurId, tx) {
  * @returns {Promise<number>} L'id du TypeLien
  */
 async function obtenirTypeLienId(code, tx) {
-  const type = await tx.typeLien.findUnique({ where: { code }, select: { id: true } });
-  if (type) return type.id;
+  const type = await tx.typeLien.findUnique({ where: { code }, select: { id: true } })
+  if (type) return type.id
 
   // Créer à la volée si inconnu (non seédé)
   const nouveau = await tx.typeLien.create({
     data: { code, libelle: code, categorie: 'autre' },
     select: { id: true },
-  });
-  return nouveau.id;
+  })
+  return nouveau.id
 }
 
 /**
@@ -192,11 +232,11 @@ async function obtenirTypeLienId(code, tx) {
  * @returns {string|null}
  */
 function normaliserSourceChoisie(valeur) {
-  if (!valeur) return null;
-  if (typeof valeur === 'string') return valeur;
+  if (!valeur) return null
+  if (typeof valeur === 'string') return valeur
   // Format objet : { source: string, valeur: unknown, ... }
-  if (typeof valeur === 'object' && typeof valeur.source === 'string') return valeur.source;
-  return null;
+  if (typeof valeur === 'object' && typeof valeur.source === 'string') return valeur.source
+  return null
 }
 
 /**
@@ -225,57 +265,61 @@ export async function importer({
 }) {
   // Garde-fou ADR-006 — obligatoire avant toute transaction
   if (!qualiteInfluencePublique) {
-    throw new Error(
-      "Qualité d'influence publique requise (RGPD art. 85 + LIL art. 80)",
-    );
+    throw new Error("Qualité d'influence publique requise (RGPD art. 85 + LIL art. 80)")
   }
 
-  const { champsRetenus, liensRetenus = [], typeEntite } = choixUtilisateur;
-  const { candidatsParChamp, liensSuggeres = [], identifiantsExternes = {} } = preview;
+  const { champsRetenus, liensRetenus = [], typeEntite } = choixUtilisateur
+  const { candidatsParChamp, liensSuggeres = [], identifiantsExternes = {} } = preview
 
   // Whitelist des champs autorisés pour ce type d'entité (protection mass-assignment)
-  const champsWhitelist = CHAMPS_AUTORISES[typeEntite] ?? [];
+  const champsWhitelist = CHAMPS_AUTORISES[typeEntite] ?? []
 
   // Construire les données de l'entité principale depuis les champs retenus
-  const donneesEntite = { qualiteInfluence: qualiteInfluencePublique, statut: 'EN_ATTENTE', creeParId: utilisateurId };
+  const donneesEntite = {
+    qualiteInfluence: qualiteInfluencePublique,
+    statut: 'EN_ATTENTE',
+    creeParId: utilisateurId,
+  }
 
   for (const [nomChamp, sourceRaw] of Object.entries(champsRetenus)) {
     // Ignorer les champs non autorisés (protection mass-assignment)
-    if (!champsWhitelist.includes(nomChamp)) continue;
+    if (!champsWhitelist.includes(nomChamp)) continue
 
-    const sourceChoisie = normaliserSourceChoisie(sourceRaw);
-    const candidats = candidatsParChamp[nomChamp] ?? [];
+    const sourceChoisie = normaliserSourceChoisie(sourceRaw)
+    const candidats = candidatsParChamp[nomChamp] ?? []
     const candidat = sourceChoisie
-      ? candidats.find((c) => c.source === sourceChoisie) ?? candidats[0]
-      : candidats[0];
-    if (candidat) donneesEntite[nomChamp] = candidat.valeur;
+      ? (candidats.find((c) => c.source === sourceChoisie) ?? candidats[0])
+      : candidats[0]
+    if (candidat) donneesEntite[nomChamp] = candidat.valeur
   }
 
   // Collecter les sources utilisées (provenance des champs retenus)
-  const sourcesUtilisees = new Set();
+  const sourcesUtilisees = new Set()
   for (const [nomChamp, sourceRaw] of Object.entries(champsRetenus)) {
-    if (!champsWhitelist.includes(nomChamp)) continue;
+    if (!champsWhitelist.includes(nomChamp)) continue
 
-    const sourceChoisie = normaliserSourceChoisie(sourceRaw);
-    const candidats = candidatsParChamp[nomChamp] ?? [];
+    const sourceChoisie = normaliserSourceChoisie(sourceRaw)
+    const candidats = candidatsParChamp[nomChamp] ?? []
     const candidat = sourceChoisie
-      ? candidats.find((c) => c.source === sourceChoisie) ?? candidats[0]
-      : candidats[0];
+      ? (candidats.find((c) => c.source === sourceChoisie) ?? candidats[0])
+      : candidats[0]
 
     // SEC-I-01 : valider l'URL avant de l'inclure
-    const urlValidee = validerUrl(candidat?.url);
+    const urlValidee = validerUrl(candidat?.url)
     if (urlValidee) {
-      sourcesUtilisees.add(JSON.stringify({ url: urlValidee, source: candidat.source, date: candidat.date }));
+      sourcesUtilisees.add(
+        JSON.stringify({ url: urlValidee, source: candidat.source, date: candidat.date }),
+      )
     }
   }
 
   // Ajouter les identifiants externes connus
-  if (identifiantsExternes.wikidataId) donneesEntite.wikidataId = identifiantsExternes.wikidataId;
+  if (identifiantsExternes.wikidataId) donneesEntite.wikidataId = identifiantsExternes.wikidataId
 
   /** @type {{ type: string, id: string }[]} */
-  const entitesCreees = [];
+  const entitesCreees = []
   /** @type {string[]} */
-  const liensCrees = [];
+  const liensCrees = []
 
   // Préparer les paramètres d'audit avant la transaction (les données sont disponibles ici)
   const paramsAudit = {
@@ -297,11 +341,11 @@ export async function importer({
     },
     connecteursUtilises: {},
     ipAddress,
-  };
+  }
 
   await prisma.$transaction(async (tx) => {
     // Étape 1 : créer l'entité principale
-    let entitePrincipale;
+    let entitePrincipale
 
     if (typeEntite === 'Personne') {
       entitePrincipale = await tx.personne.create({
@@ -318,18 +362,20 @@ export async function importer({
           // Géolocalisation lieu de naissance (L1 Passe 5 — Wikidata P19/P625)
           lieuNaissance: donneesEntite.lieuNaissance ?? null,
           lieuNaissanceCodeInsee: donneesEntite.lieuNaissanceCodeInsee ?? null,
-          lieuNaissanceLat: donneesEntite.lieuNaissanceLat !== null && donneesEntite.lieuNaissanceLat !== undefined
-            ? Number(donneesEntite.lieuNaissanceLat)
-            : null,
-          lieuNaissanceLon: donneesEntite.lieuNaissanceLon !== null && donneesEntite.lieuNaissanceLon !== undefined
-            ? Number(donneesEntite.lieuNaissanceLon)
-            : null,
+          lieuNaissanceLat:
+            donneesEntite.lieuNaissanceLat !== null && donneesEntite.lieuNaissanceLat !== undefined
+              ? Number(donneesEntite.lieuNaissanceLat)
+              : null,
+          lieuNaissanceLon:
+            donneesEntite.lieuNaissanceLon !== null && donneesEntite.lieuNaissanceLon !== undefined
+              ? Number(donneesEntite.lieuNaissanceLon)
+              : null,
           statut: 'EN_ATTENTE',
           qualiteInfluence: qualiteInfluencePublique,
           creeParId: utilisateurId,
         },
         select: { id: true },
-      });
+      })
     } else if (typeEntite === 'Organisation') {
       entitePrincipale = await tx.organisation.create({
         data: {
@@ -348,7 +394,7 @@ export async function importer({
           creeParId: utilisateurId,
         },
         select: { id: true },
-      });
+      })
     } else if (typeEntite === 'SiteWeb') {
       entitePrincipale = await tx.siteWeb.create({
         data: {
@@ -366,26 +412,26 @@ export async function importer({
           creeParId: utilisateurId,
         },
         select: { id: true },
-      });
+      })
     } else {
-      throw new Error(`Type d'entité inconnu : ${typeEntite}`);
+      throw new Error(`Type d'entité inconnu : ${typeEntite}`)
     }
 
-    entitesCreees.push({ type: typeEntite, id: entitePrincipale.id });
+    entitesCreees.push({ type: typeEntite, id: entitePrincipale.id })
 
     // Étape 2 : upsert des Sources par URL
-    const sourcesIds = new Map();
+    const sourcesIds = new Map()
     for (const sourceJson of sourcesUtilisees) {
-      const { url, source: mediaLibelle, date } = JSON.parse(sourceJson);
-      if (!url) continue;
+      const { url, source: mediaLibelle, date } = JSON.parse(sourceJson)
+      if (!url) continue
 
       const sourceExistante = await tx.source.findFirst({
         where: { url: { equals: url } },
         select: { id: true },
-      });
+      })
 
       if (sourceExistante) {
-        sourcesIds.set(url, sourceExistante.id);
+        sourcesIds.set(url, sourceExistante.id)
       } else {
         const nouvelleSource = await tx.source.create({
           data: {
@@ -398,23 +444,23 @@ export async function importer({
             creeParId: utilisateurId,
           },
           select: { id: true },
-        });
-        sourcesIds.set(url, nouvelleSource.id);
+        })
+        sourcesIds.set(url, nouvelleSource.id)
       }
     }
 
     // Étape 3 : créer les liens retenus
     for (const indexLien of liensRetenus) {
-      const lienSuggere = liensSuggeres[indexLien];
-      if (!lienSuggere) continue;
+      const lienSuggere = liensSuggeres[indexLien]
+      if (!lienSuggere) continue
 
-      const { vers, typeLienCode, url: lienUrl } = lienSuggere;
+      const { vers, typeLienCode, url: lienUrl } = lienSuggere
 
       // Résoudre ou créer la cible (M-07 : matching strict, pas de `contains`)
-      let cibleResolue = await resoudreCible(vers, tx);
+      let cibleResolue = await resoudreCible(vers, tx)
       if (!cibleResolue) {
-        cibleResolue = await creerCibleEnAttente(vers, utilisateurId, tx);
-        entitesCreees.push(cibleResolue);
+        cibleResolue = await creerCibleEnAttente(vers, utilisateurId, tx)
+        entitesCreees.push(cibleResolue)
 
         // Historique pour la cible créée en attente (M-07 : traçabilité de l'absence de match)
         await tx.historique.create({
@@ -429,20 +475,17 @@ export async function importer({
             },
             utilisateurId,
           },
-        });
+        })
       }
 
-      const typeLienId = await obtenirTypeLienId(typeLienCode, tx);
+      const typeLienId = await obtenirTypeLienId(typeLienCode, tx)
 
       // SEC-I-01 : valider l'URL du lien avant usage
-      const urlLienValidee = validerUrl(lienUrl ?? null);
-      const sourceIdLien = urlLienValidee ? (sourcesIds.get(urlLienValidee) ?? null) : null;
+      const urlLienValidee = validerUrl(lienUrl ?? null)
+      const sourceIdLien = urlLienValidee ? (sourcesIds.get(urlLienValidee) ?? null) : null
 
       // Construire les FK selon le type d'entité principale et de la cible
-      const fkLien = construireFkLien(
-        { id: entitePrincipale.id, type: typeEntite },
-        cibleResolue,
-      );
+      const fkLien = construireFkLien({ id: entitePrincipale.id, type: typeEntite }, cibleResolue)
 
       const nouveauLien = await tx.lien.create({
         data: {
@@ -456,8 +499,8 @@ export async function importer({
           dateFin: parseDate(lienSuggere.dateFin),
         },
         select: { id: true },
-      });
-      liensCrees.push(nouveauLien.id);
+      })
+      liensCrees.push(nouveauLien.id)
     }
 
     // Étape 4 : historique pour l'entité principale
@@ -466,27 +509,27 @@ export async function importer({
         entiteType: typeEntite,
         entiteId: entitePrincipale.id,
         action: 'CREATION',
-        donneesApres: { source: 'enrichissement_osint', qualiteInfluence: qualiteInfluencePublique },
+        donneesApres: {
+          source: 'enrichissement_osint',
+          qualiteInfluence: qualiteInfluencePublique,
+        },
         utilisateurId,
       },
-    });
+    })
 
     // Étape 5 : audit RGPD DANS la transaction (C-02 / ADR-008)
     // Si l'audit échoue, toute la transaction rollback — garantissant l'atomicité
     // import ↔ audit (pas d'import sans trace, pas de trace sans import).
-    await enregistrerAudit(
-      { ...paramsAudit, entitesCreees },
-      tx,
-    );
+    await enregistrerAudit({ ...paramsAudit, entitesCreees }, tx)
 
-    return { entitePrincipaleId: entitePrincipale.id };
-  });
+    return { entitePrincipaleId: entitePrincipale.id }
+  })
 
   return {
     entitePrincipaleId: entitesCreees[0]?.id,
     entitesCreees,
     liensCrees,
-  };
+  }
 }
 
 /**
@@ -504,15 +547,15 @@ function construireFkLien(entiteA, entiteB) {
     personneBId: null,
     organisationBId: null,
     siteWebBId: null,
-  };
+  }
 
-  if (entiteA.type === 'Personne') fk.personneAId = entiteA.id;
-  else if (entiteA.type === 'Organisation') fk.organisationAId = entiteA.id;
-  else if (entiteA.type === 'SiteWeb') fk.siteWebAId = entiteA.id;
+  if (entiteA.type === 'Personne') fk.personneAId = entiteA.id
+  else if (entiteA.type === 'Organisation') fk.organisationAId = entiteA.id
+  else if (entiteA.type === 'SiteWeb') fk.siteWebAId = entiteA.id
 
-  if (entiteB.type === 'Personne') fk.personneBId = entiteB.id;
-  else if (entiteB.type === 'Organisation') fk.organisationBId = entiteB.id;
-  else if (entiteB.type === 'SiteWeb') fk.siteWebBId = entiteB.id;
+  if (entiteB.type === 'Personne') fk.personneBId = entiteB.id
+  else if (entiteB.type === 'Organisation') fk.organisationBId = entiteB.id
+  else if (entiteB.type === 'SiteWeb') fk.siteWebBId = entiteB.id
 
-  return fk;
+  return fk
 }

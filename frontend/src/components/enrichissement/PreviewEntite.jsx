@@ -152,7 +152,10 @@ function PreviewEntite({ preview, index, choix, onChoixChange, onImporter }) {
           {/* Champs avec candidats par source */}
           {Object.entries(candidatsParChamp).length > 0 && (
             <section aria-labelledby={`champs-titre-${index}`}>
-              <h4 id={`champs-titre-${index}`} className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+              <h4
+                id={`champs-titre-${index}`}
+                className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3"
+              >
                 Champs proposés — sélectionnez la source à retenir
               </h4>
               <dl className="space-y-3">
@@ -199,7 +202,10 @@ function PreviewEntite({ preview, index, choix, onChoixChange, onImporter }) {
           {/* Liens suggérés */}
           {liensSuggeres.length > 0 && (
             <section aria-labelledby={`liens-titre-${index}`}>
-              <h4 id={`liens-titre-${index}`} className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
+              <h4
+                id={`liens-titre-${index}`}
+                className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3"
+              >
                 Liens suggérés — cochez ceux à importer
               </h4>
               <ul className="space-y-2">
@@ -222,11 +228,7 @@ function PreviewEntite({ preview, index, choix, onChoixChange, onImporter }) {
                             {lien.vers?.identifiantExterne ?? lien.vers?.type ?? 'entité inconnue'}
                           </span>
                         </span>
-                        <BadgeProvenance
-                          source={lien.source}
-                          url={lien.url}
-                          date={lien.date}
-                        />
+                        <BadgeProvenance source={lien.source} url={lien.url} date={lien.date} />
                       </label>
                     </li>
                   )
@@ -264,10 +266,16 @@ function TypeBadge({ type }) {
     Organisation: { icone: '■', classes: 'bg-amber-100 text-amber-800', libelle: 'Organisation' },
     SiteWeb: { icone: '◆', classes: 'bg-purple-100 text-purple-800', libelle: 'Site web' },
   }
-  const cfg = CONFIG[type] ?? { icone: '?', classes: 'bg-gray-100 text-gray-700', libelle: type ?? 'Inconnu' }
+  const cfg = CONFIG[type] ?? {
+    icone: '?',
+    classes: 'bg-gray-100 text-gray-700',
+    libelle: type ?? 'Inconnu',
+  }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}
+    >
       <span aria-hidden="true">{cfg.icone}</span>
       <span>{cfg.libelle}</span>
     </span>

@@ -20,10 +20,7 @@ function Navbar() {
   const estConnecte = Boolean(localStorage.getItem('token'))
 
   return (
-    <nav
-      className="bg-primary text-white shadow-lg"
-      aria-label="Navigation principale"
-    >
+    <nav className="bg-primary text-white shadow-lg" aria-label="Navigation principale">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo / accueil */}

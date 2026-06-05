@@ -20,13 +20,13 @@
  *   - Données indisponibles pour certaines communes non numérisées.
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_GPU = 'https://apicarto.ign.fr/api/gpu/zone-urba';
+const ENDPOINT_GPU = 'https://apicarto.ign.fr/api/gpu/zone-urba'
 
 /** Regex pour détecter "lon,lat" (raccourci coordonnées). */
-const REGEX_COORDONNEES = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/;
+const REGEX_COORDONNEES = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/
 
 export default class IgnCartoGpu extends BaseConnecteur {
   constructor() {
@@ -40,7 +40,7 @@ export default class IgnCartoGpu extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 15_000,
-    });
+    })
   }
 
   /**
@@ -54,30 +54,30 @@ export default class IgnCartoGpu extends BaseConnecteur {
    */
   async rechercher(query) {
     if (!query?.trim()) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const geom = this._parseGeom(query.trim());
+    const geom = this._parseGeom(query.trim())
     if (!geom) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const params = new URLSearchParams({ geom: JSON.stringify(geom) });
-    const url = `${ENDPOINT_GPU}?${params}`;
+    const params = new URLSearchParams({ geom: JSON.stringify(geom) })
+    const url = `${ENDPOINT_GPU}?${params}`
 
-    let donnees;
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'rechercher',
         cacheArgs: { geom },
-      });
+      })
     } catch (err) {
-      if (err.status === 404) return this._enveloppe([]);
-      throw err;
+      if (err.status === 404) return this._enveloppe([])
+      throw err
     }
 
-    const features = donnees.features ?? [];
-    return this._enveloppe(features.map((f) => this._mappageFeature(f)));
+    const features = donnees.features ?? []
+    return this._enveloppe(features.map((f) => this._mappageFeature(f)))
   }
 
   /**
@@ -87,7 +87,7 @@ export default class IgnCartoGpu extends BaseConnecteur {
    * @param {string} _id
    */
   async detailler(_id) {
-    throw new Error('[ign-carto-gpu] detailler() non supporté — utiliser rechercher("lon,lat")');
+    throw new Error('[ign-carto-gpu] detailler() non supporté — utiliser rechercher("lon,lat")')
   }
 
   /**
@@ -101,7 +101,7 @@ export default class IgnCartoGpu extends BaseConnecteur {
       source: 'IGN GPU',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
@@ -114,23 +114,23 @@ export default class IgnCartoGpu extends BaseConnecteur {
    */
   _parseGeom(query) {
     // Raccourci "lon,lat"
-    const match = query.match(REGEX_COORDONNEES);
+    const match = query.match(REGEX_COORDONNEES)
     if (match) {
       return {
         type: 'Point',
         coordinates: [parseFloat(match[1]), parseFloat(match[2])],
-      };
+      }
     }
 
     // Tentative de parse JSON direct
     try {
-      const geojson = JSON.parse(query);
-      if (geojson?.type && geojson?.coordinates) return geojson;
+      const geojson = JSON.parse(query)
+      if (geojson?.type && geojson?.coordinates) return geojson
     } catch {
       // Pas du JSON valide
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -140,8 +140,8 @@ export default class IgnCartoGpu extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageFeature(feature) {
-    const props = feature.properties ?? {};
-    const sourceInfo = { source: 'IGN GPU', url: props.urlfic ?? ENDPOINT_GPU };
+    const props = feature.properties ?? {}
+    const sourceInfo = { source: 'IGN GPU', url: props.urlfic ?? ENDPOINT_GPU }
 
     return creerEntiteNormalisee(
       'ZoneUrbanisme',
@@ -151,7 +151,7 @@ export default class IgnCartoGpu extends BaseConnecteur {
         destinations: marquerProvenance(props.destdomi ?? null, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -161,6 +161,6 @@ export default class IgnCartoGpu extends BaseConnecteur {
       source: 'IGN GPU',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

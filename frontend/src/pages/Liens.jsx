@@ -43,11 +43,15 @@ function Liens() {
                   <span className="mx-2 text-gray-400">&rarr;</span>
                   {lien.personne_b_detail?.nom_complet || 'Personne B'}
                 </h3>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  lien.statut === 'valide' ? 'bg-green-100 text-green-800'
-                  : lien.statut === 'rejete' ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    lien.statut === 'valide'
+                      ? 'bg-green-100 text-green-800'
+                      : lien.statut === 'rejete'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                  }`}
+                >
                   {lien.statut}
                 </span>
               </div>
@@ -61,9 +65,7 @@ function Liens() {
                 </span>
               )}
 
-              {lien.description && (
-                <p className="text-gray-600 text-sm mb-2">{lien.description}</p>
-              )}
+              {lien.description && <p className="text-gray-600 text-sm mb-2">{lien.description}</p>}
 
               <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
                 <span>Confiance : {lien.score_confiance}%</span>

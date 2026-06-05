@@ -22,17 +22,17 @@
  *   - Données absentes pour certaines communes (collectivités d'outre-mer).
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_DVF_ETALAB = 'https://app.dvf.etalab.gouv.fr/api/mutations3';
-const ENDPOINT_DVF_FALLBACK = 'https://api.cquest.org/dvf';
+const ENDPOINT_DVF_ETALAB = 'https://app.dvf.etalab.gouv.fr/api/mutations3'
+const ENDPOINT_DVF_FALLBACK = 'https://api.cquest.org/dvf'
 
 /** Regex de validation d'un code INSEE commune (5 chiffres). */
-const REGEX_INSEE = /^\d{5}$/;
+const REGEX_INSEE = /^\d{5}$/
 
 /** Regex de validation du format "codeInsee/section". */
-const REGEX_INSEE_SECTION = /^(\d{5})\/([A-Z0-9]+)$/i;
+const REGEX_INSEE_SECTION = /^(\d{5})\/([A-Z0-9]+)$/i
 
 export default class IgnDvfConnecteur extends BaseConnecteur {
   constructor() {
@@ -46,7 +46,7 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 15_000,
-    });
+    })
   }
 
   /**
@@ -60,21 +60,21 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
    */
   async rechercher(query) {
     if (!query?.trim()) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const correspondance = query.trim().match(REGEX_INSEE_SECTION);
+    const correspondance = query.trim().match(REGEX_INSEE_SECTION)
 
     if (correspondance) {
-      const [, codeInsee, section] = correspondance;
-      return this._rechercherEtalab(codeInsee, section.toUpperCase());
+      const [, codeInsee, section] = correspondance
+      return this._rechercherEtalab(codeInsee, section.toUpperCase())
     }
 
     if (REGEX_INSEE.test(query.trim())) {
-      return this._rechercherFallback(query.trim());
+      return this._rechercherFallback(query.trim())
     }
 
-    return this._enveloppe([]);
+    return this._enveloppe([])
   }
 
   /**
@@ -84,9 +84,7 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
    * @param {string} _id
    */
   async detailler(_id) {
-    throw new Error(
-      '[ign-dvf] detailler() non supporté — utiliser rechercher("codeInsee/section")',
-    );
+    throw new Error('[ign-dvf] detailler() non supporté — utiliser rechercher("codeInsee/section")')
   }
 
   /**
@@ -100,44 +98,44 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
       source: 'DVF',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
 
   async _rechercherEtalab(codeInsee, section) {
-    const url = `${ENDPOINT_DVF_ETALAB}/${encodeURIComponent(codeInsee)}/${encodeURIComponent(section)}`;
-    let donnees;
+    const url = `${ENDPOINT_DVF_ETALAB}/${encodeURIComponent(codeInsee)}/${encodeURIComponent(section)}`
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'rechercher-etalab',
         cacheArgs: { codeInsee, section },
-      });
+      })
     } catch (err) {
-      if (err.status === 404) return this._enveloppe([]);
-      throw err;
+      if (err.status === 404) return this._enveloppe([])
+      throw err
     }
 
-    const features = donnees.features ?? [];
-    return this._enveloppe(features.map((f) => this._mappageFeature(f)));
+    const features = donnees.features ?? []
+    return this._enveloppe(features.map((f) => this._mappageFeature(f)))
   }
 
   async _rechercherFallback(codeInsee) {
-    const params = new URLSearchParams({ code_commune: codeInsee });
-    const url = `${ENDPOINT_DVF_FALLBACK}?${params}`;
-    let donnees;
+    const params = new URLSearchParams({ code_commune: codeInsee })
+    const url = `${ENDPOINT_DVF_FALLBACK}?${params}`
+    let donnees
     try {
       donnees = await this._appelHttp(url, {
         cacheMethode: 'rechercher-fallback',
         cacheArgs: { codeInsee },
-      });
+      })
     } catch (err) {
-      if (err.status === 404) return this._enveloppe([]);
-      throw err;
+      if (err.status === 404) return this._enveloppe([])
+      throw err
     }
 
-    const features = donnees.features ?? [];
-    return this._enveloppe(features.map((f) => this._mappageFeature(f)));
+    const features = donnees.features ?? []
+    return this._enveloppe(features.map((f) => this._mappageFeature(f)))
   }
 
   /**
@@ -147,8 +145,8 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageFeature(feature) {
-    const props = feature.properties ?? {};
-    const sourceInfo = { source: 'DVF', url: ENDPOINT_DVF_ETALAB };
+    const props = feature.properties ?? {}
+    const sourceInfo = { source: 'DVF', url: ENDPOINT_DVF_ETALAB }
 
     const adresse = [
       props.adresse_numero,
@@ -157,9 +155,9 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
       props.nom_commune,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
-    const parcelles = props.id_parcelle ? [props.id_parcelle] : [];
+    const parcelles = props.id_parcelle ? [props.id_parcelle] : []
 
     return creerEntiteNormalisee(
       'TransactionFonciere',
@@ -172,7 +170,7 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
         parcelles: marquerProvenance(parcelles, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -182,6 +180,6 @@ export default class IgnDvfConnecteur extends BaseConnecteur {
       source: 'DVF',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

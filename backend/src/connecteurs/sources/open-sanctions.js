@@ -29,8 +29,8 @@
  *   3. Matching strict — pas de résultat sur nom seul si homonyme possible
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
 /** Définition des 5 sub-datasets OpenSanctions FR */
 const DATASETS = [
@@ -64,7 +64,7 @@ const DATASETS = [
     qualiteInfluence: 'AUTRE',
     label: 'Gels avoirs Trésor',
   },
-];
+]
 
 /**
  * Normalise une chaîne pour la recherche (minuscules, sans accents).
@@ -73,14 +73,14 @@ const DATASETS = [
  * @returns {string}
  */
 function normaliserRecherche(chaine) {
-  if (!chaine) return '';
+  if (!chaine) return ''
   return chaine
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 /**
@@ -90,7 +90,7 @@ function normaliserRecherche(chaine) {
  * @returns {string|null}
  */
 function premier(tableau) {
-  return Array.isArray(tableau) && tableau.length > 0 ? tableau[0] : null;
+  return Array.isArray(tableau) && tableau.length > 0 ? tableau[0] : null
 }
 
 export default class OpenSanctionsConnecteur extends BaseConnecteur {
@@ -106,12 +106,12 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
       // TTL 30 jours — datasets bulk, pas besoin de re-télécharger quotidiennement
       ttlCache: 30 * 24 * 60 * 60 * 1000,
       timeoutMs: 60_000,
-    });
+    })
 
     /** @type {Map<string, { entite: object, dataset: object }>|null} Index par nom normalisé */
-    this._index = null;
+    this._index = null
     /** @type {Promise<void>|null} */
-    this._promesseChargement = null;
+    this._promesseChargement = null
   }
 
   /**
@@ -124,25 +124,25 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async rechercher(query, options = {}) {
-    const terme = String(query ?? '').trim();
-    if (terme.length < 2) return this._enveloppe([]);
+    const terme = String(query ?? '').trim()
+    if (terme.length < 2) return this._enveloppe([])
 
-    await this._assureIndex();
+    await this._assureIndex()
 
-    const termeNormalise = normaliserRecherche(terme);
-    const limite = Math.min(Number(options.limite) || 10, 50);
-    const datasetFiltre = options.dataset ?? null;
-    const resultats = [];
+    const termeNormalise = normaliserRecherche(terme)
+    const limite = Math.min(Number(options.limite) || 10, 50)
+    const datasetFiltre = options.dataset ?? null
+    const resultats = []
 
-    for (const [cle, { entite, dataset }] of (this._index ?? new Map())) {
-      if (!cle.includes(termeNormalise)) continue;
-      if (datasetFiltre && dataset.nom !== datasetFiltre) continue;
+    for (const [cle, { entite, dataset }] of this._index ?? new Map()) {
+      if (!cle.includes(termeNormalise)) continue
+      if (datasetFiltre && dataset.nom !== datasetFiltre) continue
 
-      resultats.push(this._mappageEntite(entite, dataset));
-      if (resultats.length >= limite) break;
+      resultats.push(this._mappageEntite(entite, dataset))
+      if (resultats.length >= limite) break
     }
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -152,17 +152,17 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(id) {
-    await this._assureIndex();
+    await this._assureIndex()
 
     // Recherche dans l'index par identifiant exact
-    let trouve = null;
-    let datasetTrouve = null;
+    let trouve = null
+    let datasetTrouve = null
 
-    for (const [, { entite, dataset }] of (this._index ?? new Map())) {
+    for (const [, { entite, dataset }] of this._index ?? new Map()) {
       if (entite.id === id) {
-        trouve = entite;
-        datasetTrouve = dataset;
-        break;
+        trouve = entite
+        datasetTrouve = dataset
+        break
       }
     }
 
@@ -171,7 +171,7 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
       source: 'OpenSanctions',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -181,14 +181,14 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(id) {
-    const detail = await this.detailler(id);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(id)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'OpenSanctions',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Méthodes internes ---
@@ -199,18 +199,18 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _assureIndex() {
-    if (this._index !== null) return;
+    if (this._index !== null) return
 
     if (this._promesseChargement) {
-      await this._promesseChargement;
-      return;
+      await this._promesseChargement
+      return
     }
 
-    this._promesseChargement = this._chargerDatasets();
+    this._promesseChargement = this._chargerDatasets()
     try {
-      await this._promesseChargement;
+      await this._promesseChargement
     } finally {
-      this._promesseChargement = null;
+      this._promesseChargement = null
     }
   }
 
@@ -220,19 +220,19 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _chargerDatasets() {
-    this._index = new Map();
+    this._index = new Map()
 
     for (const dataset of DATASETS) {
       try {
-        console.info(`[open-sanctions] Chargement dataset ${dataset.nom}...`);
-        const texte = await this._telechargerTexte(dataset.url, dataset.nom);
-        this._indexerJsonl(texte, dataset);
+        console.info(`[open-sanctions] Chargement dataset ${dataset.nom}...`)
+        const texte = await this._telechargerTexte(dataset.url, dataset.nom)
+        this._indexerJsonl(texte, dataset)
       } catch (err) {
-        console.error(`[open-sanctions] Échec chargement ${dataset.nom} : ${err.message}`);
+        console.error(`[open-sanctions] Échec chargement ${dataset.nom} : ${err.message}`)
       }
     }
 
-    console.info(`[open-sanctions] Index construit : ${this._index.size} entités au total.`);
+    console.info(`[open-sanctions] Index construit : ${this._index.size} entités au total.`)
   }
 
   /**
@@ -246,39 +246,39 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
   async _telechargerTexte(url, nomDataset) {
     // On passe par fetch directement car _appelHttp parse en JSON
     // et le format JSONL n'est pas un JSON valide en tant que tel
-    const { consommer } = await import('../rate-limit.js');
-    const { lireCache, ecrireCache, hashCle } = await import('../cache.js');
-    await consommer(this.nom);
+    const { consommer } = await import('../rate-limit.js')
+    const { lireCache, ecrireCache, hashCle } = await import('../cache.js')
+    await consommer(this.nom)
 
-    const cle = hashCle(this.nom, 'ftm', { url: nomDataset });
-    const cached = await lireCache(cle, this.ttlCache);
-    if (cached !== null) return cached;
+    const cle = hashCle(this.nom, 'ftm', { url: nomDataset })
+    const cached = await lireCache(cle, this.ttlCache)
+    if (cached !== null) return cached
 
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
     try {
       const reponse = await fetch(url, {
         signal: controleur.signal,
         headers: {
           'User-Agent': userAgent,
-          'Accept': 'application/json, text/plain',
+          Accept: 'application/json, text/plain',
         },
-      });
+      })
 
       if (!reponse.ok) {
-        throw new Error(`[open-sanctions] HTTP ${reponse.status} sur ${url}`);
+        throw new Error(`[open-sanctions] HTTP ${reponse.status} sur ${url}`)
       }
 
-      const texte = await reponse.text();
-      await ecrireCache(cle, texte);
-      return texte;
+      const texte = await reponse.text()
+      await ecrireCache(cle, texte)
+      return texte
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 
@@ -290,32 +290,32 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {void}
    */
   _indexerJsonl(texte, dataset) {
-    const lignes = texte.split('\n');
+    const lignes = texte.split('\n')
 
     for (const ligne of lignes) {
-      const ligneNette = ligne.trim();
-      if (!ligneNette) continue;
+      const ligneNette = ligne.trim()
+      if (!ligneNette) continue
 
-      let entite;
+      let entite
       try {
-        entite = JSON.parse(ligneNette);
+        entite = JSON.parse(ligneNette)
       } catch {
-        continue;
+        continue
       }
 
       // On n'indexe que les Person et Organization (pas Address, Position seules)
-      if (!entite.schema || !['Person', 'Organization'].includes(entite.schema)) continue;
+      if (!entite.schema || !['Person', 'Organization'].includes(entite.schema)) continue
 
-      const props = entite.properties ?? {};
-      const nom = premier(props.name) ?? premier(props.lastName) ?? '';
-      if (!nom) continue;
+      const props = entite.properties ?? {}
+      const nom = premier(props.name) ?? premier(props.lastName) ?? ''
+      if (!nom) continue
 
-      const cle = normaliserRecherche(nom);
-      if (!cle) continue;
+      const cle = normaliserRecherche(nom)
+      if (!cle) continue
 
       // Si la clé existe déjà, conserver la première occurrence
       if (!this._index.has(cle)) {
-        this._index.set(cle, { entite, dataset });
+        this._index.set(cle, { entite, dataset })
       }
     }
   }
@@ -329,35 +329,38 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageEntite(entite, dataset) {
-    const props = entite.properties ?? {};
-    const sourceLabel = `OpenSanctions ${dataset.label}`;
-    const urlSource = `https://www.opensanctions.org/entities/${entite.id}/`;
-    const sourceInfo = { source: sourceLabel, url: urlSource };
+    const props = entite.properties ?? {}
+    const sourceLabel = `OpenSanctions ${dataset.label}`
+    const urlSource = `https://www.opensanctions.org/entities/${entite.id}/`
+    const sourceInfo = { source: sourceLabel, url: urlSource }
 
     const badgeProvenance = {
       source: sourceLabel,
       dataset: dataset.nom,
       avertissement: `Source : OpenSanctions (${dataset.label}) — vérifier avant publication. Une mention n'implique pas d'illégalité.`,
       statut: 'EN_ATTENTE',
-    };
+    }
 
     if (entite.schema === 'Person') {
       const champs = {
         nom: marquerProvenance(premier(props.lastName) ?? premier(props.name) ?? null, sourceInfo),
         prenom: marquerProvenance(premier(props.firstName) ?? null, sourceInfo),
         dateNaissance: marquerProvenance(premier(props.birthDate) ?? null, sourceInfo),
-        pays: marquerProvenance(premier(props.country) ?? premier(props.nationality) ?? 'France', sourceInfo),
+        pays: marquerProvenance(
+          premier(props.country) ?? premier(props.nationality) ?? 'France',
+          sourceInfo,
+        ),
         rolePrincipal: marquerProvenance(premier(props.position) ?? null, sourceInfo),
         qualiteInfluence: marquerProvenance(dataset.qualiteInfluence, sourceInfo),
         statut: marquerProvenance('EN_ATTENTE', sourceInfo),
         badgeProvenance: marquerProvenance(badgeProvenance, sourceInfo),
-      };
+      }
 
-      const liensSuggeres = [];
-      const maintenant = new Date().toISOString();
+      const liensSuggeres = []
+      const maintenant = new Date().toISOString()
 
       // Postes déclarés dans les propriétés FtM
-      const postes = props.position ?? [];
+      const postes = props.position ?? []
       for (const poste of postes.slice(0, 3)) {
         if (poste) {
           liensSuggeres.push({
@@ -371,11 +374,11 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
             url: urlSource,
             date: maintenant,
             statut: 'EN_ATTENTE',
-          });
+          })
         }
       }
 
-      return creerEntiteNormalisee('Personne', champs, liensSuggeres);
+      return creerEntiteNormalisee('Personne', champs, liensSuggeres)
     }
 
     // Organization
@@ -385,9 +388,9 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
       qualiteInfluence: marquerProvenance(dataset.qualiteInfluence, sourceInfo),
       statut: marquerProvenance('EN_ATTENTE', sourceInfo),
       badgeProvenance: marquerProvenance(badgeProvenance, sourceInfo),
-    };
+    }
 
-    return creerEntiteNormalisee('Organisation', champs, []);
+    return creerEntiteNormalisee('Organisation', champs, [])
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -397,6 +400,6 @@ export default class OpenSanctionsConnecteur extends BaseConnecteur {
       source: 'OpenSanctions',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

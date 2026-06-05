@@ -39,8 +39,7 @@ const COULEUR_ARETE_ATTENTE = '#d1d5db'
 
 /** Retourne alphaDecay élevé si l'utilisateur préfère moins de mouvement */
 const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
  * GrapheD3 — utilise forwardRef pour exposer la méthode recentrer()
@@ -132,7 +131,10 @@ const GrapheD3 = forwardRef(function GrapheD3(
       .forceSimulation(noeudsD3)
       .force(
         'link',
-        d3.forceLink(aretesD3).id((d) => d.id).distance(130),
+        d3
+          .forceLink(aretesD3)
+          .id((d) => d.id)
+          .distance(130),
       )
       .force('charge', d3.forceManyBody().strength(-320))
       .force('center', d3.forceCenter(largeur / 2, hauteur / 2))
@@ -149,9 +151,7 @@ const GrapheD3 = forwardRef(function GrapheD3(
       .selectAll('line')
       .data(aretesD3)
       .join('line')
-      .attr('stroke', (d) =>
-        d.statut === 'VALIDE' ? COULEUR_ARETE_VALIDE : COULEUR_ARETE_ATTENTE,
-      )
+      .attr('stroke', (d) => (d.statut === 'VALIDE' ? COULEUR_ARETE_VALIDE : COULEUR_ARETE_ATTENTE))
       .attr('stroke-width', (d) => (d.statut === 'VALIDE' ? 2 : 1.5))
       .attr('stroke-dasharray', (d) => (d.statut === 'EN_ATTENTE' ? '6 3' : null))
       .attr('stroke-opacity', 0.7)
@@ -212,12 +212,10 @@ const GrapheD3 = forwardRef(function GrapheD3(
       .text((d) => (STYLE_NOEUD[d.type] ?? STYLE_NOEUD._defaut).icone)
 
     /* Tooltip SVG natif */
-    noeudsG
-      .append('title')
-      .text((d) => {
-        const lignes = [d.nom ?? d.id, d.type, d.statut].filter(Boolean)
-        return lignes.join(' — ')
-      })
+    noeudsG.append('title').text((d) => {
+      const lignes = [d.nom ?? d.id, d.type, d.statut].filter(Boolean)
+      return lignes.join(' — ')
+    })
 
     /* Étiquette textuelle sous le nœud */
     const labelsNoeuds = g
@@ -326,7 +324,7 @@ const GrapheD3 = forwardRef(function GrapheD3(
       ]
         .filter(Boolean)
         .join(' — ')
-    : "Aucun nœud sélectionné. Utilisez Tab pour naviguer entre les nœuds."
+    : 'Aucun nœud sélectionné. Utilisez Tab pour naviguer entre les nœuds.'
 
   return (
     <div className="relative w-full">

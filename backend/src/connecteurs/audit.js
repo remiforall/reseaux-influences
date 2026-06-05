@@ -10,19 +10,19 @@
  * ce module via `jest.unstable_mockModule`.
  */
 
-import { prisma } from '../utils/prisma.js';
+import { prisma } from '../utils/prisma.js'
 
 /**
  * Regex de détection d'un email dans une chaîne.
  * Intentionnellement permissive pour maximiser la redaction.
  */
-const REGEX_EMAIL = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+const REGEX_EMAIL = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
 
 /**
  * Regex de détection d'un numéro de téléphone français (avec ou sans espaces).
  * Couvre les formats +33, 0033, 06, 07, 01-05.
  */
-const REGEX_TELEPHONE = /(?:\+33|0033|0)[1-9](?:[\s.-]?\d{2}){4}/;
+const REGEX_TELEPHONE = /(?:\+33|0033|0)[1-9](?:[\s.-]?\d{2}){4}/
 
 /**
  * Tronque le dernier octet d'une adresse IPv4, ou le dernier groupe d'une IPv6.
@@ -33,23 +33,23 @@ const REGEX_TELEPHONE = /(?:\+33|0033|0)[1-9](?:[\s.-]?\d{2}){4}/;
  * @returns {string|null}
  */
 function tronquerIp(ip) {
-  if (!ip) return null;
+  if (!ip) return null
 
   // IPv4
-  const partiesV4 = ip.split('.');
+  const partiesV4 = ip.split('.')
   if (partiesV4.length === 4) {
-    partiesV4[3] = '0';
-    return partiesV4.join('.');
+    partiesV4[3] = '0'
+    return partiesV4.join('.')
   }
 
   // IPv6 — remplace le dernier groupe non-vide
-  const partiesV6 = ip.split(':');
+  const partiesV6 = ip.split(':')
   if (partiesV6.length > 1) {
-    partiesV6[partiesV6.length - 1] = '0';
-    return partiesV6.join(':');
+    partiesV6[partiesV6.length - 1] = '0'
+    return partiesV6.join(':')
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -59,11 +59,11 @@ function tronquerIp(ip) {
  * @returns {string|null}
  */
 function expurgerQuery(query) {
-  if (!query) return query ?? null;
+  if (!query) return query ?? null
   if (REGEX_EMAIL.test(query) || REGEX_TELEPHONE.test(query)) {
-    return '[EXPURGÉ — donnée personnelle détectée]';
+    return '[EXPURGÉ — donnée personnelle détectée]'
   }
-  return query;
+  return query
 }
 
 /**
@@ -90,7 +90,7 @@ export async function enregistrerAudit(
   const requeteExpurgee = {
     ...requete,
     query: expurgerQuery(requete.query),
-  };
+  }
 
   const audit = await prismaClient.auditEnrichissement.create({
     data: {
@@ -101,10 +101,10 @@ export async function enregistrerAudit(
       ipAddressTronquee: tronquerIp(ipAddress),
     },
     select: { id: true },
-  });
+  })
 
-  return audit;
+  return audit
 }
 
 // Exports internes exposés pour les tests
-export { tronquerIp, expurgerQuery };
+export { tronquerIp, expurgerQuery }

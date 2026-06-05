@@ -97,16 +97,19 @@ function Enrichissement() {
       if (resultats.length === 0) {
         setAnnonce('Aucun résultat trouvé.')
       } else {
-        setAnnonce(`${resultats.length} résultat${resultats.length > 1 ? 's' : ''} trouvé${resultats.length > 1 ? 's' : ''}.`)
+        setAnnonce(
+          `${resultats.length} résultat${resultats.length > 1 ? 's' : ''} trouvé${resultats.length > 1 ? 's' : ''}.`,
+        )
         /* Renvoyer le focus vers le premier résultat */
         requestAnimationFrame(() => {
           premierResultatRef.current?.focus()
         })
       }
     } catch (err) {
-      const msg = err.response?.status === 401
-        ? "Vous devez être connecté pour effectuer une recherche."
-        : "Erreur lors de la recherche. Réessayez ultérieurement."
+      const msg =
+        err.response?.status === 401
+          ? 'Vous devez être connecté pour effectuer une recherche.'
+          : 'Erreur lors de la recherche. Réessayez ultérieurement.'
       setErreurGlobale(msg)
       setAnnonce(msg)
     } finally {
@@ -127,14 +130,14 @@ function Enrichissement() {
   const handleSuccesImport = useCallback((resultat) => {
     setIndexImportOuvert(-1)
     setImportSucces(resultat)
-    setAnnonce(`Entité importée en brouillon avec succès. Identifiant : ${resultat.entitePrincipaleId ?? '—'}.`)
+    setAnnonce(
+      `Entité importée en brouillon avec succès. Identifiant : ${resultat.entitePrincipaleId ?? '—'}.`,
+    )
   }, [])
 
   /* ── Affichage des statuts connecteurs (en cours ou terminés) ── */
   const entreeStatuts = Object.entries(statutParConnecteur)
-  const afficherStatuts =
-    enChargementRecherche ||
-    entreeStatuts.length > 0
+  const afficherStatuts = enChargementRecherche || entreeStatuts.length > 0
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -145,8 +148,8 @@ function Enrichissement() {
       <header>
         <h1 className="text-3xl font-bold text-primary">Importer une fiche</h1>
         <p className="text-gray-600 mt-1">
-          Recherchez des entités dans des sources publiques officielles (Wikidata, RDAP, IGN)
-          et importez-les en brouillon pour contribuer au réseau.
+          Recherchez des entités dans des sources publiques officielles (Wikidata, RDAP, IGN) et
+          importez-les en brouillon pour contribuer au réseau.
         </p>
       </header>
 
@@ -161,11 +164,10 @@ function Enrichissement() {
           Base légale et responsabilité éditoriale
         </p>
         <p>
-          Ce module traite des données personnelles de <strong>personnes publiques</strong> dans
-          le cadre de l'exception journalisme et recherche d'intérêt public
-          (art. 85 RGPD + art. 80 loi Informatique et Libertés).
-          Vous devez déclarer la qualité d'influence de chaque entité importée.
-          Toute opération est auditée et tracée.
+          Ce module traite des données personnelles de <strong>personnes publiques</strong> dans le
+          cadre de l'exception journalisme et recherche d'intérêt public (art. 85 RGPD + art. 80 loi
+          Informatique et Libertés). Vous devez déclarer la qualité d'influence de chaque entité
+          importée. Toute opération est auditée et tracée.
         </p>
       </aside>
 
@@ -205,7 +207,10 @@ function Enrichissement() {
 
       {/* ── Erreur globale ── */}
       {erreurGlobale && (
-        <p role="alert" className="bg-red-50 border border-red-300 rounded p-4 text-sm text-red-800 flex items-center gap-2">
+        <p
+          role="alert"
+          className="bg-red-50 border border-red-300 rounded p-4 text-sm text-red-800 flex items-center gap-2"
+        >
           <span aria-hidden="true">⚠</span>
           {erreurGlobale}
         </p>
@@ -249,7 +254,13 @@ function Enrichissement() {
                 <PreviewEntite
                   preview={preview}
                   index={i}
-                  choix={choixParEntite[i] ?? { champsRetenus: {}, liensRetenus: [], typeEntite: preview.typeSuggere }}
+                  choix={
+                    choixParEntite[i] ?? {
+                      champsRetenus: {},
+                      liensRetenus: [],
+                      typeEntite: preview.typeSuggere,
+                    }
+                  }
                   onChoixChange={(c) => mettreAJourChoix(i, c)}
                   onImporter={() => setIndexImportOuvert(i)}
                   /* ref sur le premier résultat pour le focus post-recherche */
@@ -259,7 +270,13 @@ function Enrichissement() {
                   <div className="mt-2 ml-4">
                     <FormulaireImport
                       preview={preview}
-                      choixUtilisateur={choixParEntite[i] ?? { champsRetenus: {}, liensRetenus: [], typeEntite: preview.typeSuggere }}
+                      choixUtilisateur={
+                        choixParEntite[i] ?? {
+                          champsRetenus: {},
+                          liensRetenus: [],
+                          typeEntite: preview.typeSuggere,
+                        }
+                      }
                       onSucces={handleSuccesImport}
                       onFermer={() => setIndexImportOuvert(-1)}
                     />
@@ -272,11 +289,13 @@ function Enrichissement() {
       )}
 
       {/* ── État vide après recherche ── */}
-      {!enChargementRecherche && previews.length === 0 && Object.keys(statutParConnecteur).length > 0 && (
-        <p className="text-gray-500 text-center py-8">
-          Aucune entité trouvée pour cette recherche. Essayez d'autres termes ou types.
-        </p>
-      )}
+      {!enChargementRecherche &&
+        previews.length === 0 &&
+        Object.keys(statutParConnecteur).length > 0 && (
+          <p className="text-gray-500 text-center py-8">
+            Aucune entité trouvée pour cette recherche. Essayez d'autres termes ou types.
+          </p>
+        )}
     </div>
   )
 }

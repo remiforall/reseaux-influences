@@ -64,7 +64,11 @@ function TableauGraphe({ noeuds = [], aretes = [], onSelectionEntite }) {
       const noeudSource = noeudsParId.get(a.sourceId) ?? { nom: a.sourceId, type: '?' }
       const noeudCible = noeudsParId.get(a.cibleId) ?? { nom: a.cibleId, type: '?' }
       const dateAffichee = a.createdAt
-        ? new Date(a.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        ? new Date(a.createdAt).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          })
         : '—'
       return {
         id: a.id,
@@ -125,7 +129,8 @@ function TableauGraphe({ noeuds = [], aretes = [], onSelectionEntite }) {
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200 text-sm">
         <caption className="text-left px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-50">
-          Liens du réseau — {aretes.length} lien{aretes.length > 1 ? 's' : ''} affiché{aretes.length > 1 ? 's' : ''}
+          Liens du réseau — {aretes.length} lien{aretes.length > 1 ? 's' : ''} affiché
+          {aretes.length > 1 ? 's' : ''}
         </caption>
         <thead className="bg-gray-50">
           <tr>
@@ -202,11 +207,7 @@ function TableauGraphe({ noeuds = [], aretes = [], onSelectionEntite }) {
                 )}
               </td>
               <td className="px-4 py-3 text-gray-600">
-                {row.dateIso ? (
-                  <time dateTime={row.dateIso}>{row.date}</time>
-                ) : (
-                  row.date
-                )}
+                {row.dateIso ? <time dateTime={row.dateIso}>{row.date}</time> : row.date}
               </td>
             </tr>
           ))}
@@ -231,7 +232,9 @@ function StatutBadge({ statut, libelle }) {
   const cfg = CONFIG[statut] ?? { icone: '?', classes: 'bg-gray-100 text-gray-700' }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}
+    >
       <span aria-hidden="true">{cfg.icone}</span>
       <span>{libelle}</span>
     </span>

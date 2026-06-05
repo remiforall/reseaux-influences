@@ -146,7 +146,8 @@ function ModalImport({ entiteExterne, onImporter, onFermer, loading }) {
           </dl>
 
           <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded p-2">
-            L'entité sera importée en statut <strong>En attente</strong> — elle devra être validée avant publication.
+            L'entité sera importée en statut <strong>En attente</strong> — elle devra être validée
+            avant publication.
           </p>
         </div>
 
@@ -156,10 +157,14 @@ function ModalImport({ entiteExterne, onImporter, onFermer, loading }) {
             htmlFor={`qualite-select-${idModal}`}
             className="block text-sm font-semibold text-gray-900 mb-1"
           >
-            Qualité d'influence publique <span aria-hidden="true" className="text-red-600">*</span>
+            Qualité d'influence publique{' '}
+            <span aria-hidden="true" className="text-red-600">
+              *
+            </span>
           </label>
           <p className="text-xs text-gray-600 mb-1" id={`qualite-aide-${idModal}`}>
-            Requis par le RGPD art. 85 — cette personne ou organisation doit exercer une influence publique.
+            Requis par le RGPD art. 85 — cette personne ou organisation doit exercer une influence
+            publique.
           </p>
           <select
             id={`qualite-select-${idModal}`}
@@ -178,15 +183,13 @@ function ModalImport({ entiteExterne, onImporter, onFermer, loading }) {
           >
             <option value="">— Sélectionner —</option>
             {QUALITE_OPTIONS.map((opt) => (
-              <option key={opt.valeur} value={opt.valeur}>{opt.libelle}</option>
+              <option key={opt.valeur} value={opt.valeur}>
+                {opt.libelle}
+              </option>
             ))}
           </select>
           {erreurQualite && (
-            <p
-              id={`qualite-erreur-${idModal}`}
-              role="alert"
-              className="text-red-600 text-xs mt-1"
-            >
+            <p id={`qualite-erreur-${idModal}`} role="alert" className="text-red-600 text-xs mt-1">
               La qualité d'influence publique est obligatoire.
             </p>
           )}
@@ -366,9 +369,8 @@ function SelecteurEntite({ onSelection }) {
   useEffect(() => {
     if (indexActif >= 0) {
       const refCible = indexActif < suggestionsLocales.length ? listeRef : listeExterneRef
-      const relIdx = indexActif < suggestionsLocales.length
-        ? indexActif
-        : indexActif - suggestionsLocales.length
+      const relIdx =
+        indexActif < suggestionsLocales.length ? indexActif : indexActif - suggestionsLocales.length
       const item = refCible.current?.querySelector(`[data-idx="${relIdx}"]`)
       item?.scrollIntoView({ block: 'nearest' })
     }
@@ -409,7 +411,7 @@ function SelecteurEntite({ onSelection }) {
       } catch (err) {
         const msgErreur =
           err.response?.data?.error ??
-          'Erreur lors de l\'import. Réessayez ou vérifiez votre connexion.'
+          "Erreur lors de l'import. Réessayez ou vérifiez votre connexion."
         setMessageImport({ type: 'erreur', texte: msgErreur })
       } finally {
         setImportEnCours(false)
@@ -425,7 +427,10 @@ function SelecteurEntite({ onSelection }) {
   return (
     <>
       <div className="relative w-full max-w-md">
-        <label htmlFor="selecteur-entite" className="block text-sm font-semibold text-gray-900 mb-1">
+        <label
+          htmlFor="selecteur-entite"
+          className="block text-sm font-semibold text-gray-900 mb-1"
+        >
           Entité centrale du graphe
         </label>
         <p id="selecteur-entite-aide" className="text-xs text-gray-600 mb-1">
@@ -487,12 +492,7 @@ function SelecteurEntite({ onSelection }) {
         </div>
 
         {/* Zone live pour les annonces externes */}
-        <p
-          id={idAnnonce}
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
+        <p id={idAnnonce} aria-live="polite" aria-atomic="true" className="sr-only">
           {enChargementExterne
             ? 'Recherche dans les sources publiques en cours…'
             : nbExternes > 0
@@ -501,135 +501,149 @@ function SelecteurEntite({ onSelection }) {
         </p>
 
         {/* Dropdown */}
-        {ouvert && (suggestionsLocales.length > 0 || enChargementExterne || suggestionsExternes.length > 0) && (
-          <div
-            className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-80 overflow-y-auto"
-            style={{ minWidth: '100%' }}
-          >
-            {/* ── Section locale ── */}
-            {suggestionsLocales.length > 0 && (
-              <>
-                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
-                  Base locale
-                </div>
-                <ul
-                  ref={listeRef}
-                  id={idListe}
-                  role="listbox"
-                  aria-label="Entités dans la base locale"
-                >
-                  {suggestionsLocales.map((entite, idx) => {
-                    const badge = TYPE_BADGE[entite.type] ?? TYPE_BADGE.Personne
-                    const estActif = idx === indexActif
-                    return (
-                      <li
-                        key={entite.id}
-                        id={`sug-${idx}`}
-                        role="option"
-                        aria-selected={estActif}
-                        data-idx={idx}
-                        onMouseDown={(e) => { e.preventDefault(); selectionner(entite) }}
-                        className={[
-                          'flex items-center gap-2 px-3 py-2 cursor-pointer text-sm border-l-2',
-                          estActif
-                            ? 'bg-blue-50 border-blue-500 text-gray-900'
-                            : 'border-transparent hover:bg-gray-50 text-gray-800',
-                        ].join(' ')}
-                      >
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badge.classes}`}
-                        >
-                          <span aria-hidden="true">{badge.icone}</span>
-                          <span>{entite.type}</span>
-                        </span>
-                        <span className="truncate">{entite.nom}</span>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </>
-            )}
-
-            {/* ── Section externe ── */}
-            {(enChargementExterne || suggestionsExternes.length > 0) && (
-              <>
-                <div className="px-3 py-1.5 text-xs font-semibold text-orange-700 bg-orange-50 border-t border-b border-orange-200 sticky top-0">
-                  {enChargementExterne
-                    ? 'Pas dans la base — recherche dans les sources publiques…'
-                    : `Pas dans la base — trouvé dans les sources publiques (${suggestionsExternes.length})`}
-                </div>
-
-                {enChargementExterne && (
-                  <div
-                    role="status"
-                    aria-label="Chargement des résultats externes"
-                    className="px-3 py-3 text-sm text-gray-500 text-center"
-                  >
-                    <span aria-hidden="true">⏳</span> Interrogation des sources publiques…
+        {ouvert &&
+          (suggestionsLocales.length > 0 ||
+            enChargementExterne ||
+            suggestionsExternes.length > 0) && (
+            <div
+              className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-80 overflow-y-auto"
+              style={{ minWidth: '100%' }}
+            >
+              {/* ── Section locale ── */}
+              {suggestionsLocales.length > 0 && (
+                <>
+                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                    Base locale
                   </div>
-                )}
-
-                {!enChargementExterne && suggestionsExternes.length > 0 && (
                   <ul
-                    ref={listeExterneRef}
-                    id={idListeExterne}
+                    ref={listeRef}
+                    id={idListe}
                     role="listbox"
-                    aria-label="Entités trouvées dans les sources publiques"
+                    aria-label="Entités dans la base locale"
                   >
-                    {suggestionsExternes.map((entite, idx) => {
-                      const idxGlobal = suggestionsLocales.length + idx
+                    {suggestionsLocales.map((entite, idx) => {
                       const badge = TYPE_BADGE[entite.type] ?? TYPE_BADGE.Personne
-                      const sourceBadge = SOURCE_BADGE[entite.sourceConnecteur] ?? SOURCE_BADGE.externe
-                      const estActif = idxGlobal === indexActif
+                      const estActif = idx === indexActif
                       return (
                         <li
-                          key={`ext-${idx}`}
-                          id={`sug-${idxGlobal}`}
+                          key={entite.id}
+                          id={`sug-${idx}`}
                           role="option"
                           aria-selected={estActif}
                           data-idx={idx}
-                          onMouseDown={(e) => { e.preventDefault(); selectionner(entite) }}
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            selectionner(entite)
+                          }}
                           className={[
-                            'flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-l-2',
+                            'flex items-center gap-2 px-3 py-2 cursor-pointer text-sm border-l-2',
                             estActif
-                              ? 'bg-orange-50 border-orange-400'
-                              : 'border-transparent hover:bg-orange-50/50 text-gray-800',
+                              ? 'bg-blue-50 border-blue-500 text-gray-900'
+                              : 'border-transparent hover:bg-gray-50 text-gray-800',
                           ].join(' ')}
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span
-                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badge.classes}`}
-                              >
-                                <span aria-hidden="true">{badge.icone}</span>
-                                <span>{entite.type}</span>
-                              </span>
-                              <span
-                                className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${sourceBadge.couleur}`}
-                              >
-                                {sourceBadge.libelle}
-                              </span>
-                            </div>
-                            <span className="block truncate mt-0.5 font-medium text-gray-900">{entite.nom}</span>
-                            {entite.bio && (
-                              <span className="block text-xs text-gray-500 truncate">{entite.bio}</span>
-                            )}
-                          </div>
                           <span
-                            className="text-xs text-orange-600 flex-shrink-0 mt-0.5 font-medium"
-                            aria-label="Cliquer pour importer"
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badge.classes}`}
                           >
-                            Importer
+                            <span aria-hidden="true">{badge.icone}</span>
+                            <span>{entite.type}</span>
                           </span>
+                          <span className="truncate">{entite.nom}</span>
                         </li>
                       )
                     })}
                   </ul>
-                )}
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+
+              {/* ── Section externe ── */}
+              {(enChargementExterne || suggestionsExternes.length > 0) && (
+                <>
+                  <div className="px-3 py-1.5 text-xs font-semibold text-orange-700 bg-orange-50 border-t border-b border-orange-200 sticky top-0">
+                    {enChargementExterne
+                      ? 'Pas dans la base — recherche dans les sources publiques…'
+                      : `Pas dans la base — trouvé dans les sources publiques (${suggestionsExternes.length})`}
+                  </div>
+
+                  {enChargementExterne && (
+                    <div
+                      role="status"
+                      aria-label="Chargement des résultats externes"
+                      className="px-3 py-3 text-sm text-gray-500 text-center"
+                    >
+                      <span aria-hidden="true">⏳</span> Interrogation des sources publiques…
+                    </div>
+                  )}
+
+                  {!enChargementExterne && suggestionsExternes.length > 0 && (
+                    <ul
+                      ref={listeExterneRef}
+                      id={idListeExterne}
+                      role="listbox"
+                      aria-label="Entités trouvées dans les sources publiques"
+                    >
+                      {suggestionsExternes.map((entite, idx) => {
+                        const idxGlobal = suggestionsLocales.length + idx
+                        const badge = TYPE_BADGE[entite.type] ?? TYPE_BADGE.Personne
+                        const sourceBadge =
+                          SOURCE_BADGE[entite.sourceConnecteur] ?? SOURCE_BADGE.externe
+                        const estActif = idxGlobal === indexActif
+                        return (
+                          <li
+                            key={`ext-${idx}`}
+                            id={`sug-${idxGlobal}`}
+                            role="option"
+                            aria-selected={estActif}
+                            data-idx={idx}
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              selectionner(entite)
+                            }}
+                            className={[
+                              'flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-l-2',
+                              estActif
+                                ? 'bg-orange-50 border-orange-400'
+                                : 'border-transparent hover:bg-orange-50/50 text-gray-800',
+                            ].join(' ')}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${badge.classes}`}
+                                >
+                                  <span aria-hidden="true">{badge.icone}</span>
+                                  <span>{entite.type}</span>
+                                </span>
+                                <span
+                                  className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${sourceBadge.couleur}`}
+                                >
+                                  {sourceBadge.libelle}
+                                </span>
+                              </div>
+                              <span className="block truncate mt-0.5 font-medium text-gray-900">
+                                {entite.nom}
+                              </span>
+                              {entite.bio && (
+                                <span className="block text-xs text-gray-500 truncate">
+                                  {entite.bio}
+                                </span>
+                              )}
+                            </div>
+                            <span
+                              className="text-xs text-orange-600 flex-shrink-0 mt-0.5 font-medium"
+                              aria-label="Cliquer pour importer"
+                            >
+                              Importer
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
+          )}
       </div>
 
       {/* ── Modale d'import ── */}

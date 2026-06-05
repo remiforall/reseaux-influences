@@ -15,35 +15,37 @@ Permettre au grand public, aux journalistes et aux chercheurs de :
 - **Explorer** les réseaux d'influence via des graphes interactifs
 - **Exporter** les données structurées (CSV, JSON, API)
 
-Ce projet s'inscrit dans la continuité du projet *InfluenceNetwork* développé chez Owni.fr par Nicolas Kayser-Bril, modernisé avec une stack technique contemporaine et un système de modération communautaire par gamification.
+Ce projet s'inscrit dans la continuité du projet _InfluenceNetwork_ développé chez Owni.fr par Nicolas Kayser-Bril, modernisé avec une stack technique contemporaine et un système de modération communautaire par gamification.
 
 ---
 
 ## Stack technique
 
-| Composant | Technologie |
-|---|---|
-| **Backend** | Node.js 20+ / Fastify 5 / Prisma ORM |
-| **Frontend** | React 18+ / Vite / Tailwind CSS |
-| **Visualisation** | D3.js (graphes interactifs) |
-| **Base de données** | PostgreSQL 16+ |
-| **Cache** | Redis (ioredis) |
-| **Tâches asynchrones** | BullMQ + Redis |
-| **Authentification** | JWT + bcrypt |
-| **Validation** | Zod |
-| **Documentation API** | Swagger / OpenAPI |
-| **Hébergement** | Infomaniak Public Cloud (Suisse, éco-responsable) |
+| Composant              | Technologie                                       |
+| ---------------------- | ------------------------------------------------- |
+| **Backend**            | Node.js 20+ / Fastify 5 / Prisma ORM              |
+| **Frontend**           | React 18+ / Vite / Tailwind CSS                   |
+| **Visualisation**      | D3.js (graphes interactifs)                       |
+| **Base de données**    | PostgreSQL 16+                                    |
+| **Cache**              | Redis (ioredis)                                   |
+| **Tâches asynchrones** | BullMQ + Redis                                    |
+| **Authentification**   | JWT + bcrypt                                      |
+| **Validation**         | Zod                                               |
+| **Documentation API**  | Swagger / OpenAPI                                 |
+| **Hébergement**        | Infomaniak Public Cloud (Suisse, éco-responsable) |
 
 ---
 
 ## Fonctionnalités principales
 
 ### Contribution
+
 - Formulaire pour ajouter un lien : Personne A → Personne B + type de lien + source médiatique
 - Création de fiches de personnes publiques avec métadonnées (rôle, pays, biographie)
 - Référencement de sources médiatiques vérifiées
 
 ### Modération communautaire et gamification
+
 - **Obligation de validation** : un utilisateur doit valider au moins 5 liens existants (vrai/faux) avant de pouvoir soumettre un nouveau lien
 - **Système de points** : chaque validation et soumission acceptée rapporte des points
 - **Badges automatiques** attribués selon :
@@ -54,16 +56,19 @@ Ce projet s'inscrit dans la continuité du projet *InfluenceNetwork* développé
 - **Niveaux** : débutant → intermédiaire → expert → modérateur
 
 ### Visualisation
+
 - Graphe interactif D3.js : noeuds = personnes, arêtes = liens
 - Filtres par nom, pays, type de lien, source, date
 - Tooltips avec détails du lien et source
 
 ### API publique
+
 - Endpoints REST : `/api/personnes`, `/api/liens`, `/api/sources`, `/api/utilisateurs/{id}/badges`
 - Documentation Swagger/OpenAPI
 - Export CSV et JSON
 
 ### Historique et traçabilité
+
 - Versioning des contributions (modèle Wikipedia)
 - Historique des modifications et des validations
 - Signalement et modération avec traces
@@ -165,7 +170,7 @@ MIT — libre d'utilisation, modification et distribution.
 ## Contact
 
 Sur une idée de NXX
-Relancée par Rémi Vincent** — porteur du projet 
+Relancée par Rémi Vincent\*\* — porteur du projet
 
 Site : [reseauxinfluences.fr](https://reseauxinfluences.fr)
 

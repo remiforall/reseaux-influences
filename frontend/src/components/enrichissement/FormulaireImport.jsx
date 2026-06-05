@@ -93,7 +93,7 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
     e.preventDefault()
 
     if (!qualiteInfluence) {
-      setErreurQualite("Champ obligatoire — base légale RGPD art. 85 + LIL art. 80.")
+      setErreurQualite('Champ obligatoire — base légale RGPD art. 85 + LIL art. 80.')
       return
     }
 
@@ -117,7 +117,7 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
         const seuil = err.response?.data?.seuilRequis
         setErreur(
           `Vous devez valider ${seuil ?? 'N'} liens avant de pouvoir importer. ` +
-          'Rendez-vous sur la page Liens pour valider des contributions.',
+            'Rendez-vous sur la page Liens pour valider des contributions.',
         )
       } else if (status === 400) {
         setErreur(message ?? 'Données invalides. Vérifiez les champs.')
@@ -199,7 +199,10 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
         {/* ── Qualité d'influence (obligatoire, ADR-006) ── */}
         <SelecteurQualiteInfluence
           valeur={qualiteInfluence}
-          onChange={(v) => { setQualiteInfluence(v); setErreurQualite(null) }}
+          onChange={(v) => {
+            setQualiteInfluence(v)
+            setErreurQualite(null)
+          }}
           erreur={erreurQualite}
         />
 
@@ -213,21 +216,21 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
           />
           <span className="text-sm text-gray-800">
             Je confirme que cette entité exerce une influence publique justifiant son traitement
-            dans le cadre de la recherche d'intérêt public (art. 85 RGPD + art. 80 LIL).
-            L'entité sera créée en statut <strong>brouillon</strong> et soumise à validation.
+            dans le cadre de la recherche d'intérêt public (art. 85 RGPD + art. 80 LIL). L'entité
+            sera créée en statut <strong>brouillon</strong> et soumise à validation.
           </span>
         </label>
 
         {/* ── Erreur globale ── */}
         {erreur && (
-          <p role="alert" className="text-sm text-red-800 bg-red-50 border border-red-300 rounded p-3 flex items-start gap-2">
+          <p
+            role="alert"
+            className="text-sm text-red-800 bg-red-50 border border-red-300 rounded p-3 flex items-start gap-2"
+          >
             <span aria-hidden="true">⚠</span>
             <span>{erreur}</span>
             {erreur.includes('Liens') && (
-              <a
-                href="/liens"
-                className="ml-2 underline focus-visible-ring rounded"
-              >
+              <a href="/liens" className="ml-2 underline focus-visible-ring rounded">
                 Aller aux liens
               </a>
             )}
@@ -251,9 +254,7 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
             className={[
               'inline-flex items-center gap-2 px-6 py-2 rounded text-sm font-semibold text-white',
               'focus-visible-ring min-h-[44px]',
-              peutSoumettre
-                ? 'bg-secondary hover:bg-primary'
-                : 'bg-gray-300 cursor-not-allowed',
+              peutSoumettre ? 'bg-secondary hover:bg-primary' : 'bg-gray-300 cursor-not-allowed',
               'transition-colors',
             ].join(' ')}
           >
@@ -271,7 +272,8 @@ function FormulaireImport({ preview, choixUtilisateur, onSucces, onFermer }) {
           </button>
           {!peutSoumettre && (
             <p id="import-submit-aide" className="sr-only">
-              Le bouton est désactivé : sélectionnez une qualité d'influence et cochez la confirmation.
+              Le bouton est désactivé : sélectionnez une qualité d'influence et cochez la
+              confirmation.
             </p>
           )}
         </div>

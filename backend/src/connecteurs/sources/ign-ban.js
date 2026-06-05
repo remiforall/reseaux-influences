@@ -18,10 +18,10 @@
  *   - Résultats limités à 10 par requête
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_BAN = 'https://api-adresse.data.gouv.fr/search/';
+const ENDPOINT_BAN = 'https://api-adresse.data.gouv.fr/search/'
 
 export default class IgnBanConnecteur extends BaseConnecteur {
   constructor() {
@@ -35,7 +35,7 @@ export default class IgnBanConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 10_000,
-    });
+    })
   }
 
   /**
@@ -46,19 +46,19 @@ export default class IgnBanConnecteur extends BaseConnecteur {
    */
   async rechercher(query) {
     if (!query || query.trim().length < 3) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const params = new URLSearchParams({ q: query.trim(), limit: '10' });
-    const url = `${ENDPOINT_BAN}?${params}`;
+    const params = new URLSearchParams({ q: query.trim(), limit: '10' })
+    const url = `${ENDPOINT_BAN}?${params}`
 
     const donnees = await this._appelHttp(url, {
       cacheMethode: 'rechercher',
       cacheArgs: { query: query.trim() },
-    });
+    })
 
-    const features = donnees.features ?? [];
-    return this._enveloppe(features.map((f) => this._mappageFeature(f)));
+    const features = donnees.features ?? []
+    return this._enveloppe(features.map((f) => this._mappageFeature(f)))
   }
 
   /**
@@ -68,7 +68,7 @@ export default class IgnBanConnecteur extends BaseConnecteur {
    * @param {string} _id
    */
   async detailler(_id) {
-    throw new Error('[ign-ban] detailler() non supporté — utiliser rechercher()');
+    throw new Error('[ign-ban] detailler() non supporté — utiliser rechercher()')
   }
 
   /**
@@ -82,7 +82,7 @@ export default class IgnBanConnecteur extends BaseConnecteur {
       source: 'BAN',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
@@ -94,9 +94,9 @@ export default class IgnBanConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageFeature(feature) {
-    const props = feature.properties ?? {};
-    const [lon, lat] = feature.geometry?.coordinates ?? [null, null];
-    const sourceInfo = { source: 'BAN', url: ENDPOINT_BAN };
+    const props = feature.properties ?? {}
+    const [lon, lat] = feature.geometry?.coordinates ?? [null, null]
+    const sourceInfo = { source: 'BAN', url: ENDPOINT_BAN }
 
     return creerEntiteNormalisee(
       'Adresse',
@@ -110,7 +110,7 @@ export default class IgnBanConnecteur extends BaseConnecteur {
         score: marquerProvenance(props.score ?? null, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -120,6 +120,6 @@ export default class IgnBanConnecteur extends BaseConnecteur {
       source: 'BAN',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

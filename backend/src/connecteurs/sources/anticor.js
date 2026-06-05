@@ -26,11 +26,11 @@
  * ⚠️ User-Agent obligatoire (respect de la politesse Anticor).
  */
 
-import { BaseConnecteur } from '../base.js';
+import { BaseConnecteur } from '../base.js'
 
-const ENDPOINT_RSS = 'https://www.anticor.org/feed/';
+const ENDPOINT_RSS = 'https://www.anticor.org/feed/'
 /** TTL cache 6 heures (le flux ne change pas constamment) */
-const TTL_6H_MS = 6 * 60 * 60 * 1000;
+const TTL_6H_MS = 6 * 60 * 60 * 1000
 
 export default class AnticorConnecteur extends BaseConnecteur {
   constructor() {
@@ -44,7 +44,7 @@ export default class AnticorConnecteur extends BaseConnecteur {
       },
       ttlCache: TTL_6H_MS,
       timeoutMs: 15_000,
-    });
+    })
   }
 
   /**
@@ -64,18 +64,21 @@ export default class AnticorConnecteur extends BaseConnecteur {
    * }>}
    */
   async rechercher(query, _options = {}) {
-    const terme = String(query ?? '').trim();
-    if (!terme) return this._enveloppeVide([]);
+    const terme = String(query ?? '').trim()
+    if (!terme) return this._enveloppeVide([])
 
-    const rssTexte = await this._telechargerRss();
-    const items = this._parserRss(rssTexte);
-    const termeNormalise = terme.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const rssTexte = await this._telechargerRss()
+    const items = this._parserRss(rssTexte)
+    const termeNormalise = terme.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
     const sources = items
       .filter((item) => {
-        const titre = (item.titre ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        const description = (item.description ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        return titre.includes(termeNormalise) || description.includes(termeNormalise);
+        const titre = (item.titre ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        const description = (item.description ?? '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+        return titre.includes(termeNormalise) || description.includes(termeNormalise)
       })
       .map((item) => ({
         url: item.url,
@@ -85,9 +88,9 @@ export default class AnticorConnecteur extends BaseConnecteur {
         media: 'Anticor',
         typeMedia: 'PRESSE_ECRITE',
         mentions: [terme],
-      }));
+      }))
 
-    return this._enveloppeVide(sources);
+    return this._enveloppeVide(sources)
   }
 
   /**
@@ -102,7 +105,7 @@ export default class AnticorConnecteur extends BaseConnecteur {
       source: 'Anticor',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -117,7 +120,7 @@ export default class AnticorConnecteur extends BaseConnecteur {
       source: 'Anticor',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Méthodes internes ---
@@ -129,39 +132,39 @@ export default class AnticorConnecteur extends BaseConnecteur {
    * @returns {Promise<string>}
    */
   async _telechargerRss() {
-    const { consommer } = await import('../rate-limit.js');
-    const { lireCache, ecrireCache, hashCle } = await import('../cache.js');
-    await consommer(this.nom);
+    const { consommer } = await import('../rate-limit.js')
+    const { lireCache, ecrireCache, hashCle } = await import('../cache.js')
+    await consommer(this.nom)
 
-    const cle = hashCle(this.nom, 'rss', 'feed');
-    const cached = await lireCache(cle, this.ttlCache);
-    if (cached !== null) return cached;
+    const cle = hashCle(this.nom, 'rss', 'feed')
+    const cached = await lireCache(cle, this.ttlCache)
+    if (cached !== null) return cached
 
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
     try {
       const reponse = await fetch(ENDPOINT_RSS, {
         signal: controleur.signal,
         headers: {
           'User-Agent': userAgent,
-          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          Accept: 'application/rss+xml, application/xml, text/xml, */*',
         },
-      });
+      })
 
       if (!reponse.ok) {
-        throw new Error(`[anticor] HTTP ${reponse.status} sur ${ENDPOINT_RSS}`);
+        throw new Error(`[anticor] HTTP ${reponse.status} sur ${ENDPOINT_RSS}`)
       }
 
-      const texte = await reponse.text();
-      await ecrireCache(cle, texte);
-      return texte;
+      const texte = await reponse.text()
+      await ecrireCache(cle, texte)
+      return texte
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 
@@ -173,24 +176,24 @@ export default class AnticorConnecteur extends BaseConnecteur {
    * @returns {Array<{ titre: string, url: string, datePublication: string, description: string }>}
    */
   _parserRss(xml) {
-    if (!xml || typeof xml !== 'string') return [];
+    if (!xml || typeof xml !== 'string') return []
 
-    const items = [];
+    const items = []
     // Extraction de chaque bloc <item>...</item>
-    const regexItem = /<item[^>]*>([\s\S]*?)<\/item>/gi;
-    let match;
+    const regexItem = /<item[^>]*>([\s\S]*?)<\/item>/gi
+    let match
 
     while ((match = regexItem.exec(xml)) !== null) {
-      const bloc = match[1];
+      const bloc = match[1]
       items.push({
         titre: this._extraireBalise(bloc, 'title'),
         url: this._extraireBalise(bloc, 'link') || this._extraireBalise(bloc, 'guid'),
         datePublication: this._normaliserDate(this._extraireBalise(bloc, 'pubDate')),
         description: this._nettoyerHtml(this._extraireBalise(bloc, 'description')),
-      });
+      })
     }
 
-    return items;
+    return items
   }
 
   /**
@@ -203,16 +206,19 @@ export default class AnticorConnecteur extends BaseConnecteur {
    */
   _extraireBalise(xml, balise) {
     // Gérer CDATA
-    const regexCdata = new RegExp(`<${balise}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${balise}>`, 'i');
-    const matchCdata = regexCdata.exec(xml);
-    if (matchCdata) return matchCdata[1].trim();
+    const regexCdata = new RegExp(
+      `<${balise}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${balise}>`,
+      'i',
+    )
+    const matchCdata = regexCdata.exec(xml)
+    if (matchCdata) return matchCdata[1].trim()
 
     // Balise standard
-    const regex = new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'i');
-    const matchStd = regex.exec(xml);
-    if (matchStd) return matchStd[1].trim();
+    const regex = new RegExp(`<${balise}[^>]*>([\\s\\S]*?)<\\/${balise}>`, 'i')
+    const matchStd = regex.exec(xml)
+    if (matchStd) return matchStd[1].trim()
 
-    return '';
+    return ''
   }
 
   /**
@@ -222,7 +228,7 @@ export default class AnticorConnecteur extends BaseConnecteur {
    * @returns {string}
    */
   _nettoyerHtml(texte) {
-    if (!texte) return '';
+    if (!texte) return ''
     return texte
       .replace(/<[^>]+>/g, ' ')
       .replace(/&amp;/g, '&')
@@ -232,7 +238,7 @@ export default class AnticorConnecteur extends BaseConnecteur {
       .replace(/&#039;/g, "'")
       .replace(/&nbsp;/g, ' ')
       .replace(/\s+/g, ' ')
-      .trim();
+      .trim()
   }
 
   /**
@@ -243,11 +249,11 @@ export default class AnticorConnecteur extends BaseConnecteur {
    * @returns {string}
    */
   _normaliserDate(dateRss) {
-    if (!dateRss) return new Date().toISOString();
+    if (!dateRss) return new Date().toISOString()
     try {
-      return new Date(dateRss).toISOString();
+      return new Date(dateRss).toISOString()
     } catch {
-      return new Date().toISOString();
+      return new Date().toISOString()
     }
   }
 
@@ -264,6 +270,6 @@ export default class AnticorConnecteur extends BaseConnecteur {
       source: 'Anticor',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

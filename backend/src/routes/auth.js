@@ -17,11 +17,9 @@ const connexionSchema = z.object({
 })
 
 function genererToken(utilisateur) {
-  return jwt.sign(
-    { id: utilisateur.id, role: utilisateur.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  )
+  return jwt.sign({ id: utilisateur.id, role: utilisateur.role }, process.env.JWT_SECRET, {
+    expiresIn: '7d',
+  })
 }
 
 export default async function authRoutes(fastify) {
@@ -104,10 +102,19 @@ export default async function authRoutes(fastify) {
     const utilisateur = await prisma.utilisateur.findUnique({
       where: { id: request.utilisateur.id },
       select: {
-        id: true, email: true, nom: true, pseudo: true, bio: true, avatarUrl: true,
-        role: true, points: true, niveau: true,
-        validationsEffectuees: true, soumissionsEffectuees: true,
-        soumissionsAcceptees: true, tauxPrecision: true,
+        id: true,
+        email: true,
+        nom: true,
+        pseudo: true,
+        bio: true,
+        avatarUrl: true,
+        role: true,
+        points: true,
+        niveau: true,
+        validationsEffectuees: true,
+        soumissionsEffectuees: true,
+        soumissionsAcceptees: true,
+        tauxPrecision: true,
         dateInscription: true,
         badges: { include: { badge: true } },
       },

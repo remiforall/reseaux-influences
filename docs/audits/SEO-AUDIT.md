@@ -20,9 +20,11 @@ Conclusion : la fondation a11y/HTML est saine ; la couche **discovery** (sitemap
 ### CRITIQUE (impact direct sur visibilité)
 
 #### C1 — Rendu SPA sans pré-rendu : le contenu n'est pas indexable par défaut
+
 `frontend/index.html` n'expose que `<div id="root"></div>` + une meta description statique. Googlebot exécute JS, mais **Bingbot, GPTBot, ClaudeBot, PerplexityBot ne le font pas de manière fiable** (Bing en particulier ne rend qu'une fraction des SPAs JS). Conséquence : **ChatGPT ne pourra pas citer une fiche entité** parce que ChatGPT s'appuie sur l'index Bing.
 
 Solutions par ordre de coût croissant :
+
 - **Pré-rendu statique au build** des pages publiques (`/`, `/liens`, `/graphe`, `/profil/:id`, `/entites/:id`) via `vite-plugin-ssg`, `react-snap` ou similaire. Coût : ~1 j de mise en place.
 - **SSR Fastify** : le backend rend le HTML initial pour les routes publiques. Plus lourd, plus puissant.
 - **Génération de fiches statiques** par cron côté backend (HTML + JSON-LD inline) servies par Fastify static avant le SPA fallback — pragmatique pour un MVP.
@@ -30,7 +32,9 @@ Solutions par ordre de coût croissant :
 À trancher dès que la base contient des entités publiques exploitables. Tant qu'elle est vide, pas de gain à pré-rendre du vide.
 
 #### C2 — Absence de `robots.txt`
+
 Aucun `robots.txt` à `/Users/remi/Developer/reseaux-influences/frontend/public/`. Par défaut, tous les bots ont accès — mais :
+
 - pas de pointeur vers `sitemap.xml`
 - aucune directive pour les bots IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) → comportement non maîtrisé
 - aucune protection des routes sensibles (`/enrichissement`, `/api/docs`)
@@ -38,7 +42,9 @@ Aucun `robots.txt` à `/Users/remi/Developer/reseaux-influences/frontend/public/
 Le `robots.txt` est aussi un signal d'**intentionnalité** : sa présence indique aux moteurs que le site est conscient de son indexation.
 
 #### C3 — Absence de `sitemap.xml`
+
 Aucun sitemap généré. Pour un projet collaboratif où chaque entité (Personne, Organisation, SiteWeb) est une URL publique potentielle, un sitemap dynamique est indispensable pour :
+
 - la découverte des nouvelles fiches par Google et Bing
 - la priorisation des URLs canoniques (`/entites/:id` plutôt que `/profil/:id` ou variantes)
 - la transmission de `lastmod` pour le crawl différentiel
@@ -46,9 +52,11 @@ Aucun sitemap généré. Pour un projet collaboratif où chaque entité (Personn
 Recommandation : endpoint Fastify `GET /sitemap.xml` qui lit `Personne`, `Organisation`, `SiteWeb` validés et génère un sitemap (≤ 50 000 URLs/fichier, sinon sitemap index). Régénération à la volée avec cache 1 h, suffisant au MVP.
 
 #### C4 — Pas de données structurées (JSON-LD) intégrées dans les pages
+
 Le seul JSON-LD du projet est un **endpoint d'export API** (`backend/src/routes/export.js` ligne 85 — `Dataset` / `Person` / `Organization` / `Role`). C'est très bien pour la portabilité des données, **mais aucun de ce JSON-LD ne se trouve dans le HTML servi aux crawlers**.
 
 Pour que Google AI Overviews, Perplexity, ChatGPT citent une fiche `Personne` ou `Organisation`, il faut un `<script type="application/ld+json">` dans le `<head>` de chaque fiche, avec au minimum :
+
 - `Person` (`name`, `jobTitle`, `nationality`, `sameAs` → URL Wikidata)
 - `Organization` (`name`, `legalName`, `sameAs`, `additionalType`)
 - `Dataset` au niveau du site (description du corpus, licence, créateur)
@@ -61,9 +69,11 @@ Le code de génération existe déjà côté backend — il suffit de l'**inject
 ### IMPORTANT
 
 #### I1 — Aucune balise Open Graph ni Twitter Card
+
 `frontend/index.html` ne contient ni `og:title`, ni `og:description`, ni `og:image`, ni `twitter:card`. Conséquence : tout partage du site sur Mastodon, Bluesky, Twitter/X, LinkedIn, Slack, Discord produit un aperçu vide ou pauvre. Pour un projet qui cible **journalistes et chercheurs** (audience qui partage par lien), c'est handicapant.
 
 Minimum vital dans `index.html` :
+
 ```
 <meta property="og:type" content="website">
 <meta property="og:title" content="Réseaux d'Influence">
@@ -77,22 +87,27 @@ Minimum vital dans `index.html` :
 Pour les fiches d'entités, ces balises doivent être **dynamiques** (titre = nom de la personne, image = portrait si disponible) — implique encore C1.
 
 #### I2 — `<title>` et `<meta description>` statiques (un seul couple pour toutes les routes)
+
 Le SPA ne met pas à jour le `<title>` et la `<meta description>` par route. Conséquence : Google indexe (s'il rend le JS) toutes les pages sous le même titre `Réseaux d'Influence`. Aucun mot-clé différenciant entre `/liens`, `/graphe`, `/profil/:id`.
 
 Solution : `react-helmet-async` ou équivalent — composant `<Helmet>` par page avec titre et description ciblés. Effort : ~2 h. À combiner avec un pré-rendu (C1) pour que les crawlers le voient.
 
 #### I3 — `/api/docs` Swagger exposé sans directive d'indexation
+
 `backend/src/server.js` ligne 67 enregistre Swagger UI sur `/docs`. La documentation OpenAPI est utile aux développeurs mais **inutile dans Google** — elle dilue le signal de pertinence du domaine. À couvrir par `robots.txt` (`Disallow: /docs`, `Disallow: /api/`) ou par une meta `noindex` côté Fastify.
 
 #### I4 — Absence de `llms.txt` à la racine
+
 Standard émergent (proposé par Jeremy Howard, adoption croissante chez Anthropic, Mistral, Cloudflare, Stripe…) : un fichier markdown à la racine qui décrit le site et oriente les LLMs vers les contenus prioritaires. **Aucune garantie d'effet** (Google ne le confirme pas, les crawlers d'OpenAI/Anthropic ne le lisent pas tous), mais coût marginal et signal d'intentionnalité fort pour la cible journalistes/chercheurs.
 
 Modèle proposé pour ce projet (cf. section **Plan d'action GEO** ci-dessous).
 
 #### I5 — Pas de balise canonique
+
 Aucun `<link rel="canonical">` dans `index.html`. Pour un SPA avec routes paramétrées (`?entite=:id`, `?filtres=...`), le risque de duplication est réel. À ajouter dynamiquement par page, avec stripping des query params non significatifs (tri, pagination affichage…).
 
 #### I6 — Hiérarchie H1 → H3 sur l'accueil (saut de niveau)
+
 `frontend/src/pages/Accueil.jsx` : H1 « Réseaux d'Influence » suivi directement de trois `<h3>` (Contribuez / Validez / Explorez), sans H2 intermédiaire. Sémantiquement incorrect : impact accessibilité (déjà flaggé probablement par Accessibility Champion) **et** SEO (Google utilise la hiérarchie pour comprendre la structure).
 
 Correction : passer les trois cards en H2, ou wrapper dans une section H2 « En 3 étapes ».
@@ -102,21 +117,27 @@ Correction : passer les trois cards en H2, ou wrapper dans une section H2 « En 
 ### À AMÉLIORER
 
 #### A1 — Pas de `humans.txt` ni mentions de crédits machine-lisibles
+
 `humans.txt` (standard humanstxt.org) est anecdotique côté SEO mais utile pour la transparence du projet — qui le maintient, contact, technologies. Cohérent avec la posture « souveraineté + transparence démocratique » du README.
 
 #### A2 — `<meta name="author">`, `<meta name="generator">`, `<meta name="theme-color">` absents
+
 Pas critiques, mais à ajouter pour les aperçus de partage et la cohérence multi-plateforme. `theme-color` impacte l'aperçu Chrome mobile et iOS.
 
 #### A3 — Pas de favicons multi-formats
+
 `/vite.svg` par défaut. À remplacer par une icône projet (SVG + PNG 32/192/512) + `apple-touch-icon`.
 
 #### A4 — Domaine URN custom `urn:reseaux-influences:` dans l'export JSON-LD
+
 `backend/src/routes/export.js` ligne 97 utilise `urn:reseaux-influences:personne:${id}` comme `@id`. C'est valide mais **non résolvable**. Pour la GEO, des `@id` qui sont des URLs HTTPS publiques de la fiche correspondante (`https://reseauxinfluences.fr/entites/:id`) augmentent fortement la citabilité (un LLM peut suivre l'URL, un humain aussi).
 
 #### A5 — Manifest PWA absent
+
 Pas critique pour le SEO classique mais utile pour la « Add to Home Screen » et certains signaux de qualité. Optionnel au MVP.
 
 #### A6 — `npm audit` et build CI : pas de Lighthouse SEO check
+
 La CI (`.github/workflows/ci.yml`) ne fait pas tourner Lighthouse ni `pa11y`. À envisager post-MVP — un check Lighthouse SEO/a11y en CI sur PR évite la régression.
 
 ---
@@ -230,6 +251,7 @@ Base légale RGPD : art. 85 RGPD + art. 80 LIL (exception journalisme/recherche)
 Ajouter `backend/src/routes/sitemap.js`, exposer `GET /sitemap.xml` non préfixé. Lecture des entités publiées (status `VALIDE`), génération `<urlset>` avec `<loc>`, `<lastmod>`, `<changefreq>`, `<priority>`. Cache mémoire 1 h.
 
 Ordre de priorité par type :
+
 - `/` : priority 1.0
 - `/graphe`, `/liens` : 0.9
 - `/entites/:id` (personnes publiques validées) : 0.8
@@ -240,6 +262,7 @@ Ordre de priorité par type :
 Une fois le pré-rendu en place, chaque fiche d'entité doit contenir un bloc `<script type="application/ld+json">` dans le `<head>`. Le code générateur existe déjà côté backend (`backend/src/routes/export.js`) — il faut l'extraire en utilitaire (`backend/src/utils/jsonld.js`) et l'injecter à la génération.
 
 Schémas prioritaires :
+
 - **Page d'accueil** : `WebSite` + `SearchAction` (recherche interne) + `Organization` (l'éditeur du site)
 - **Fiche Personne** (`/entites/:id` type Personne) : `Person` avec `sameAs` Wikidata
 - **Fiche Organisation** : `Organization` avec `sameAs`
@@ -252,6 +275,7 @@ Corriger en passant le `@id` URN → URL HTTPS résolvable (cf. A4).
 ### 6. Inscription `Bing Webmaster Tools` + `Google Search Console`
 
 Étapes au lancement public :
+
 - Créer un compte Bing Webmaster Tools, soumettre `https://reseauxinfluences.fr` et `sitemap.xml`. **Critique pour ChatGPT** (s'appuie sur l'index Bing).
 - Créer un compte Google Search Console, valider la propriété par fichier ou DNS.
 - Activer IndexNow (Bing) pour publication immédiate des nouvelles fiches d'entités. Token IndexNow à placer dans `frontend/public/` + endpoint Fastify pour notifier à chaque création d'entité validée.
@@ -259,6 +283,7 @@ Corriger en passant le `@id` URN → URL HTTPS résolvable (cf. A4).
 ### 7. Présence Wikidata du projet lui-même
 
 Hors code : créer une fiche Wikidata pour **le projet `reseauxinfluences.fr`** (item type `Q7397` = software / `Q35127` = website). Propriétés à renseigner :
+
 - `instance of` (P31) : open data project / website
 - `official website` (P856) : https://reseauxinfluences.fr
 - `programming language` (P277) : Node.js, React
@@ -293,6 +318,7 @@ Ces 4 éléments doivent figurer **dans la première section de chaque page** su
 ### Entité « reseauxinfluences.fr » dans le knowledge graph
 
 Pour que `reseauxinfluences.fr` devienne une entité reconnue :
+
 - Mention cohérente dans 3+ sources indépendantes (Wikidata, posthack.com, profils GitHub/LinkedIn de Rémi)
 - Description identique partout (le même paragraphe de 2-3 phrases)
 - Schema.org `Organization` ou `Dataset` sur la home
@@ -300,6 +326,7 @@ Pour que `reseauxinfluences.fr` devienne une entité reconnue :
 ### Choix de licence pour le corpus de données (à trancher)
 
 Le README mentionne MIT. **Pour des données, MIT n'est pas adapté** — c'est une licence logicielle. Pour un corpus collaboratif sourcé, les choix pertinents sont :
+
 - **ODbL** (Open Database License) : utilisée par OpenStreetMap. Share-alike fort, protection contre la captation par GAFAM.
 - **CC-BY 4.0** : libre, simple, attribution obligatoire. Pas de share-alike → un acteur tiers peut bâtir un produit fermé dessus.
 - **CC-BY-SA 4.0** : compromis, share-alike sans la complexité d'ODbL.
@@ -322,21 +349,22 @@ Cette décision a un impact GEO : un LLM peut citer plus largement un corpus CC-
 
 ## Récapitulatif effort/impact
 
-| Action | Effort | Impact MVP | Impact post-MVP |
-|---|---|---|---|
-| robots.txt | 10 min | moyen | élevé |
-| llms.txt | 30 min | faible | moyen |
-| humans.txt | 10 min | faible | faible |
-| OG/Twitter dans index.html | 30 min | moyen (partage) | élevé |
-| Hiérarchie titres accueil (I6) | 10 min | faible | faible |
-| sitemap.xml dynamique | 2-3 h | nul (base vide) | critique |
-| JSON-LD intégré par page | 4-6 h (dépend C1) | nul | critique |
-| Pré-rendu SPA (C1) | 1-2 j | nul | critique |
-| react-helmet par route | 2 h | faible | élevé |
-| Bing Webmaster + IndexNow | 1 h | nul | critique (ChatGPT) |
-| Wikidata projet | 30 min | faible | moyen |
+| Action                         | Effort            | Impact MVP      | Impact post-MVP    |
+| ------------------------------ | ----------------- | --------------- | ------------------ |
+| robots.txt                     | 10 min            | moyen           | élevé              |
+| llms.txt                       | 30 min            | faible          | moyen              |
+| humans.txt                     | 10 min            | faible          | faible             |
+| OG/Twitter dans index.html     | 30 min            | moyen (partage) | élevé              |
+| Hiérarchie titres accueil (I6) | 10 min            | faible          | faible             |
+| sitemap.xml dynamique          | 2-3 h             | nul (base vide) | critique           |
+| JSON-LD intégré par page       | 4-6 h (dépend C1) | nul             | critique           |
+| Pré-rendu SPA (C1)             | 1-2 j             | nul             | critique           |
+| react-helmet par route         | 2 h               | faible          | élevé              |
+| Bing Webmaster + IndexNow      | 1 h               | nul             | critique (ChatGPT) |
+| Wikidata projet                | 30 min            | faible          | moyen              |
 
 **Recommandation de séquence** :
+
 1. **Aujourd'hui** : robots.txt + humans.txt + llms.txt + OG/Twitter + correction I6 (≤ 1 h cumulé, tout en `public/` ou `index.html`).
 2. **Avant ouverture publique** : pré-rendu SPA + sitemap dynamique + JSON-LD intégré + react-helmet (2-3 j).
 3. **Au lancement** : Bing Webmaster, Google Search Console, Wikidata projet, IndexNow.

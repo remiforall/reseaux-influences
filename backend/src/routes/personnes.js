@@ -24,10 +24,7 @@ export default async function personnesRoutes(fastify) {
 
     const where = { statut: 'VALIDE' }
     if (search) {
-      where.OR = [
-        { nom: { contains: search } },
-        { prenom: { contains: search } },
-      ]
+      where.OR = [{ nom: { contains: search } }, { prenom: { contains: search } }]
     }
     if (pays) where.pays = pays
     if (role) where.rolePrincipal = { contains: role }
@@ -115,10 +112,7 @@ export default async function personnesRoutes(fastify) {
 
     const personnes = await prisma.personne.findMany({
       where: {
-        OR: [
-          { nom: { contains: q } },
-          { prenom: { contains: q } },
-        ],
+        OR: [{ nom: { contains: q } }, { prenom: { contains: q } }],
       },
       select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true },
       take: 10,

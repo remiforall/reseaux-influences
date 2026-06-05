@@ -18,7 +18,7 @@ Service du Registre national des entreprises — Bénéficiaires effectifs
 15 rue des Minimes
 92677 Courbevoie Cedex
 
-*Envoyé par lettre recommandée avec accusé de réception et copie électronique à `dpo@inpi.fr`*
+_Envoyé par lettre recommandée avec accusé de réception et copie électronique à `dpo@inpi.fr`_
 
 Courseulles-sur-Mer, le {{date du jour}}
 
@@ -43,11 +43,12 @@ Je porte un projet personnel et professionnel de journalisme d'investigation et 
 ## 2. Description du projet et de son intérêt public
 
 **Réseaux d'Influence** est une plateforme collaborative non commerciale de **cartographie des réseaux d'influence interpersonnels et transnationaux** entre :
+
 - personnalités exerçant un mandat électif ou une fonction publique,
 - dirigeants et bénéficiaires effectifs d'organisations significatives sur le plan économique, médiatique ou culturel,
 - éditeurs de publications, hébergeurs et titulaires de sites web à audience publique.
 
-Le projet s'inscrit dans la continuité directe d'initiatives journalistiques reconnues d'intérêt public (*InfluenceNetwork* d'Owni.fr porté par Nicolas Kayser-Bril, *LittleSis* aux États-Unis, *OCCRP Aleph*). Il vise à **rendre traçables, sourcées et vérifiables les relations d'influence** que les journalistes, chercheurs en sciences politiques et citoyens éclairés doivent pouvoir consulter dans le cadre du débat démocratique.
+Le projet s'inscrit dans la continuité directe d'initiatives journalistiques reconnues d'intérêt public (_InfluenceNetwork_ d'Owni.fr porté par Nicolas Kayser-Bril, _LittleSis_ aux États-Unis, _OCCRP Aleph_). Il vise à **rendre traçables, sourcées et vérifiables les relations d'influence** que les journalistes, chercheurs en sciences politiques et citoyens éclairés doivent pouvoir consulter dans le cadre du débat démocratique.
 
 La plateforme est actuellement en **phase alpha fermée** (accès restreint à son auteur), pendant que l'analyse juridique préalable à l'ouverture publique est conduite avec un cabinet spécialisé en données personnelles et droit des médias.
 
@@ -63,10 +64,12 @@ L'intérêt légitime au sens du considérant 12 de la directive (UE) 2018/843 e
 ## 4. Périmètre des demandes envisagées
 
 Je sollicite un **accès individualisé, motivé et tracé** au RBE, **strictement limité** à :
+
 - la consultation des bénéficiaires effectifs des **personnes morales déjà identifiées** comme exerçant une influence publique dans le projet ;
 - la vérification des participations significatives (≥ 25 %) lorsqu'un lien capitalistique est cité par une source secondaire (presse, BODACC, Sirene/RNE) et nécessite confirmation officielle.
 
 Je ne sollicite **pas** :
+
 - d'extraction massive ni d'exploitation systématique du registre,
 - de consultation de personnes morales non précédemment identifiées par recoupement de sources publiques,
 - de transmission à des tiers, à l'exception des publications éditoriales rédigées dans le respect de la déontologie journalistique.
@@ -89,6 +92,7 @@ Une analyse d'impact relative à la protection des données (AIPD) est en cours 
 ## 6. Engagements complémentaires
 
 Je m'engage à :
+
 - ne consulter le RBE que pour les **finalités strictement définies au § 4** ;
 - **citer systématiquement la source RBE** dans toute publication exploitant ces données (mention « Source : Registre des Bénéficiaires Effectifs (INPI), consulté le [date] ») ;
 - **conserver une traçabilité des consultations** pendant cinq (5) ans, à la disposition de l'INPI sur simple demande ;
@@ -117,7 +121,7 @@ Je vous prie d'agréer, Madame, Monsieur, l'expression de ma considération dist
 
 **Rémi Vincent**
 Gérant de PostHack
-*{{Signature manuscrite}}*
+_{{Signature manuscrite}}_
 
 ---
 
@@ -128,7 +132,7 @@ Gérant de PostHack
 3. **Note d'intention** : extraire de `CONTENT-STRATEGY.md` + `ARCHITECTURE-DECISIONS.md` les éléments clés en 3 pages mises en forme.
 4. **Lettre de soutien** : optionnel mais renforce le dossier. Possibles signataires :
    - Un·e juriste reconnu·e en données personnelles
-   - Une rédaction partenaire (*Mediapart*, *Disclose*, *Le Monde Diplomatique*) si tu en as un contact
+   - Une rédaction partenaire (_Mediapart_, _Disclose_, _Le Monde Diplomatique_) si tu en as un contact
    - Une école de journalisme (CFJ, ESJ Lille)
    - Une association reconnue d'utilité publique (Transparency International France, Anticor — vérifier compatibilité éditoriale)
 5. **Coordonner avec l'audit juridique ADR-010** : ce courrier est à envoyer **après** la validation du dossier RGPD par le juriste, pas avant. Il sera mieux reçu si la conformité du projet a déjà été examinée par un tiers de confiance.

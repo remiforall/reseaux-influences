@@ -5,6 +5,7 @@
 **Priorité d'arbitrage** : Sécurité > Accessibilité > UX > SEO/GEO > Performance
 
 Audits livrés (avec doublons cross-check) :
+
 - `docs/audits/security-2026-05-11.md` (synthétisé ci-dessous — agent a refusé l'écriture)
 - `docs/audits/ACCESSIBILITY-AUDIT.md` + `docs/audits/accessibility-2026-05-11.md`
 - `docs/audits/PERFORMANCE-AUDIT.md` + `docs/audits/performance-2026-05-11.md`
@@ -17,6 +18,7 @@ Audits livrés (avec doublons cross-check) :
 ## 1. Bug fonctionnel bloquant détecté (hors classification d'audit)
 
 **P-C3 — Contrat API graphe cassé** :
+
 - Backend `routes/graphe.js:336-337` renvoie `{source, target}`
 - Frontend `pages/Graphe.jsx:126-127` et `components/graphe/GrapheD3.jsx:93-94` lisent `{sourceId, cibleId}`
 - **Conséquence : aucune arête ne s'affiche dans le graphe**
@@ -29,22 +31,22 @@ Audits livrés (avec doublons cross-check) :
 
 ### Critiques (bloquants déploiement)
 
-| ID | Issue | Fichier | Fix |
-|---|---|---|---|
-| **C-01** | `AuditEnrichissement.utilisateurId onDelete: Cascade` viole ADR-006 | `prisma/schema.prisma:486` | Passer en `SetNull` + `utilisateurId String?` (nullable) + migration |
-| **C-02** | Audit RGPD hors transaction via `setImmediate` → perte silencieuse possible | `services/import-enrichissement.js:366-389` | Inclure audit DANS `prisma.$transaction` (tx.auditEnrichissement.create) |
-| **C-03** | Injection SPARQL Wikidata mal échappée (backslash, newlines, `lang` non validé) | `connecteurs/sources/wikidata.js:66-83` | Whitelist `^[a-z]{2}$` sur `lang`, échappement complet `\\`, `\n`, `\r`, `\t`, contrôles |
+| ID       | Issue                                                                           | Fichier                                     | Fix                                                                                      |
+| -------- | ------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **C-01** | `AuditEnrichissement.utilisateurId onDelete: Cascade` viole ADR-006             | `prisma/schema.prisma:486`                  | Passer en `SetNull` + `utilisateurId String?` (nullable) + migration                     |
+| **C-02** | Audit RGPD hors transaction via `setImmediate` → perte silencieuse possible     | `services/import-enrichissement.js:366-389` | Inclure audit DANS `prisma.$transaction` (tx.auditEnrichissement.create)                 |
+| **C-03** | Injection SPARQL Wikidata mal échappée (backslash, newlines, `lang` non validé) | `connecteurs/sources/wikidata.js:66-83`     | Whitelist `^[a-z]{2}$` sur `lang`, échappement complet `\\`, `\n`, `\r`, `\t`, contrôles |
 
 ### Majeurs (à corriger en Phase 4)
 
-| ID | Issue | Fichier | Fix |
-|---|---|---|---|
-| **M-01** | `JWT_SECRET` non vérifié au démarrage (valeur par défaut acceptée silencieusement) | `server.js` | Check fatal au boot si absent ou == valeur par défaut |
-| **M-02** | Route `/api/graphe/ego/:entiteId` publique avec `EN_ATTENTE` par défaut → exposition brouillons non modérés diffamatoires | `routes/graphe.js:230,235` | `optionalAuth` + statut défaut `'VALIDE'` si non authentifié |
-| **M-03** | SSRF résiduelle via redirections HTTP (Wikidata, RDAP, DVF) | `connecteurs/base.js:101-109` | `redirect: 'manual'` + whitelist hôtes + refus IPs RFC1918 |
-| **M-05** | Swagger UI exposé en prod → cartographie complète de l'API par tout attaquant | `server.js:67-69` | Gate sur `NODE_ENV !== 'production'` |
-| **M-06** | `request.ip` non-fiable derrière Phusion Passenger → audit forensique cassé (`127.0.0.0` partout) | `server.js` Fastify init | `trustProxy: true` en prod |
-| **M-07** | `resoudreCible` matching `nom: { contains }` → false-positives, pollution silencieuse de données | `services/import-enrichissement.js:38-60` | Matcher `wikidataId` exact, sinon créer en EN_ATTENTE plutôt que d'associer à mauvaise personne |
+| ID       | Issue                                                                                                                     | Fichier                                   | Fix                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **M-01** | `JWT_SECRET` non vérifié au démarrage (valeur par défaut acceptée silencieusement)                                        | `server.js`                               | Check fatal au boot si absent ou == valeur par défaut                                           |
+| **M-02** | Route `/api/graphe/ego/:entiteId` publique avec `EN_ATTENTE` par défaut → exposition brouillons non modérés diffamatoires | `routes/graphe.js:230,235`                | `optionalAuth` + statut défaut `'VALIDE'` si non authentifié                                    |
+| **M-03** | SSRF résiduelle via redirections HTTP (Wikidata, RDAP, DVF)                                                               | `connecteurs/base.js:101-109`             | `redirect: 'manual'` + whitelist hôtes + refus IPs RFC1918                                      |
+| **M-05** | Swagger UI exposé en prod → cartographie complète de l'API par tout attaquant                                             | `server.js:67-69`                         | Gate sur `NODE_ENV !== 'production'`                                                            |
+| **M-06** | `request.ip` non-fiable derrière Phusion Passenger → audit forensique cassé (`127.0.0.0` partout)                         | `server.js` Fastify init                  | `trustProxy: true` en prod                                                                      |
+| **M-07** | `resoudreCible` matching `nom: { contains }` → false-positives, pollution silencieuse de données                          | `services/import-enrichissement.js:38-60` | Matcher `wikidataId` exact, sinon créer en EN_ATTENTE plutôt que d'associer à mauvaise personne |
 
 ### Mineurs (post-MVP)
 
@@ -59,18 +61,18 @@ Audits livrés (avec doublons cross-check) :
 
 ### Conformité RGPD — statut
 
-| Article | Statut | Note |
-|---|---|---|
-| 5.1.a (transparence) | ✅ | Note RGPD avant formulaire |
-| 5.1.c (minimisation) | ⚠️ | OK sauf Wikidata P26 conjoint sur entités cibles non publiques |
-| 5.1.e (durée conservation) | ❌ | Aucune définie |
-| 6 (base légale) | ✅ | Art. 85 + LIL 80 cités |
-| 13/14 (information) | ⚠️ | `/mentions-legales` absente |
-| 17 (effacement) | ❌ | Bloqué par C-01 |
-| 22 (décision auto) | ✅ | Consensus communautaire |
-| 25 (privacy by design) | ⚠️ | Cassé par M-07 |
-| 35 (AIPD) | ❌ | Obligatoire, non rédigée |
-| 85 (journalisme/recherche) | ✅ partiel | Garde-fou ADR-006 OK mais court-circuitable par M-02 |
+| Article                    | Statut     | Note                                                           |
+| -------------------------- | ---------- | -------------------------------------------------------------- |
+| 5.1.a (transparence)       | ✅         | Note RGPD avant formulaire                                     |
+| 5.1.c (minimisation)       | ⚠️         | OK sauf Wikidata P26 conjoint sur entités cibles non publiques |
+| 5.1.e (durée conservation) | ❌         | Aucune définie                                                 |
+| 6 (base légale)            | ✅         | Art. 85 + LIL 80 cités                                         |
+| 13/14 (information)        | ⚠️         | `/mentions-legales` absente                                    |
+| 17 (effacement)            | ❌         | Bloqué par C-01                                                |
+| 22 (décision auto)         | ✅         | Consensus communautaire                                        |
+| 25 (privacy by design)     | ⚠️         | Cassé par M-07                                                 |
+| 35 (AIPD)                  | ❌         | Obligatoire, non rédigée                                       |
+| 85 (journalisme/recherche) | ✅ partiel | Garde-fou ADR-006 OK mais court-circuitable par M-02           |
 
 ---
 
@@ -78,14 +80,14 @@ Audits livrés (avec doublons cross-check) :
 
 ### Bloquants (échec niveau A/AA)
 
-| ID | Issue | Fichier | Fix |
-|---|---|---|---|
-| **B-01 / AAA6 / UX C1** | `FormulaireImport role="dialog" aria-modal="true"` SANS focus trap, focus initial, ni Échap | `FormulaireImport.jsx:74-79` | Vrai focus trap + focus initial + Escape + restauration focus trigger |
-| **B1** | Focus ring `amber-500 #f59e0b` annoncé 3.06:1 mais réel **2.15:1** → échec WCAG AA 1.4.11 | `index.css:28-33` | Passer en `amber-700 #b45309` (4.69:1) ou `primary` |
-| **B-02** | Bouton "Recentrer" couplé via `document.getElementById` (anti-pattern React + race condition) | `GrapheD3.jsx:279-284` | Refactor via ref/callback prop `onRecentrer` |
-| **B-03** | Triple focus sur `<tr>` du tableau graphe (`tabIndex={0}` + 2 `<button>` internes) | `TableauGraphe.jsx` | Choisir une seule cible de focus par ligne |
-| **B-04** | Commentaire promet navigation flèches sur graphe SVG, code n'implémente pas | `GrapheD3.jsx:12` | Soit implémenter, soit corriger le commentaire et documenter alternative tableau |
-| **T1** | Skip links absents (`Aller au contenu`) | `App.jsx`, `Navbar.jsx` | Ajouter `<a href="#contenu-principal">` + `id` sur main |
+| ID                      | Issue                                                                                         | Fichier                      | Fix                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
+| **B-01 / AAA6 / UX C1** | `FormulaireImport role="dialog" aria-modal="true"` SANS focus trap, focus initial, ni Échap   | `FormulaireImport.jsx:74-79` | Vrai focus trap + focus initial + Escape + restauration focus trigger            |
+| **B1**                  | Focus ring `amber-500 #f59e0b` annoncé 3.06:1 mais réel **2.15:1** → échec WCAG AA 1.4.11     | `index.css:28-33`            | Passer en `amber-700 #b45309` (4.69:1) ou `primary`                              |
+| **B-02**                | Bouton "Recentrer" couplé via `document.getElementById` (anti-pattern React + race condition) | `GrapheD3.jsx:279-284`       | Refactor via ref/callback prop `onRecentrer`                                     |
+| **B-03**                | Triple focus sur `<tr>` du tableau graphe (`tabIndex={0}` + 2 `<button>` internes)            | `TableauGraphe.jsx`          | Choisir une seule cible de focus par ligne                                       |
+| **B-04**                | Commentaire promet navigation flèches sur graphe SVG, code n'implémente pas                   | `GrapheD3.jsx:12`            | Soit implémenter, soit corriger le commentaire et documenter alternative tableau |
+| **T1**                  | Skip links absents (`Aller au contenu`)                                                       | `App.jsx`, `Navbar.jsx`      | Ajouter `<a href="#contenu-principal">` + `id` sur main                          |
 
 ### Non-conformités AAA
 
@@ -104,13 +106,13 @@ Audits livrés (avec doublons cross-check) :
 
 ## 4. UX — frictions critiques
 
-| ID | Issue | Impact |
-|---|---|---|
-| **C1** | `FormulaireImport` fausse modale (cf. A11y B-01) | Convergence avec A11y |
-| **C2** | Filtres `dateDebut`/`dateFin` codés mais jamais appliqués | Bug silencieux qui détruit la confiance |
-| **C3** | Aucune continuité après import (toast vert, mais previews vidées, pas "Explorer") | Perte de momentum sessions 30-60 min |
-| **C4** | Onboarding nul — disclaimer RGPD anxiogène + formulaire vide | Premier usage frustrant |
-| **C5** | `qualiteInfluencePublique` obligatoire mais 10 valeurs sans définition | Saisie médiocre par défaut, atterrissage sur "AUTRE" |
+| ID     | Issue                                                                             | Impact                                               |
+| ------ | --------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **C1** | `FormulaireImport` fausse modale (cf. A11y B-01)                                  | Convergence avec A11y                                |
+| **C2** | Filtres `dateDebut`/`dateFin` codés mais jamais appliqués                         | Bug silencieux qui détruit la confiance              |
+| **C3** | Aucune continuité après import (toast vert, mais previews vidées, pas "Explorer") | Perte de momentum sessions 30-60 min                 |
+| **C4** | Onboarding nul — disclaimer RGPD anxiogène + formulaire vide                      | Premier usage frustrant                              |
+| **C5** | `qualiteInfluencePublique` obligatoire mais 10 valeurs sans définition            | Saisie médiocre par défaut, atterrissage sur "AUTRE" |
 
 ### Frictions importantes
 
@@ -156,13 +158,13 @@ Audits livrés (avec doublons cross-check) :
 
 ### Critiques
 
-| ID | Issue | Fichier | Fix |
-|---|---|---|---|
-| **P-C1** | Aucun index sur les 6 FK polymorphes de `Lien` + sur `wikidataId`/`siren`/`domaine` (MySQL Prisma ne les crée pas auto) | `prisma/schema.prisma` | Migration avec `@@index` composites |
-| **P-C2** | BFS ego-network N+1 — 1 requête par voisin | `routes/graphe.js:268-294` | Batch `WHERE id IN (...)` par niveau |
-| **P-C3** | (déjà listé §1) Bug contrat API graphe |  |  |
-| **P-C4** | Cache fichier disque sans verrou ni dédup → corruption JSON + ban User-Agent Wikidata possible | `connecteurs/cache.js` | Locks par clé OU dédup des requêtes en vol via Map |
-| **P-C5** | `setImmediate(audit)` INSIDE `$transaction` → lock DB maintenu | `services/import-enrichissement.js` | Couvert par fix sécurité C-02 |
+| ID       | Issue                                                                                                                   | Fichier                             | Fix                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------- |
+| **P-C1** | Aucun index sur les 6 FK polymorphes de `Lien` + sur `wikidataId`/`siren`/`domaine` (MySQL Prisma ne les crée pas auto) | `prisma/schema.prisma`              | Migration avec `@@index` composites                |
+| **P-C2** | BFS ego-network N+1 — 1 requête par voisin                                                                              | `routes/graphe.js:268-294`          | Batch `WHERE id IN (...)` par niveau               |
+| **P-C3** | (déjà listé §1) Bug contrat API graphe                                                                                  |                                     |                                                    |
+| **P-C4** | Cache fichier disque sans verrou ni dédup → corruption JSON + ban User-Agent Wikidata possible                          | `connecteurs/cache.js`              | Locks par clé OU dédup des requêtes en vol via Map |
+| **P-C5** | `setImmediate(audit)` INSIDE `$transaction` → lock DB maintenu                                                          | `services/import-enrichissement.js` | Couvert par fix sécurité C-02                      |
 
 ### Importants
 
@@ -177,14 +179,14 @@ Audits livrés (avec doublons cross-check) :
 
 ## 7. Content — pages manquantes critiques
 
-| Page | Priorité | Justification |
-|---|---|---|
-| `/mentions-legales` | **URGENTE juridique** | ADR-006 l'exige (base légale art. 85 + LIL 80 explicite) |
-| `/sources-et-methodes` | Haute | Fondement de l'autorité éditoriale, transparence sur sources et lacunes |
-| `/comment-ca-marche` | Haute | Modèle wiki, seuil 5/5, consensus, badges |
-| `/declaration-accessibilite` | Moyenne | Template DINUM, formulation honnête "conformité partielle" |
-| Pages d'entités publiques | Haute | `Enrichissement.jsx:226` renvoie vers `/entites/:id` inexistant |
-| `/cgu` | Post-MVP | Interdire explicitement enrichissement sur citoyens privés |
+| Page                         | Priorité              | Justification                                                           |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------------- |
+| `/mentions-legales`          | **URGENTE juridique** | ADR-006 l'exige (base légale art. 85 + LIL 80 explicite)                |
+| `/sources-et-methodes`       | Haute                 | Fondement de l'autorité éditoriale, transparence sur sources et lacunes |
+| `/comment-ca-marche`         | Haute                 | Modèle wiki, seuil 5/5, consensus, badges                               |
+| `/declaration-accessibilite` | Moyenne               | Template DINUM, formulation honnête "conformité partielle"              |
+| Pages d'entités publiques    | Haute                 | `Enrichissement.jsx:226` renvoie vers `/entites/:id` inexistant         |
+| `/cgu`                       | Post-MVP              | Interdire explicitement enrichissement sur citoyens privés              |
 
 ### Renommages vocabulaire critique
 
@@ -242,6 +244,7 @@ Audits livrés (avec doublons cross-check) :
 ### LOT FIX 6 — Content / pages manquantes (chantier dédié)
 
 Différable hors pipeline actuel — sera traité dans une session dédiée :
+
 1. `/mentions-legales` (URGENT juridique)
 2. `/declaration-accessibilite`
 3. `/sources-et-methodes`
@@ -252,12 +255,12 @@ Différable hors pipeline actuel — sera traité dans une session dédiée :
 
 ## 9. Conflits arbitrés
 
-| Conflit | Résolution |
-|---|---|
-| **SEO** veut SSR pour indexabilité ↔ **Perf** prévient TTFB +50-150 ms | SSR différable post-MVP (runway PostHack). Quick wins SEO suffisent court terme. |
-| **SEO** propose `Disallow: /enrichissement` ↔ **Security** rappelle que le vrai gate est JWT | Cumul : `Disallow` pour signal moteurs + JWT pour vraie sécu. |
-| **A11y** veut focus ring contrasté ↔ **UX** veut esthétique amber | A11y prime (priorité 2 vs 3). Amber-700 reste cohérent ton mais conforme AA. |
-| **Perf** veut code-splitting ↔ **A11y** exige `<Suspense fallback>` accessible | Coordonner : fallback Suspense avec `role="status" aria-live="polite"`. |
+| Conflit                                                                                      | Résolution                                                                       |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **SEO** veut SSR pour indexabilité ↔ **Perf** prévient TTFB +50-150 ms                       | SSR différable post-MVP (runway PostHack). Quick wins SEO suffisent court terme. |
+| **SEO** propose `Disallow: /enrichissement` ↔ **Security** rappelle que le vrai gate est JWT | Cumul : `Disallow` pour signal moteurs + JWT pour vraie sécu.                    |
+| **A11y** veut focus ring contrasté ↔ **UX** veut esthétique amber                            | A11y prime (priorité 2 vs 3). Amber-700 reste cohérent ton mais conforme AA.     |
+| **Perf** veut code-splitting ↔ **A11y** exige `<Suspense fallback>` accessible               | Coordonner : fallback Suspense avec `role="status" aria-live="polite"`.          |
 
 ---
 

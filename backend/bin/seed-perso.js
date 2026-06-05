@@ -13,11 +13,11 @@
  *   cd backend && node bin/seed-perso.js --reset    # purge avant re-seed
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient();
-const RESET = process.argv.includes('--reset');
-const USER_EMAIL = 'remi@reseauxinfluences.fr';
+const prisma = new PrismaClient()
+const RESET = process.argv.includes('--reset')
+const USER_EMAIL = 'remi@reseauxinfluences.fr'
 
 // ---------------------------------------------------------------------------
 // Données issues des sources publiques (récupérées via API gratuites)
@@ -34,7 +34,7 @@ const PERSONNE_REMI = {
   wikipediaUrl: null,
   wikidataId: 'Q127335356',
   qualiteInfluence: 'DIRIGEANT',
-};
+}
 
 const ORGANISATION_POSTHACK = {
   nom: 'PostHack',
@@ -43,7 +43,7 @@ const ORGANISATION_POSTHACK = {
   pays: 'France',
   siteWeb: 'https://posthack.com',
   description:
-    "PostHack — entreprise individuelle / société de conseil en éthique numérique. " +
+    'PostHack — entreprise individuelle / société de conseil en éthique numérique. ' +
     'SIREN 900477571 · SIRET siège 90047757100021 · NAF 70.22Z (Conseil pour les affaires et autres conseils de gestion). ' +
     'Siège : 7 rue des Sorbiers, 14470 Courseulles-sur-Mer (Calvados, Normandie). ' +
     'Catégorie INSEE : PME. Source : recherche-entreprises.api.gouv.fr',
@@ -51,13 +51,14 @@ const ORGANISATION_POSTHACK = {
   wikipediaUrl: null,
   wikidataId: null, // pas de fiche Wikidata pour PostHack (à créer si pertinent)
   qualiteInfluence: 'AUTRE',
-};
+}
 
 const SITE_POSTHACK = {
   domaine: 'posthack.com',
   url: 'https://posthack.com',
   titre: 'PostHack — site officiel',
-  description: 'Site officiel de PostHack. Enregistré chez Gandi SAS, hébergé sur infrastructure Gandi.',
+  description:
+    'Site officiel de PostHack. Enregistré chez Gandi SAS, hébergé sur infrastructure Gandi.',
   dateEnregistrement: new Date('2012-08-09'),
   dateExpiration: new Date('2032-08-09'),
   registrar: 'Gandi SAS',
@@ -65,7 +66,7 @@ const SITE_POSTHACK = {
   nameservers: ['NS-166-A.GANDI.NET', 'NS-190-C.GANDI.NET', 'NS-50-B.GANDI.NET'],
   titulaireRedacted: false,
   qualiteInfluence: 'EDITEUR_SITE',
-};
+}
 
 const SOURCES = {
   wikidata: {
@@ -104,7 +105,7 @@ const SOURCES = {
     paysMedia: 'International',
     datePublication: new Date('2026-04-22'), // last changed
   },
-};
+}
 
 const LIENS = [
   {
@@ -119,52 +120,53 @@ const LIENS = [
     deA: { type: 'Organisation', match: { description_contains: 'SIREN 900477571' } },
     versB: { type: 'SiteWeb', domaine: 'posthack.com' },
     typeLienCode: 'EDITEUR_DU_SITE',
-    description: 'PostHack édite le site posthack.com (faisceau : domaine identique au nom commercial).',
+    description:
+      'PostHack édite le site posthack.com (faisceau : domaine identique au nom commercial).',
     sources: ['rdap_verisign'],
   },
-];
+]
 
 // ---------------------------------------------------------------------------
 // Helpers idempotents
 // ---------------------------------------------------------------------------
 
 async function getUserDemo() {
-  const user = await prisma.utilisateur.findUnique({ where: { email: USER_EMAIL } });
+  const user = await prisma.utilisateur.findUnique({ where: { email: USER_EMAIL } })
   if (!user) {
     throw new Error(
       `[seed-perso] Utilisateur ${USER_EMAIL} introuvable. Lancer d'abord : node bin/seed-demo.js`,
-    );
+    )
   }
-  return user;
+  return user
 }
 
 async function upsertPersonne(data, userId) {
-  const existing = await prisma.personne.findFirst({ where: { wikidataId: data.wikidataId } });
+  const existing = await prisma.personne.findFirst({ where: { wikidataId: data.wikidataId } })
   if (existing) {
     return prisma.personne.update({
       where: { id: existing.id },
       data: { ...data, statut: 'VALIDE' },
-    });
+    })
   }
-  return prisma.personne.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } });
+  return prisma.personne.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } })
 }
 
 async function upsertOrganisation(data, userId) {
   // PostHack n'a pas de wikidataId → matcher par "SIREN xxxxx" dans la description
-  const sirenMatch = data.description.match(/SIREN (\d{9})/);
-  const siren = sirenMatch?.[1];
+  const sirenMatch = data.description.match(/SIREN (\d{9})/)
+  const siren = sirenMatch?.[1]
   const existing = siren
     ? await prisma.organisation.findFirst({
         where: { description: { contains: `SIREN ${siren}` } },
       })
-    : null;
+    : null
   if (existing) {
     return prisma.organisation.update({
       where: { id: existing.id },
       data: { ...data, statut: 'VALIDE' },
-    });
+    })
   }
-  return prisma.organisation.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } });
+  return prisma.organisation.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } })
 }
 
 async function upsertSiteWeb(data, userId) {
@@ -172,61 +174,61 @@ async function upsertSiteWeb(data, userId) {
     where: { domaine: data.domaine },
     update: { ...data, statut: 'VALIDE' },
     create: { ...data, statut: 'VALIDE', creeParId: userId },
-  });
+  })
 }
 
 async function upsertSource(key) {
-  const data = SOURCES[key];
-  const existing = await prisma.source.findFirst({ where: { url: data.url } });
-  if (existing) return existing;
+  const data = SOURCES[key]
+  const existing = await prisma.source.findFirst({ where: { url: data.url } })
+  if (existing) return existing
   return prisma.source.create({
     data: { ...data, dateConsultation: new Date(), verifiee: false },
-  });
+  })
 }
 
 async function trouverEntite(ref) {
   if (ref.type === 'Personne') {
-    return prisma.personne.findFirst({ where: { wikidataId: ref.wikidataId } });
+    return prisma.personne.findFirst({ where: { wikidataId: ref.wikidataId } })
   }
   if (ref.type === 'Organisation') {
     if (ref.match?.description_contains) {
       return prisma.organisation.findFirst({
         where: { description: { contains: ref.match.description_contains } },
-      });
+      })
     }
-    return prisma.organisation.findFirst({ where: { wikidataId: ref.wikidataId } });
+    return prisma.organisation.findFirst({ where: { wikidataId: ref.wikidataId } })
   }
   if (ref.type === 'SiteWeb') {
-    return prisma.siteWeb.findUnique({ where: { domaine: ref.domaine } });
+    return prisma.siteWeb.findUnique({ where: { domaine: ref.domaine } })
   }
-  return null;
+  return null
 }
 
 function fkPourEntite(ref, entite, position) {
-  const suffix = position === 'A' ? 'AId' : 'BId';
-  if (ref.type === 'Personne') return { [`personne${suffix}`]: entite.id };
-  if (ref.type === 'Organisation') return { [`organisation${suffix}`]: entite.id };
-  if (ref.type === 'SiteWeb') return { [`siteWeb${suffix}`]: entite.id };
-  throw new Error(`Type inconnu : ${ref.type}`);
+  const suffix = position === 'A' ? 'AId' : 'BId'
+  if (ref.type === 'Personne') return { [`personne${suffix}`]: entite.id }
+  if (ref.type === 'Organisation') return { [`organisation${suffix}`]: entite.id }
+  if (ref.type === 'SiteWeb') return { [`siteWeb${suffix}`]: entite.id }
+  throw new Error(`Type inconnu : ${ref.type}`)
 }
 
 async function creerLien(lien, userId) {
-  const entiteA = await trouverEntite(lien.deA);
-  const entiteB = await trouverEntite(lien.versB);
+  const entiteA = await trouverEntite(lien.deA)
+  const entiteB = await trouverEntite(lien.versB)
   if (!entiteA || !entiteB) {
-    throw new Error(`[seed-perso] Entité introuvable pour lien ${lien.typeLienCode}`);
+    throw new Error(`[seed-perso] Entité introuvable pour lien ${lien.typeLienCode}`)
   }
 
-  const typeLien = await prisma.typeLien.findUnique({ where: { code: lien.typeLienCode } });
-  if (!typeLien) throw new Error(`TypeLien introuvable : ${lien.typeLienCode}`);
+  const typeLien = await prisma.typeLien.findUnique({ where: { code: lien.typeLienCode } })
+  if (!typeLien) throw new Error(`TypeLien introuvable : ${lien.typeLienCode}`)
 
-  const fkA = fkPourEntite(lien.deA, entiteA, 'A');
-  const fkB = fkPourEntite(lien.versB, entiteB, 'B');
+  const fkA = fkPourEntite(lien.deA, entiteA, 'A')
+  const fkB = fkPourEntite(lien.versB, entiteB, 'B')
 
   const existing = await prisma.lien.findFirst({
     where: { ...fkA, ...fkB, typeLienId: typeLien.id },
-  });
-  if (existing) return existing;
+  })
+  if (existing) return existing
 
   return prisma.lien.create({
     data: {
@@ -239,20 +241,20 @@ async function creerLien(lien, userId) {
       intensite: 1,
       creeParId: userId,
     },
-  });
+  })
 }
 
 async function reset() {
-  console.log('⚠ Suppression données perso précédentes...');
-  const remi = await prisma.personne.findFirst({ where: { wikidataId: 'Q127335356' } });
+  console.log('⚠ Suppression données perso précédentes...')
+  const remi = await prisma.personne.findFirst({ where: { wikidataId: 'Q127335356' } })
   const posthack = await prisma.organisation.findFirst({
     where: { description: { contains: 'SIREN 900477571' } },
-  });
-  const site = await prisma.siteWeb.findUnique({ where: { domaine: 'posthack.com' } });
+  })
+  const site = await prisma.siteWeb.findUnique({ where: { domaine: 'posthack.com' } })
 
-  const idsP = [remi?.id].filter(Boolean);
-  const idsO = [posthack?.id].filter(Boolean);
-  const idsS = [site?.id].filter(Boolean);
+  const idsP = [remi?.id].filter(Boolean)
+  const idsO = [posthack?.id].filter(Boolean)
+  const idsS = [site?.id].filter(Boolean)
 
   await prisma.lien.deleteMany({
     where: {
@@ -265,11 +267,11 @@ async function reset() {
         { siteWebBId: { in: idsS } },
       ],
     },
-  });
-  if (remi) await prisma.personne.delete({ where: { id: remi.id } });
-  if (posthack) await prisma.organisation.delete({ where: { id: posthack.id } });
-  if (site) await prisma.siteWeb.delete({ where: { id: site.id } });
-  console.log('✓ Données perso supprimées.\n');
+  })
+  if (remi) await prisma.personne.delete({ where: { id: remi.id } })
+  if (posthack) await prisma.organisation.delete({ where: { id: posthack.id } })
+  if (site) await prisma.siteWeb.delete({ where: { id: site.id } })
+  console.log('✓ Données perso supprimées.\n')
 }
 
 // ---------------------------------------------------------------------------
@@ -277,52 +279,52 @@ async function reset() {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log('\n┌─ seed-perso — Rémi Vincent + PostHack + posthack.com ───────┐\n');
-  if (RESET) await reset();
+  console.log('\n┌─ seed-perso — Rémi Vincent + PostHack + posthack.com ───────┐\n')
+  if (RESET) await reset()
 
-  const user = await getUserDemo();
-  console.log(`✓ User : ${user.email}\n`);
+  const user = await getUserDemo()
+  console.log(`✓ User : ${user.email}\n`)
 
-  console.log('— Personne (Wikidata Q127335356) —');
-  const remi = await upsertPersonne(PERSONNE_REMI, user.id);
-  console.log(`  ✓ ${remi.prenom} ${remi.nom}`);
+  console.log('— Personne (Wikidata Q127335356) —')
+  const remi = await upsertPersonne(PERSONNE_REMI, user.id)
+  console.log(`  ✓ ${remi.prenom} ${remi.nom}`)
 
-  console.log('\n— Organisation (Sirene SIREN 900477571) —');
-  const posthack = await upsertOrganisation(ORGANISATION_POSTHACK, user.id);
-  console.log(`  ✓ ${posthack.nom}`);
+  console.log('\n— Organisation (Sirene SIREN 900477571) —')
+  const posthack = await upsertOrganisation(ORGANISATION_POSTHACK, user.id)
+  console.log(`  ✓ ${posthack.nom}`)
 
-  console.log('\n— Site web (RDAP Verisign) —');
-  const site = await upsertSiteWeb(SITE_POSTHACK, user.id);
-  console.log(`  ✓ ${site.domaine}`);
+  console.log('\n— Site web (RDAP Verisign) —')
+  const site = await upsertSiteWeb(SITE_POSTHACK, user.id)
+  console.log(`  ✓ ${site.domaine}`)
 
-  console.log('\n— Sources publiques —');
-  const sources = {};
+  console.log('\n— Sources publiques —')
+  const sources = {}
   for (const [key, data] of Object.entries(SOURCES)) {
-    sources[key] = await upsertSource(key);
-    console.log(`  ✓ ${data.titre}`);
+    sources[key] = await upsertSource(key)
+    console.log(`  ✓ ${data.titre}`)
   }
 
-  console.log('\n— Liens —');
+  console.log('\n— Liens —')
   for (const lien of LIENS) {
-    await creerLien(lien, user.id);
-    console.log(`  ✓ ${lien.typeLienCode} — ${lien.description.slice(0, 60)}...`);
+    await creerLien(lien, user.id)
+    console.log(`  ✓ ${lien.typeLienCode} — ${lien.description.slice(0, 60)}...`)
   }
 
-  console.log('\n┌─ Bilan ─────────────────────────────────────────────────────┐');
-  console.log('│ Personnes  : 1 (Rémi Vincent — Q127335356)');
-  console.log('│ Orgas      : 1 (PostHack — SIREN 900477571)');
-  console.log('│ Sites web  : 1 (posthack.com — Gandi)');
-  console.log('│ Sources    : 4 (Wikidata, data.gouv.fr × 2, RDAP Verisign)');
-  console.log('│ Liens      : 2 (Rémi→DIRIGEANT→PostHack, PostHack→EDITEUR_DU_SITE→posthack.com)');
-  console.log('└─────────────────────────────────────────────────────────────┘\n');
-  console.log('Ouvre http://localhost:5173 → /graphe → tape "Rémi" ou "PostHack"\n');
+  console.log('\n┌─ Bilan ─────────────────────────────────────────────────────┐')
+  console.log('│ Personnes  : 1 (Rémi Vincent — Q127335356)')
+  console.log('│ Orgas      : 1 (PostHack — SIREN 900477571)')
+  console.log('│ Sites web  : 1 (posthack.com — Gandi)')
+  console.log('│ Sources    : 4 (Wikidata, data.gouv.fr × 2, RDAP Verisign)')
+  console.log('│ Liens      : 2 (Rémi→DIRIGEANT→PostHack, PostHack→EDITEUR_DU_SITE→posthack.com)')
+  console.log('└─────────────────────────────────────────────────────────────┘\n')
+  console.log('Ouvre http://localhost:5173 → /graphe → tape "Rémi" ou "PostHack"\n')
 }
 
 main()
   .catch((err) => {
-    console.error('[seed-perso] Échec :', err);
-    process.exit(1);
+    console.error('[seed-perso] Échec :', err)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

@@ -17,8 +17,8 @@
 const VALEURS = [
   { code: 'ELU', libelle: 'Élu·e (mandat électif)' },
   { code: 'HAUT_FONCTIONNAIRE', libelle: 'Haut·e fonctionnaire' },
-  { code: 'LOBBYISTE', libelle: 'Lobbyiste / représentant·e d\'intérêts' },
-  { code: 'DIRIGEANT', libelle: 'Dirigeant·e d\'organisation' },
+  { code: 'LOBBYISTE', libelle: "Lobbyiste / représentant·e d'intérêts" },
+  { code: 'DIRIGEANT', libelle: "Dirigeant·e d'organisation" },
   { code: 'ARTISTE', libelle: 'Artiste / créateur·rice' },
   { code: 'PRODUCTEUR', libelle: 'Producteur·rice' },
   { code: 'EDITEUR_PRESSE', libelle: 'Éditeur·rice de presse' },
@@ -35,12 +35,15 @@ function SelecteurQualiteInfluence({ valeur, onChange, id = 'qualite-influence',
     <div className="space-y-1">
       <label htmlFor={id} className="block text-sm font-semibold text-gray-900">
         Qualité d'influence publique
-        <span aria-hidden="true" className="text-red-800 ml-1">*</span>
+        <span aria-hidden="true" className="text-red-800 ml-1">
+          *
+        </span>
         <span className="sr-only"> (champ obligatoire)</span>
       </label>
 
       <p id={idAide} className="text-xs text-gray-600">
-        Obligatoire — base légale RGPD art. 85 + LIL art. 80 (traitement journalistique / intérêt public).
+        Obligatoire — base légale RGPD art. 85 + LIL art. 80 (traitement journalistique / intérêt
+        public).
       </p>
 
       <select
@@ -55,9 +58,7 @@ function SelecteurQualiteInfluence({ valeur, onChange, id = 'qualite-influence',
           'block w-full rounded border px-3 py-2 text-sm text-gray-900',
           'focus-visible-ring',
           'min-h-[44px]',
-          erreur
-            ? 'border-red-600 bg-red-50'
-            : 'border-gray-400 bg-white',
+          erreur ? 'border-red-600 bg-red-50' : 'border-gray-400 bg-white',
         ].join(' ')}
       >
         {/* Premier item disabled — force un choix explicite */}

@@ -14,12 +14,12 @@
  *   cd backend && node bin/seed-demo.js --reset   # supprime puis recrée
  */
 
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-const RESET = process.argv.includes('--reset');
+const RESET = process.argv.includes('--reset')
 
 // ---------------------------------------------------------------------------
 // Données démo — Sphère Bolloré + Macron (cf. CONTENT-STRATEGY.md §seeding)
@@ -31,7 +31,7 @@ const USER_DEMO = {
   nom: 'Rémi Vincent',
   pseudo: 'remi',
   role: 'ADMIN',
-};
+}
 
 const PERSONNES = [
   {
@@ -70,7 +70,7 @@ const PERSONNES = [
     wikidataId: 'Q1389428',
     qualiteInfluence: 'DIRIGEANT',
   },
-];
+]
 
 const ORGANISATIONS = [
   {
@@ -97,7 +97,7 @@ const ORGANISATIONS = [
     wikidataId: 'Q894664',
     qualiteInfluence: 'DIRIGEANT',
   },
-];
+]
 
 const SITES_WEB = [
   {
@@ -110,7 +110,7 @@ const SITES_WEB = [
     nameservers: ['dns1.ovh.net', 'dns2.ovh.net'],
     qualiteInfluence: 'EDITEUR_SITE',
   },
-];
+]
 
 const LIENS = [
   {
@@ -143,7 +143,7 @@ const LIENS = [
     typeLienCode: 'EDITEUR_DU_SITE',
     description: 'Vivendi (via Canal+) édite la chaîne et le site CNews.',
   },
-];
+]
 
 const SOURCES = {
   bollore_vivendi: {
@@ -165,43 +165,43 @@ const SOURCES = {
     paysMedia: 'France',
     datePublication: new Date('2024-01-01'),
   },
-};
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 async function upsertUserDemo() {
-  const motDePasseHash = await bcrypt.hash(USER_DEMO.motDePasse, 10);
+  const motDePasseHash = await bcrypt.hash(USER_DEMO.motDePasse, 10)
   const user = await prisma.utilisateur.upsert({
     where: { email: USER_DEMO.email },
     update: { role: USER_DEMO.role, nom: USER_DEMO.nom, pseudo: USER_DEMO.pseudo },
     create: { ...USER_DEMO, motDePasseHash, motDePasse: undefined },
-  });
-  console.log(`✓ User demo : ${user.email} (id=${user.id}, role=${user.role})`);
-  return user;
+  })
+  console.log(`✓ User demo : ${user.email} (id=${user.id}, role=${user.role})`)
+  return user
 }
 
 async function upsertPersonne(data, userId) {
-  const existing = await prisma.personne.findFirst({ where: { wikidataId: data.wikidataId } });
+  const existing = await prisma.personne.findFirst({ where: { wikidataId: data.wikidataId } })
   if (existing) {
     return prisma.personne.update({
       where: { id: existing.id },
       data: { ...data, statut: 'VALIDE' },
-    });
+    })
   }
-  return prisma.personne.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } });
+  return prisma.personne.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } })
 }
 
 async function upsertOrganisation(data, userId) {
-  const existing = await prisma.organisation.findFirst({ where: { wikidataId: data.wikidataId } });
+  const existing = await prisma.organisation.findFirst({ where: { wikidataId: data.wikidataId } })
   if (existing) {
     return prisma.organisation.update({
       where: { id: existing.id },
       data: { ...data, statut: 'VALIDE' },
-    });
+    })
   }
-  return prisma.organisation.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } });
+  return prisma.organisation.create({ data: { ...data, statut: 'VALIDE', creeParId: userId } })
 }
 
 async function upsertSiteWeb(data, userId) {
@@ -209,59 +209,59 @@ async function upsertSiteWeb(data, userId) {
     where: { domaine: data.domaine },
     update: { ...data, statut: 'VALIDE' },
     create: { ...data, statut: 'VALIDE', creeParId: userId },
-  });
+  })
 }
 
 async function trouverEntite(ref, index) {
   if (ref.type === 'Personne') {
-    return prisma.personne.findFirst({ where: { wikidataId: ref.wikidataId } });
+    return prisma.personne.findFirst({ where: { wikidataId: ref.wikidataId } })
   }
   if (ref.type === 'Organisation') {
-    return prisma.organisation.findFirst({ where: { wikidataId: ref.wikidataId } });
+    return prisma.organisation.findFirst({ where: { wikidataId: ref.wikidataId } })
   }
   if (ref.type === 'SiteWeb') {
-    return prisma.siteWeb.findUnique({ where: { domaine: ref.domaine } });
+    return prisma.siteWeb.findUnique({ where: { domaine: ref.domaine } })
   }
-  throw new Error(`[seed-demo] Type d'entité inconnu (lien #${index}) : ${ref.type}`);
+  throw new Error(`[seed-demo] Type d'entité inconnu (lien #${index}) : ${ref.type}`)
 }
 
 function fkPourEntite(ref, entite, position) {
-  const suffix = position === 'A' ? 'AId' : 'BId';
-  if (ref.type === 'Personne') return { [`personne${suffix}`]: entite.id };
-  if (ref.type === 'Organisation') return { [`organisation${suffix}`]: entite.id };
-  if (ref.type === 'SiteWeb') return { [`siteWeb${suffix}`]: entite.id };
-  throw new Error(`[seed-demo] Type inconnu : ${ref.type}`);
+  const suffix = position === 'A' ? 'AId' : 'BId'
+  if (ref.type === 'Personne') return { [`personne${suffix}`]: entite.id }
+  if (ref.type === 'Organisation') return { [`organisation${suffix}`]: entite.id }
+  if (ref.type === 'SiteWeb') return { [`siteWeb${suffix}`]: entite.id }
+  throw new Error(`[seed-demo] Type inconnu : ${ref.type}`)
 }
 
 async function upsertSource(key) {
-  const data = SOURCES[key];
-  const existing = await prisma.source.findFirst({ where: { url: data.url } });
-  if (existing) return existing;
+  const data = SOURCES[key]
+  const existing = await prisma.source.findFirst({ where: { url: data.url } })
+  if (existing) return existing
   return prisma.source.create({
     data: { ...data, dateConsultation: new Date(), verifiee: false },
-  });
+  })
 }
 
 async function creerLien(lien, userId, index) {
-  const entiteA = await trouverEntite(lien.deA, index);
-  const entiteB = await trouverEntite(lien.versB, index);
+  const entiteA = await trouverEntite(lien.deA, index)
+  const entiteB = await trouverEntite(lien.versB, index)
   if (!entiteA || !entiteB) {
-    throw new Error(`[seed-demo] Lien #${index} : entité introuvable`);
+    throw new Error(`[seed-demo] Lien #${index} : entité introuvable`)
   }
 
-  const typeLien = await prisma.typeLien.findUnique({ where: { code: lien.typeLienCode } });
+  const typeLien = await prisma.typeLien.findUnique({ where: { code: lien.typeLienCode } })
   if (!typeLien) {
-    throw new Error(`[seed-demo] TypeLien introuvable : ${lien.typeLienCode}`);
+    throw new Error(`[seed-demo] TypeLien introuvable : ${lien.typeLienCode}`)
   }
 
-  const fkA = fkPourEntite(lien.deA, entiteA, 'A');
-  const fkB = fkPourEntite(lien.versB, entiteB, 'B');
+  const fkA = fkPourEntite(lien.deA, entiteA, 'A')
+  const fkB = fkPourEntite(lien.versB, entiteB, 'B')
 
   // Idempotence : si un lien existe déjà entre ces 2 entités avec ce typeLien, on le réutilise
   const existing = await prisma.lien.findFirst({
     where: { ...fkA, ...fkB, typeLienId: typeLien.id },
-  });
-  if (existing) return existing;
+  })
+  if (existing) return existing
 
   return prisma.lien.create({
     data: {
@@ -274,7 +274,7 @@ async function creerLien(lien, userId, index) {
       intensite: 1,
       creeParId: userId,
     },
-  });
+  })
 }
 
 async function attacherSource(lienId, sourceId) {
@@ -285,29 +285,29 @@ async function attacherSource(lienId, sourceId) {
       where: { lienId_sourceId: { lienId, sourceId } },
       update: {},
       create: { lienId, sourceId },
-    });
+    })
   } catch {
     // Si le modèle n'existe pas, on ignore — la source est créée mais non rattachée.
   }
 }
 
 async function resetDonneesDemo() {
-  console.log('⚠ Mode --reset : suppression des données démo existantes...');
+  console.log('⚠ Mode --reset : suppression des données démo existantes...')
   const wikidataIds = [
     ...PERSONNES.map((p) => p.wikidataId),
     ...ORGANISATIONS.map((o) => o.wikidataId),
-  ];
-  const personnes = await prisma.personne.findMany({ where: { wikidataId: { in: wikidataIds } } });
+  ]
+  const personnes = await prisma.personne.findMany({ where: { wikidataId: { in: wikidataIds } } })
   const organisations = await prisma.organisation.findMany({
     where: { wikidataId: { in: wikidataIds } },
-  });
+  })
   const sitesWeb = await prisma.siteWeb.findMany({
     where: { domaine: { in: SITES_WEB.map((s) => s.domaine) } },
-  });
+  })
 
-  const idsPersonnes = personnes.map((p) => p.id);
-  const idsOrganisations = organisations.map((o) => o.id);
-  const idsSitesWeb = sitesWeb.map((s) => s.id);
+  const idsPersonnes = personnes.map((p) => p.id)
+  const idsOrganisations = organisations.map((o) => o.id)
+  const idsSitesWeb = sitesWeb.map((s) => s.id)
 
   await prisma.lien.deleteMany({
     where: {
@@ -320,11 +320,11 @@ async function resetDonneesDemo() {
         { siteWebBId: { in: idsSitesWeb } },
       ],
     },
-  });
-  await prisma.personne.deleteMany({ where: { id: { in: idsPersonnes } } });
-  await prisma.organisation.deleteMany({ where: { id: { in: idsOrganisations } } });
-  await prisma.siteWeb.deleteMany({ where: { id: { in: idsSitesWeb } } });
-  console.log('✓ Données démo précédentes supprimées.');
+  })
+  await prisma.personne.deleteMany({ where: { id: { in: idsPersonnes } } })
+  await prisma.organisation.deleteMany({ where: { id: { in: idsOrganisations } } })
+  await prisma.siteWeb.deleteMany({ where: { id: { in: idsSitesWeb } } })
+  console.log('✓ Données démo précédentes supprimées.')
 }
 
 // ---------------------------------------------------------------------------
@@ -332,65 +332,65 @@ async function resetDonneesDemo() {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log('\n┌─ seed-demo — Sphère Bolloré/Macron ─────────────────────────┐\n');
+  console.log('\n┌─ seed-demo — Sphère Bolloré/Macron ─────────────────────────┐\n')
 
-  if (RESET) await resetDonneesDemo();
+  if (RESET) await resetDonneesDemo()
 
-  const user = await upsertUserDemo();
+  const user = await upsertUserDemo()
 
-  console.log('\n— Personnes —');
+  console.log('\n— Personnes —')
   for (const p of PERSONNES) {
-    const personne = await upsertPersonne(p, user.id);
-    console.log(`  ✓ ${personne.prenom} ${personne.nom} (${personne.wikidataId})`);
+    const personne = await upsertPersonne(p, user.id)
+    console.log(`  ✓ ${personne.prenom} ${personne.nom} (${personne.wikidataId})`)
   }
 
-  console.log('\n— Organisations —');
+  console.log('\n— Organisations —')
   for (const o of ORGANISATIONS) {
-    const orga = await upsertOrganisation(o, user.id);
-    console.log(`  ✓ ${orga.nom} (${orga.wikidataId})`);
+    const orga = await upsertOrganisation(o, user.id)
+    console.log(`  ✓ ${orga.nom} (${orga.wikidataId})`)
   }
 
-  console.log('\n— Sites web —');
+  console.log('\n— Sites web —')
   for (const s of SITES_WEB) {
-    const site = await upsertSiteWeb(s, user.id);
-    console.log(`  ✓ ${site.domaine}`);
+    const site = await upsertSiteWeb(s, user.id)
+    console.log(`  ✓ ${site.domaine}`)
   }
 
-  console.log('\n— Sources —');
-  const sourceBolloreVivendi = await upsertSource('bollore_vivendi');
-  const sourceCnews = await upsertSource('cnews_editeur');
-  console.log(`  ✓ ${sourceBolloreVivendi.titre}`);
-  console.log(`  ✓ ${sourceCnews.titre}`);
+  console.log('\n— Sources —')
+  const sourceBolloreVivendi = await upsertSource('bollore_vivendi')
+  const sourceCnews = await upsertSource('cnews_editeur')
+  console.log(`  ✓ ${sourceBolloreVivendi.titre}`)
+  console.log(`  ✓ ${sourceCnews.titre}`)
 
-  console.log('\n— Liens —');
+  console.log('\n— Liens —')
   for (let i = 0; i < LIENS.length; i++) {
-    const lien = await creerLien(LIENS[i], user.id, i);
-    const sourceId = i === LIENS.length - 1 ? sourceCnews.id : sourceBolloreVivendi.id;
-    await attacherSource(lien.id, sourceId);
+    const lien = await creerLien(LIENS[i], user.id, i)
+    const sourceId = i === LIENS.length - 1 ? sourceCnews.id : sourceBolloreVivendi.id
+    await attacherSource(lien.id, sourceId)
     console.log(
       `  ✓ ${LIENS[i].deA.wikidataId ?? LIENS[i].deA.domaine} → ${LIENS[i].typeLienCode} → ${LIENS[i].versB.wikidataId ?? LIENS[i].versB.domaine}`,
-    );
+    )
   }
 
-  console.log('\n┌─ Bilan ─────────────────────────────────────────────────────┐');
-  console.log(`│ User demo  : ${USER_DEMO.email}`);
-  console.log(`│ Mot de passe : ${USER_DEMO.motDePasse}`);
-  console.log(`│ Rôle       : ${USER_DEMO.role}`);
-  console.log(`│ Personnes  : ${PERSONNES.length}`);
-  console.log(`│ Orgas      : ${ORGANISATIONS.length}`);
-  console.log(`│ Sites web  : ${SITES_WEB.length}`);
-  console.log(`│ Liens      : ${LIENS.length}`);
-  console.log('└─────────────────────────────────────────────────────────────┘\n');
+  console.log('\n┌─ Bilan ─────────────────────────────────────────────────────┐')
+  console.log(`│ User demo  : ${USER_DEMO.email}`)
+  console.log(`│ Mot de passe : ${USER_DEMO.motDePasse}`)
+  console.log(`│ Rôle       : ${USER_DEMO.role}`)
+  console.log(`│ Personnes  : ${PERSONNES.length}`)
+  console.log(`│ Orgas      : ${ORGANISATIONS.length}`)
+  console.log(`│ Sites web  : ${SITES_WEB.length}`)
+  console.log(`│ Liens      : ${LIENS.length}`)
+  console.log('└─────────────────────────────────────────────────────────────┘\n')
   console.log(
     'Prochaine étape : http://localhost:5173 → Connexion → /graphe → rechercher "Bolloré"',
-  );
+  )
 }
 
 main()
   .catch((err) => {
-    console.error('[seed-demo] Échec :', err);
-    process.exit(1);
+    console.error('[seed-demo] Échec :', err)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

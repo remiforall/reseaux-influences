@@ -66,8 +66,7 @@ function FiltresGraphe({ typesLienDisponibles = [], filtres, onChangeFiltres }) 
     const base = filtres.typesLien.length === 0 ? tousLesCodes : filtres.typesLien
     const nouveau = base.includes(code) ? base.filter((c) => c !== code) : [...base, code]
     /* Si tout est coché, revenir à la convention vide (= tout) */
-    const normalise =
-      nouveau.length === tousLesCodes.length ? [] : nouveau
+    const normalise = nouveau.length === tousLesCodes.length ? [] : nouveau
     metAJour('typesLien', normalise)
   }
 
@@ -81,9 +80,7 @@ function FiltresGraphe({ typesLienDisponibles = [], filtres, onChangeFiltres }) 
       className="bg-white border border-gray-200 rounded-lg p-4 space-y-5 text-sm"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Filtres
-        </h2>
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Filtres</h2>
         <button
           type="button"
           onClick={reinitialiser}
@@ -166,9 +163,7 @@ function FiltresGraphe({ typesLienDisponibles = [], filtres, onChangeFiltres }) 
               <input
                 type="checkbox"
                 checked={filtres.statuts.includes(code)}
-                onChange={() =>
-                  metAJour('statuts', toggleDansTableau(filtres.statuts, code))
-                }
+                onChange={() => metAJour('statuts', toggleDansTableau(filtres.statuts, code))}
                 className="w-4 h-4 rounded border-gray-400 text-secondary focus-visible-ring"
               />
               <span className="text-gray-800">{libelle}</span>

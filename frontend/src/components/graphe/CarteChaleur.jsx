@@ -44,7 +44,8 @@ const IGN_WMTS_URL =
   '&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' +
   '&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'
 
-const IGN_ATTRIBUTION = 'Fonds de carte &copy; <a href="https://geoplateforme.ign.fr" rel="external noopener">IGN Géoplateforme</a> — données reseaux-influences.fr'
+const IGN_ATTRIBUTION =
+  'Fonds de carte &copy; <a href="https://geoplateforme.ign.fr" rel="external noopener">IGN Géoplateforme</a> — données reseaux-influences.fr'
 
 /** Centre par défaut : France métropolitaine */
 const CENTRE_DEFAUT = { lat: 46.5, lon: 2.5 }
@@ -69,8 +70,7 @@ function obtenirCouleur(poids) {
  */
 function prefersReducedMotion() {
   return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
 }
 
@@ -82,9 +82,7 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
 
   const [vuTableau, setVuTableau] = useState(false)
 
-  const pointsValides = points.filter(
-    (p) => typeof p.lat === 'number' && typeof p.lon === 'number',
-  )
+  const pointsValides = points.filter((p) => typeof p.lat === 'number' && typeof p.lon === 'number')
 
   // Initialisation de la carte Leaflet
   useEffect(() => {
@@ -140,26 +138,28 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
 
     // Couche heatmap (leaflet.heat doit être importé après Leaflet)
     // Import dynamique pour éviter les erreurs SSR
-    import('leaflet.heat').then(() => {
-      if (!instanceCarteRef.current) return
+    import('leaflet.heat')
+      .then(() => {
+        if (!instanceCarteRef.current) return
 
-      const heatData = pointsValides.map((p) => [p.lat, p.lon, Math.min(p.poids, 1)])
-      // L.heatLayer est ajouté par leaflet.heat sur l'objet L global
-      if (L.heatLayer) {
-        heatLayerRef.current = L.heatLayer(heatData, {
-          radius: 25,
-          blur: 15,
-          maxZoom: 14,
-          gradient: {
-            0.0: '#2563eb',
-            0.5: '#f59e0b',
-            1.0: '#dc2626',
-          },
-        }).addTo(instanceCarteRef.current)
-      }
-    }).catch(() => {
-      // leaflet.heat non disponible — on affiche uniquement les marqueurs
-    })
+        const heatData = pointsValides.map((p) => [p.lat, p.lon, Math.min(p.poids, 1)])
+        // L.heatLayer est ajouté par leaflet.heat sur l'objet L global
+        if (L.heatLayer) {
+          heatLayerRef.current = L.heatLayer(heatData, {
+            radius: 25,
+            blur: 15,
+            maxZoom: 14,
+            gradient: {
+              0.0: '#2563eb',
+              0.5: '#f59e0b',
+              1.0: '#dc2626',
+            },
+          }).addTo(instanceCarteRef.current)
+        }
+      })
+      .catch(() => {
+        // leaflet.heat non disponible — on affiche uniquement les marqueurs
+      })
 
     // Marqueurs cliquables pour l'interactivité (au-dessus du layer de chaleur)
     for (const point of pointsValides) {
@@ -219,9 +219,7 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
   }, [pointsValides, onPointClick])
 
   // Top 10 pour le tableau alternatif
-  const top10 = [...pointsValides]
-    .sort((a, b) => b.poids - a.poids)
-    .slice(0, 10)
+  const top10 = [...pointsValides].sort((a, b) => b.poids - a.poids).slice(0, 10)
 
   return (
     <div lang="fr" className="space-y-3">
@@ -238,7 +236,8 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
         </button>
 
         <span className="text-sm text-gray-600">
-          {pointsValides.length} point{pointsValides.length > 1 ? 's' : ''} géolocalisé{pointsValides.length > 1 ? 's' : ''}
+          {pointsValides.length} point{pointsValides.length > 1 ? 's' : ''} géolocalisé
+          {pointsValides.length > 1 ? 's' : ''}
         </span>
       </div>
 
@@ -281,18 +280,33 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
           {top10.length === 0 ? (
             <p className="text-gray-500 text-sm py-4 text-center">Aucune entité géolocalisée.</p>
           ) : (
-            <table className="w-full text-sm border-collapse" aria-label="Entités géolocalisées classées par poids">
+            <table
+              className="w-full text-sm border-collapse"
+              aria-label="Entités géolocalisées classées par poids"
+            >
               <caption className="sr-only">
                 Les entités sont classées par poids décroissant (intensite × score de confiance).
               </caption>
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th scope="col" className="py-2 text-left font-medium text-gray-700">Rang</th>
-                  <th scope="col" className="py-2 text-left font-medium text-gray-700">Entité</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Poids</th>
-                  <th scope="col" className="py-2 text-left font-medium text-gray-700">Niveau</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Lat</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Lon</th>
+                  <th scope="col" className="py-2 text-left font-medium text-gray-700">
+                    Rang
+                  </th>
+                  <th scope="col" className="py-2 text-left font-medium text-gray-700">
+                    Entité
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Poids
+                  </th>
+                  <th scope="col" className="py-2 text-left font-medium text-gray-700">
+                    Niveau
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Lat
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Lon
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -322,8 +336,12 @@ function CarteChaleur({ points = [], centre = CENTRE_DEFAUT, onPointClick }) {
                           {couleurInfo.libelle}
                         </span>
                       </td>
-                      <td className="py-1.5 text-right font-mono text-gray-600">{point.lat.toFixed(4)}</td>
-                      <td className="py-1.5 text-right font-mono text-gray-600">{point.lon.toFixed(4)}</td>
+                      <td className="py-1.5 text-right font-mono text-gray-600">
+                        {point.lat.toFixed(4)}
+                      </td>
+                      <td className="py-1.5 text-right font-mono text-gray-600">
+                        {point.lon.toFixed(4)}
+                      </td>
                     </tr>
                   )
                 })}

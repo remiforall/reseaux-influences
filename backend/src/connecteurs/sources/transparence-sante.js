@@ -31,7 +31,7 @@
  * Ce stub retourne toujours un tableau vide sans appel reseau.
  */
 
-import { BaseConnecteur } from '../base.js';
+import { BaseConnecteur } from '../base.js'
 
 export default class TransparenceSanteConnecteur extends BaseConnecteur {
   constructor() {
@@ -43,7 +43,7 @@ export default class TransparenceSanteConnecteur extends BaseConnecteur {
         debit: Number(process.env.TRANSPARENCE_SANTE_RATE_LIMIT_DEBIT) || 2,
         capacite: Number(process.env.TRANSPARENCE_SANTE_RATE_LIMIT_CAPACITE) || 5,
       },
-    });
+    })
   }
 
   /**
@@ -56,7 +56,7 @@ export default class TransparenceSanteConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: [], source: string, dateRecuperation: string, version: string, avertissement: string }>}
    */
   async rechercher(_query) {
-    return this._enveloppe([]);
+    return this._enveloppe([])
   }
 
   /**
@@ -73,9 +73,8 @@ export default class TransparenceSanteConnecteur extends BaseConnecteur {
       source: 'Transparence Sante',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-      avertissement:
-        'Connecteur en cours de developpement — voir ADR-012 pour le calendrier.',
-    };
+      avertissement: 'Connecteur en cours de developpement — voir ADR-012 pour le calendrier.',
+    }
   }
 
   /**
@@ -92,7 +91,7 @@ export default class TransparenceSanteConnecteur extends BaseConnecteur {
       source: 'Transparence Sante',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /** Enveloppe standard avec avertissement stub. */
@@ -102,8 +101,7 @@ export default class TransparenceSanteConnecteur extends BaseConnecteur {
       source: 'Transparence Sante',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-      avertissement:
-        'Connecteur en cours de developpement — voir ADR-012 pour le calendrier.',
-    };
+      avertissement: 'Connecteur en cours de developpement — voir ADR-012 pour le calendrier.',
+    }
   }
 }

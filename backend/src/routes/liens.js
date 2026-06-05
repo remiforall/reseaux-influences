@@ -3,36 +3,45 @@ import { prisma } from '../utils/prisma.js'
 import { authenticate } from '../middleware/auth.js'
 import { peutSoumettre } from '../services/gamification.js'
 
-const lienSchema = z.object({
-  // Entité A : personne OU organisation
-  personneAId: z.string().uuid().optional(),
-  organisationAId: z.string().uuid().optional(),
-  // Entité B : personne OU organisation
-  personneBId: z.string().uuid().optional(),
-  organisationBId: z.string().uuid().optional(),
-  typeLienId: z.number().int().positive(),
-  description: z.string().optional(),
-  dateDebut: z.string().optional(),
-  dateFin: z.string().optional(),
-  estBidirectionnel: z.boolean().optional(),
-  intensite: z.number().int().min(1).max(5).optional(),
-  sourceId: z.string().uuid().optional(),
-  // Création de source inline
-  nouvelleSource: z.object({
-    url: z.string().url(),
-    titre: z.string().min(1),
-    media: z.string().optional(),
-    typeMedia: z.enum(['PRESSE_ECRITE', 'TELEVISION', 'RADIO', 'WEB', 'DOCUMENT_OFFICIEL']).optional(),
-    datePublication: z.string().optional(),
-    auteur: z.string().optional(),
-  }).optional(),
-}).refine(
-  (data) => (data.personneAId || data.organisationAId) && !(data.personneAId && data.organisationAId),
-  { message: 'Entité A : fournir personneAId OU organisationAId (pas les deux)' },
-).refine(
-  (data) => (data.personneBId || data.organisationBId) && !(data.personneBId && data.organisationBId),
-  { message: 'Entité B : fournir personneBId OU organisationBId (pas les deux)' },
-)
+const lienSchema = z
+  .object({
+    // Entité A : personne OU organisation
+    personneAId: z.string().uuid().optional(),
+    organisationAId: z.string().uuid().optional(),
+    // Entité B : personne OU organisation
+    personneBId: z.string().uuid().optional(),
+    organisationBId: z.string().uuid().optional(),
+    typeLienId: z.number().int().positive(),
+    description: z.string().optional(),
+    dateDebut: z.string().optional(),
+    dateFin: z.string().optional(),
+    estBidirectionnel: z.boolean().optional(),
+    intensite: z.number().int().min(1).max(5).optional(),
+    sourceId: z.string().uuid().optional(),
+    // Création de source inline
+    nouvelleSource: z
+      .object({
+        url: z.string().url(),
+        titre: z.string().min(1),
+        media: z.string().optional(),
+        typeMedia: z
+          .enum(['PRESSE_ECRITE', 'TELEVISION', 'RADIO', 'WEB', 'DOCUMENT_OFFICIEL'])
+          .optional(),
+        datePublication: z.string().optional(),
+        auteur: z.string().optional(),
+      })
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      (data.personneAId || data.organisationAId) && !(data.personneAId && data.organisationAId),
+    { message: 'Entité A : fournir personneAId OU organisationAId (pas les deux)' },
+  )
+  .refine(
+    (data) =>
+      (data.personneBId || data.organisationBId) && !(data.personneBId && data.organisationBId),
+    { message: 'Entité B : fournir personneBId OU organisationBId (pas les deux)' },
+  )
 
 export default async function liensRoutes(fastify) {
   // Liste des liens (public)
@@ -50,10 +59,18 @@ export default async function liensRoutes(fastify) {
         take: parseInt(limit),
         orderBy: { createdAt: 'desc' },
         include: {
-          personneA: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true } },
-          personneB: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true } },
-          organisationA: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true } },
-          organisationB: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true } },
+          personneA: {
+            select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true },
+          },
+          personneB: {
+            select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true },
+          },
+          organisationA: {
+            select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true },
+          },
+          organisationB: {
+            select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true },
+          },
           typeLien: true,
           source: { select: { id: true, url: true, titre: true, media: true } },
           creePar: { select: { id: true, pseudo: true } },
@@ -184,7 +201,9 @@ export default async function liensRoutes(fastify) {
       const source = await prisma.source.create({
         data: {
           ...nouvelleSource,
-          datePublication: nouvelleSource.datePublication ? new Date(nouvelleSource.datePublication) : null,
+          datePublication: nouvelleSource.datePublication
+            ? new Date(nouvelleSource.datePublication)
+            : null,
           creeParId: request.utilisateur.id,
         },
       })

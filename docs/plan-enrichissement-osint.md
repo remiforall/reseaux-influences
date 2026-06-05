@@ -309,18 +309,18 @@ Aucune nouvelle au-delà du L1.
 
 ```javascript
 // Pseudo-code (à implémenter par l'Implementer)
-import { z } from 'zod';
-import { authenticate } from '../middleware/auth.js';
-import { peutSoumettre } from '../services/gamification.js';
-import { rechercherMultiConnecteurs } from '../services/enrichissement.js';
-import { importer } from '../services/import-enrichissement.js';
-import { listerConnecteurs } from '../connecteurs/registry.js';
+import { z } from 'zod'
+import { authenticate } from '../middleware/auth.js'
+import { peutSoumettre } from '../services/gamification.js'
+import { rechercherMultiConnecteurs } from '../services/enrichissement.js'
+import { importer } from '../services/import-enrichissement.js'
+import { listerConnecteurs } from '../connecteurs/registry.js'
 
 const rechercherSchema = z.object({
   query: z.string().min(2).max(200),
   types: z.array(z.enum(['personne', 'organisation', 'site'])).min(1),
   connecteurs: z.array(z.string()).optional(), // défaut = tous actifs
-});
+})
 
 const importerSchema = z.object({
   preview: z.object({
@@ -341,46 +341,44 @@ const importerSchema = z.object({
     'EDITEUR_SITE',
     'AUTRE',
   ]),
-});
+})
 
 export default async function enrichissementRoutes(fastify) {
   fastify.get('/connecteurs', { preHandler: [authenticate] }, async () => {
-    return { connecteurs: listerConnecteurs() };
-  });
+    return { connecteurs: listerConnecteurs() }
+  })
 
   fastify.post('/rechercher', { preHandler: [authenticate] }, async (req, reply) => {
-    const result = rechercherSchema.safeParse(req.body);
+    const result = rechercherSchema.safeParse(req.body)
     if (!result.success)
-      return reply.code(400).send({ error: 'Données invalides', details: result.error.flatten() });
-    const reponse = await rechercherMultiConnecteurs(result.data);
-    return reponse;
-  });
+      return reply.code(400).send({ error: 'Données invalides', details: result.error.flatten() })
+    const reponse = await rechercherMultiConnecteurs(result.data)
+    return reponse
+  })
 
   fastify.post('/importer', { preHandler: [authenticate] }, async (req, reply) => {
-    const eligibilite = await peutSoumettre(req.utilisateur.id);
+    const eligibilite = await peutSoumettre(req.utilisateur.id)
     if (!eligibilite.autorise) {
-      return reply
-        .code(403)
-        .send({
-          error: `Vous devez valider ${eligibilite.seuilRequis} liens avant.`,
-          ...eligibilite,
-        });
+      return reply.code(403).send({
+        error: `Vous devez valider ${eligibilite.seuilRequis} liens avant.`,
+        ...eligibilite,
+      })
     }
-    const result = importerSchema.safeParse(req.body);
+    const result = importerSchema.safeParse(req.body)
     if (!result.success)
-      return reply.code(400).send({ error: 'Données invalides', details: result.error.flatten() });
+      return reply.code(400).send({ error: 'Données invalides', details: result.error.flatten() })
     try {
       const reponse = await importer({
         ...result.data,
         utilisateurId: req.utilisateur.id,
         ipAddress: req.ip,
-      });
-      return reply.code(201).send(reponse);
+      })
+      return reply.code(201).send(reponse)
     } catch (err) {
-      if (err.message.startsWith('Qualité')) return reply.code(400).send({ error: err.message });
-      throw err;
+      if (err.message.startsWith('Qualité')) return reply.code(400).send({ error: err.message })
+      throw err
     }
-  });
+  })
 }
 ```
 

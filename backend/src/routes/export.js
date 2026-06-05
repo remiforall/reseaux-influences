@@ -4,17 +4,67 @@ import { prisma } from '../utils/prisma.js'
 function nomEntite(lien, cote) {
   const p = cote === 'A' ? lien.personneA : lien.personneB
   const o = cote === 'A' ? lien.organisationA : lien.organisationB
-  if (p) return { nom: p.prenom ? `${p.prenom} ${p.nom}` : p.nom, type: 'Person', pays: p.pays, id: p.id, role: p.rolePrincipal }
-  if (o) return { nom: o.sigle ? `${o.nom} (${o.sigle})` : o.nom, type: 'Organization', pays: o.pays, id: o.id, role: o.typeOrganisation }
+  if (p)
+    return {
+      nom: p.prenom ? `${p.prenom} ${p.nom}` : p.nom,
+      type: 'Person',
+      pays: p.pays,
+      id: p.id,
+      role: p.rolePrincipal,
+    }
+  if (o)
+    return {
+      nom: o.sigle ? `${o.nom} (${o.sigle})` : o.nom,
+      type: 'Organization',
+      pays: o.pays,
+      id: o.id,
+      role: o.typeOrganisation,
+    }
   return null
 }
 
 // Includes communs pour les exports
 const exportIncludes = {
-  personneA: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true, wikidataId: true } },
-  personneB: { select: { id: true, nom: true, prenom: true, rolePrincipal: true, pays: true, wikidataId: true } },
-  organisationA: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true, wikidataId: true } },
-  organisationB: { select: { id: true, nom: true, sigle: true, typeOrganisation: true, pays: true, wikidataId: true } },
+  personneA: {
+    select: {
+      id: true,
+      nom: true,
+      prenom: true,
+      rolePrincipal: true,
+      pays: true,
+      wikidataId: true,
+    },
+  },
+  personneB: {
+    select: {
+      id: true,
+      nom: true,
+      prenom: true,
+      rolePrincipal: true,
+      pays: true,
+      wikidataId: true,
+    },
+  },
+  organisationA: {
+    select: {
+      id: true,
+      nom: true,
+      sigle: true,
+      typeOrganisation: true,
+      pays: true,
+      wikidataId: true,
+    },
+  },
+  organisationB: {
+    select: {
+      id: true,
+      nom: true,
+      sigle: true,
+      typeOrganisation: true,
+      pays: true,
+      wikidataId: true,
+    },
+  },
   typeLien: { select: { code: true, libelle: true } },
   source: { select: { url: true, titre: true, media: true, datePublication: true } },
 }
@@ -51,7 +101,8 @@ export default async function exportRoutes(fastify) {
   fastify.get('/csv', async (request, reply) => {
     const liens = await fetchValidatedLiens(request.query)
 
-    const header = 'Entité A,Type A,Pays A,Entité B,Type B,Pays B,Type de lien,Description,Source,Média,URL Source,Score de confiance\n'
+    const header =
+      'Entité A,Type A,Pays A,Entité B,Type B,Pays B,Type de lien,Description,Source,Média,URL Source,Score de confiance\n'
     const rows = liens.map((l) => {
       const a = nomEntite(l, 'A')
       const b = nomEntite(l, 'B')
@@ -134,13 +185,15 @@ export default async function exportRoutes(fastify) {
           { '@id': `urn:reseaux-influences:${typeA}:${idA}` },
           { '@id': `urn:reseaux-influences:${typeB}:${idB}` },
         ],
-        isBasedOn: l.source ? {
-          '@type': 'CreativeWork',
-          name: l.source.titre,
-          url: l.source.url,
-          publisher: l.source.media || undefined,
-          datePublished: l.source.datePublication || undefined,
-        } : undefined,
+        isBasedOn: l.source
+          ? {
+              '@type': 'CreativeWork',
+              name: l.source.titre,
+              url: l.source.url,
+              publisher: l.source.media || undefined,
+              datePublished: l.source.datePublication || undefined,
+            }
+          : undefined,
         aggregateRating: {
           '@type': 'AggregateRating',
           ratingValue: l.scoreConfiance,
@@ -156,19 +209,16 @@ export default async function exportRoutes(fastify) {
         ri: 'https://reseauxinfluences.fr/ontology/',
       },
       '@type': 'Dataset',
-      name: 'Réseaux d\'Influence — Export',
-      description: 'Données collaboratives et vérifiées sur les réseaux d\'influence',
+      name: "Réseaux d'Influence — Export",
+      description: "Données collaboratives et vérifiées sur les réseaux d'influence",
       license: 'https://opensource.org/licenses/MIT',
       dateModified: new Date().toISOString(),
       creator: {
         '@type': 'Organization',
-        name: 'Réseaux d\'Influence',
+        name: "Réseaux d'Influence",
         url: 'https://reseauxinfluences.fr',
       },
-      hasPart: [
-        ...Array.from(entities.values()),
-        ...relationships,
-      ],
+      hasPart: [...Array.from(entities.values()), ...relationships],
     }
   })
 
@@ -190,7 +240,12 @@ export default async function exportRoutes(fastify) {
     }
 
     // Échapper les caractères XML
-    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    const esc = (s) =>
+      String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphstruct.org/graphml"
@@ -274,7 +329,8 @@ export default async function exportRoutes(fastify) {
         limit: take,
         pages: Math.ceil(total / take),
         exportDate: new Date().toISOString(),
-        description: 'Données collaboratives vérifiées — score de confiance minimum : ' + minScore + '%',
+        description:
+          'Données collaboratives vérifiées — score de confiance minimum : ' + minScore + '%',
         formats_disponibles: ['/export/json', '/export/csv', '/export/jsonld', '/export/graphml'],
       },
       data: liens.map((l) => {
@@ -299,12 +355,14 @@ export default async function exportRoutes(fastify) {
             validationsFaux: l.nbValidationsFaux,
             validationsIndecis: l.nbValidationsIndecis,
           },
-          source: l.source ? {
-            titre: l.source.titre,
-            url: l.source.url,
-            media: l.source.media,
-            datePublication: l.source.datePublication,
-          } : null,
+          source: l.source
+            ? {
+                titre: l.source.titre,
+                url: l.source.url,
+                media: l.source.media,
+                datePublication: l.source.datePublication,
+              }
+            : null,
           updatedAt: l.updatedAt,
         }
       }),

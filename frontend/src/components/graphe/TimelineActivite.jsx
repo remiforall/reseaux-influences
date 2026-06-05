@@ -39,24 +39,18 @@ import * as d3 from 'd3'
 
 /** Préfère les transitions réduites ? */
 const reduitMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** Palette de couleur : intensiteMoyenne 0→5 → bleu (#2563eb) → rouge (#dc2626) */
-const echelleIntensiteCouleur = d3.scaleLinear()
+const echelleIntensiteCouleur = d3
+  .scaleLinear()
   .domain([0, 2.5, 5])
   .range(['#2563eb', '#f59e0b', '#dc2626'])
   .clamp(true)
 
 const MARGE = { haut: 20, droite: 20, bas: 50, gauche: 50 }
 
-function TimelineActivite({
-  periodes = [],
-  evenements = [],
-  dateMin,
-  dateMax,
-  onPeriodeClick,
-}) {
+function TimelineActivite({ periodes = [], evenements = [], dateMin, dateMax, onPeriodeClick }) {
   const svgRef = useRef(null)
   const [vuTableau, setVuTableau] = useState(false)
   const [indexCurseur, setIndexCurseur] = useState(0)
@@ -114,7 +108,8 @@ function TimelineActivite({
     g.append('g')
       .attr('transform', `translate(0,${hauteur})`)
       .call(
-        d3.axisBottom(echelleX)
+        d3
+          .axisBottom(echelleX)
           .ticks(Math.min(periodesTriees.length, 8))
           .tickFormat(d3.timeFormat('%Y')),
       )
@@ -170,15 +165,18 @@ function TimelineActivite({
       if (x < 0 || x > largeur) continue
 
       g.append('line')
-        .attr('x1', x).attr('x2', x)
-        .attr('y1', 0).attr('y2', hauteur)
+        .attr('x1', x)
+        .attr('x2', x)
+        .attr('y1', 0)
+        .attr('y2', hauteur)
         .attr('stroke', '#7c3aed')
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '4 3')
         .attr('opacity', 0.7)
 
       g.append('circle')
-        .attr('cx', x).attr('cy', 0)
+        .attr('cx', x)
+        .attr('cy', 0)
         .attr('r', 5)
         .attr('fill', '#7c3aed')
         .attr('cursor', 'help')
@@ -191,8 +189,10 @@ function TimelineActivite({
       const xCurseur = echelleX(new Date(periodeSurvol.date))
       g.append('line')
         .attr('class', 'ligne-curseur')
-        .attr('x1', xCurseur).attr('x2', xCurseur)
-        .attr('y1', 0).attr('y2', hauteur)
+        .attr('x1', xCurseur)
+        .attr('x2', xCurseur)
+        .attr('y1', 0)
+        .attr('y2', hauteur)
         .attr('stroke', '#111827')
         .attr('stroke-width', 2)
         .attr('pointer-events', 'none')
@@ -214,7 +214,8 @@ function TimelineActivite({
         </button>
         <span className="text-sm text-gray-600">
           {periodesTriees.length} période{periodesTriees.length > 1 ? 's' : ''}
-          {evenements.length > 0 && ` · ${evenements.length} événement${evenements.length > 1 ? 's' : ''}`}
+          {evenements.length > 0 &&
+            ` · ${evenements.length} événement${evenements.length > 1 ? 's' : ''}`}
         </span>
       </div>
 
@@ -249,7 +250,9 @@ function TimelineActivite({
       {!vuTableau && (
         <div>
           {periodesTriees.length === 0 ? (
-            <p className="text-gray-500 text-sm py-8 text-center">Aucune donnée chronologique disponible.</p>
+            <p className="text-gray-500 text-sm py-8 text-center">
+              Aucune donnée chronologique disponible.
+            </p>
           ) : (
             <>
               <svg
@@ -262,11 +265,16 @@ function TimelineActivite({
 
               {/* Curseur temporel — <input type="range"> natif pour accessibilité AAA */}
               <div className="mt-3">
-                <label htmlFor={`curseur-${idGraphe}`} className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor={`curseur-${idGraphe}`}
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Période sélectionnée :{' '}
                   <strong aria-live="polite">
                     {periodeSurvol?.date ?? '—'}
-                    {periodeSurvol ? ` (${periodeSurvol.volumeLiens} lien${periodeSurvol.volumeLiens > 1 ? 's' : ''})` : ''}
+                    {periodeSurvol
+                      ? ` (${periodeSurvol.volumeLiens} lien${periodeSurvol.volumeLiens > 1 ? 's' : ''})`
+                      : ''}
                   </strong>
                 </label>
                 <input
@@ -304,7 +312,9 @@ function TimelineActivite({
       {vuTableau && (
         <div>
           {periodesTriees.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4 text-center">Aucune donnée chronologique disponible.</p>
+            <p className="text-gray-500 text-sm py-4 text-center">
+              Aucune donnée chronologique disponible.
+            </p>
           ) : (
             <table
               className="w-full text-sm border-collapse"
@@ -316,20 +326,25 @@ function TimelineActivite({
               </caption>
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th scope="col" className="py-2 text-left font-medium text-gray-700">Période</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Volume de liens</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Intensité moyenne</th>
-                  <th scope="col" className="py-2 text-right font-medium text-gray-700">Score confiance</th>
+                  <th scope="col" className="py-2 text-left font-medium text-gray-700">
+                    Période
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Volume de liens
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Intensité moyenne
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium text-gray-700">
+                    Score confiance
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {periodesTriees.map((p) => {
                   const couleur = echelleIntensiteCouleur(p.intensiteMoyenne ?? 0)
                   return (
-                    <tr
-                      key={p.date}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
+                    <tr key={p.date} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-1.5">
                         {onPeriodeClick ? (
                           <button
@@ -372,7 +387,9 @@ function TimelineActivite({
               <ul className="space-y-1 text-sm">
                 {evenements.map((evt, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-gray-700">
-                    <span aria-hidden="true" className="text-purple-600 flex-shrink-0 mt-0.5">◆</span>
+                    <span aria-hidden="true" className="text-purple-600 flex-shrink-0 mt-0.5">
+                      ◆
+                    </span>
                     <span>
                       <strong>{evt.date}</strong> — {evt.titre}
                       {evt.typeEvenement && (

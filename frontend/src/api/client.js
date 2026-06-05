@@ -38,7 +38,8 @@ export const getTypesLiens = () => api.get('/liens/types/all')
 export const getOrganisations = (params) => api.get('/organisations', { params })
 export const getOrganisation = (id) => api.get(`/organisations/${id}`)
 export const postOrganisation = (data) => api.post('/organisations', data)
-export const searchOrganisations = (q) => api.get('/organisations/search/autocomplete', { params: { q } })
+export const searchOrganisations = (q) =>
+  api.get('/organisations/search/autocomplete', { params: { q } })
 export const getTypesOrganisations = () => api.get('/organisations/types/all')
 
 // Sources
@@ -64,13 +65,16 @@ export const getGrapheEgo = (entiteId, params) => api.get(`/graphe/ego/${entiteI
 export const getEnrichissementConnecteurs = () => api.get('/enrichissement/connecteurs')
 export const postEnrichissementRechercher = (body) => api.post('/enrichissement/rechercher', body)
 export const postEnrichissementImporter = (body) => api.post('/enrichissement/importer', body)
-export const postEnrichissementRechercheGlobale = (body) => api.post('/enrichissement/recherche-globale', body)
+export const postEnrichissementRechercheGlobale = (body) =>
+  api.post('/enrichissement/recherche-globale', body)
 export const getIgnGeoplateformeWmsConfig = () =>
   api.get('/enrichissement/connecteurs/ign-geoplateforme/wms-config')
 
 // Graphe — timeline et heatmap (Passe 4)
-export const getGrapheTimeline = (entiteId, params) => api.get(`/graphe/timeline/${entiteId}`, { params })
-export const getGrapheHeatmap = (entiteId, params) => api.get(`/graphe/heatmap/${entiteId}`, { params })
+export const getGrapheTimeline = (entiteId, params) =>
+  api.get(`/graphe/timeline/${entiteId}`, { params })
+export const getGrapheHeatmap = (entiteId, params) =>
+  api.get(`/graphe/heatmap/${entiteId}`, { params })
 
 // Fiche enrichie IGN (Passe 5 — L4/L6)
 export const getEntiteFoncier = (type, id) => api.get(`/entites/${type}/${id}/foncier`)
@@ -81,7 +85,8 @@ export const getEntiteUrbanisme = (type, id) => api.get(`/entites/${type}/${id}/
 export const getExportJSON = (params) => api.get('/export/json', { params })
 export const getExportCSV = (params) => api.get('/export/csv', { params, responseType: 'blob' })
 export const getExportJSONLD = (params) => api.get('/export/jsonld', { params })
-export const getExportGraphML = (params) => api.get('/export/graphml', { params, responseType: 'blob' })
+export const getExportGraphML = (params) =>
+  api.get('/export/graphml', { params, responseType: 'blob' })
 export const getApiPublique = (params) => api.get('/export/api-publique', { params })
 
 export default api

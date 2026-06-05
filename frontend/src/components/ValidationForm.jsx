@@ -31,9 +31,11 @@ function ValidationForm({ lienId, onValidated }) {
             onClick={() => setVerdict(v)}
             className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
               verdict === v
-                ? v === 'vrai' ? 'bg-green-600 text-white'
-                : v === 'faux' ? 'bg-red-600 text-white'
-                : 'bg-yellow-500 text-white'
+                ? v === 'vrai'
+                  ? 'bg-green-600 text-white'
+                  : v === 'faux'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-yellow-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >

@@ -12,13 +12,13 @@
  * qui accepte un auth optionnel (utile pour pré-charger le fond de carte).
  */
 
-import { z } from 'zod';
-import { authenticate, optionalAuth } from '../middleware/auth.js';
-import { peutSoumettre } from '../services/gamification.js';
-import { rechercherMultiConnecteurs } from '../services/enrichissement.js';
-import { importer } from '../services/import-enrichissement.js';
-import { listerConnecteurs } from '../connecteurs/registry.js';
-import { prisma } from '../utils/prisma.js';
+import { z } from 'zod'
+import { authenticate, optionalAuth } from '../middleware/auth.js'
+import { peutSoumettre } from '../services/gamification.js'
+import { rechercherMultiConnecteurs } from '../services/enrichissement.js'
+import { importer } from '../services/import-enrichissement.js'
+import { listerConnecteurs } from '../connecteurs/registry.js'
+import { prisma } from '../utils/prisma.js'
 
 // ---------------------------------------------------------------------------
 // Schémas de validation Zod
@@ -28,10 +28,10 @@ const rechercherSchema = z.object({
   query: z.string().min(2, 'La requête doit contenir au moins 2 caractères').max(200),
   types: z
     .array(z.enum(['personne', 'organisation', 'site']))
-    .min(1, 'Au moins un type d\'entité est requis'),
+    .min(1, "Au moins un type d'entité est requis"),
   connecteurs: z.array(z.string()).optional(),
   options: z.record(z.unknown()).optional(),
-});
+})
 
 /**
  * Valide qu'une URL est bien http(s) — SEC-I-01.
@@ -41,12 +41,12 @@ const rechercherSchema = z.object({
  * @returns {boolean}
  */
 function estUrlHttp(url) {
-  if (!url) return true; // null/undefined : champ optionnel, accepté
+  if (!url) return true // null/undefined : champ optionnel, accepté
   try {
-    const u = new URL(url);
-    return u.protocol === 'http:' || u.protocol === 'https:';
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -60,7 +60,7 @@ const candidatChampSchema = z.object({
     .optional()
     .refine(estUrlHttp, { message: "L'URL doit commencer par http:// ou https://" }),
   date: z.string().optional(),
-});
+})
 
 const lienSuggereSchema = z.object({
   vers: z.object({
@@ -78,7 +78,7 @@ const lienSuggereSchema = z.object({
     .optional()
     .refine(estUrlHttp, { message: "L'URL doit commencer par http:// ou https://" }),
   date: z.string().optional(),
-});
+})
 
 const previewEntiteSchema = z.object({
   typeSuggere: z.string().max(50),
@@ -98,7 +98,7 @@ const previewEntiteSchema = z.object({
     })
     .optional()
     .default({}),
-});
+})
 
 const importerSchema = z.object({
   preview: previewEntiteSchema,
@@ -123,7 +123,7 @@ const importerSchema = z.object({
     'EDITEUR_SITE',
     'AUTRE',
   ]),
-});
+})
 
 // ---------------------------------------------------------------------------
 // Plugin Fastify
@@ -140,9 +140,9 @@ export default async function enrichissementRoutes(fastify) {
    * Retourne la liste des connecteurs actifs dans le registry.
    */
   fastify.get('/connecteurs', { preHandler: [authenticate] }, async () => {
-    const connecteurs = await listerConnecteurs();
-    return { connecteurs };
-  });
+    const connecteurs = await listerConnecteurs()
+    return { connecteurs }
+  })
 
   /**
    * GET /connecteurs/ign-geoplateforme/wms-config
@@ -165,9 +165,9 @@ export default async function enrichissementRoutes(fastify) {
           transparent: true,
           version: '1.3.0',
         },
-      };
+      }
     },
-  );
+  )
 
   /**
    * POST /rechercher
@@ -177,17 +177,17 @@ export default async function enrichissementRoutes(fastify) {
    * Réponse : { resultats, statutParConnecteur, dureeMs }
    */
   fastify.post('/rechercher', { preHandler: [authenticate] }, async (request, reply) => {
-    const validation = rechercherSchema.safeParse(request.body);
+    const validation = rechercherSchema.safeParse(request.body)
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Données invalides',
         details: validation.error.flatten(),
-      });
+      })
     }
 
-    const reponse = await rechercherMultiConnecteurs(validation.data);
-    return reponse;
-  });
+    const reponse = await rechercherMultiConnecteurs(validation.data)
+    return reponse
+  })
 
   /**
    * POST /importer
@@ -201,23 +201,23 @@ export default async function enrichissementRoutes(fastify) {
    */
   fastify.post('/importer', { preHandler: [authenticate] }, async (request, reply) => {
     // Vérification seuil gamification
-    const eligibilite = await peutSoumettre(request.utilisateur.id);
+    const eligibilite = await peutSoumettre(request.utilisateur.id)
     if (!eligibilite.autorise) {
       return reply.code(403).send({
         error: `Vous devez effectuer ${eligibilite.restantes} validation(s) supplémentaire(s) avant de pouvoir importer.`,
         validationsEffectuees: eligibilite.validationsEffectuees,
         seuilRequis: eligibilite.seuilRequis,
         restantes: eligibilite.restantes,
-      });
+      })
     }
 
     // Validation du corps
-    const validation = importerSchema.safeParse(request.body);
+    const validation = importerSchema.safeParse(request.body)
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Données invalides',
         details: validation.error.flatten(),
-      });
+      })
     }
 
     try {
@@ -227,16 +227,16 @@ export default async function enrichissementRoutes(fastify) {
         qualiteInfluencePublique: validation.data.qualiteInfluencePublique,
         utilisateurId: request.utilisateur.id,
         ipAddress: request.ip,
-      });
-      return reply.code(201).send(reponse);
+      })
+      return reply.code(201).send(reponse)
     } catch (err) {
       // Garde-fou ADR-006 : qualité manquante
       if (err.message.startsWith("Qualité d'influence")) {
-        return reply.code(400).send({ error: err.message });
+        return reply.code(400).send({ error: err.message })
       }
-      throw err;
+      throw err
     }
-  });
+  })
 
   /**
    * POST /recherche-globale
@@ -254,34 +254,41 @@ export default async function enrichissementRoutes(fastify) {
   fastify.post('/recherche-globale', { preHandler: [optionalAuth] }, async (request, reply) => {
     const schemaRechercheGlobale = z.object({
       query: z.string().min(2).max(200),
-      types: z.array(z.enum(['personne', 'organisation', 'site'])).min(1).default(['personne', 'organisation', 'site']),
-    });
+      types: z
+        .array(z.enum(['personne', 'organisation', 'site']))
+        .min(1)
+        .default(['personne', 'organisation', 'site']),
+    })
 
-    const validation = schemaRechercheGlobale.safeParse(request.body);
+    const validation = schemaRechercheGlobale.safeParse(request.body)
     if (!validation.success) {
       return reply.code(400).send({
         error: 'Données invalides',
         details: validation.error.flatten(),
-      });
+      })
     }
 
-    const { query, types } = validation.data;
-    const termeNormalise = query.trim().toLowerCase();
+    const { query, types } = validation.data
+    const termeNormalise = query.trim().toLowerCase()
 
     // Étape 1 : recherche locale en BDD
-    const locales = [];
+    const locales = []
 
     if (types.includes('personne')) {
       const personnes = await prisma.personne.findMany({
         where: {
-          OR: [
-            { nom: { contains: termeNormalise } },
-            { prenom: { contains: termeNormalise } },
-          ],
+          OR: [{ nom: { contains: termeNormalise } }, { prenom: { contains: termeNormalise } }],
         },
-        select: { id: true, nom: true, prenom: true, rolePrincipal: true, statut: true, wikidataId: true },
+        select: {
+          id: true,
+          nom: true,
+          prenom: true,
+          rolePrincipal: true,
+          statut: true,
+          wikidataId: true,
+        },
         take: 10,
-      });
+      })
       for (const p of personnes) {
         locales.push({
           id: p.id,
@@ -291,21 +298,25 @@ export default async function enrichissementRoutes(fastify) {
           statut: p.statut,
           wikidataId: p.wikidataId ?? null,
           source: 'local',
-        });
+        })
       }
     }
 
     if (types.includes('organisation')) {
       const orgas = await prisma.organisation.findMany({
         where: {
-          OR: [
-            { nom: { contains: termeNormalise } },
-            { sigle: { contains: termeNormalise } },
-          ],
+          OR: [{ nom: { contains: termeNormalise } }, { sigle: { contains: termeNormalise } }],
         },
-        select: { id: true, nom: true, sigle: true, typeOrganisation: true, statut: true, wikidataId: true },
+        select: {
+          id: true,
+          nom: true,
+          sigle: true,
+          typeOrganisation: true,
+          statut: true,
+          wikidataId: true,
+        },
         take: 10,
-      });
+      })
       for (const o of orgas) {
         locales.push({
           id: o.id,
@@ -315,21 +326,18 @@ export default async function enrichissementRoutes(fastify) {
           statut: o.statut,
           wikidataId: o.wikidataId ?? null,
           source: 'local',
-        });
+        })
       }
     }
 
     if (types.includes('site')) {
       const sites = await prisma.siteWeb.findMany({
         where: {
-          OR: [
-            { domaine: { contains: termeNormalise } },
-            { titre: { contains: termeNormalise } },
-          ],
+          OR: [{ domaine: { contains: termeNormalise } }, { titre: { contains: termeNormalise } }],
         },
         select: { id: true, domaine: true, titre: true, statut: true },
         take: 10,
-      });
+      })
       for (const s of sites) {
         locales.push({
           id: s.id,
@@ -338,24 +346,24 @@ export default async function enrichissementRoutes(fastify) {
           domaine: s.domaine,
           statut: s.statut,
           source: 'local',
-        });
+        })
       }
     }
 
     // Étape 2 : si aucun résultat local ET utilisateur authentifié → connecteurs externes
-    let externes = [];
+    let externes = []
     if (locales.length === 0 && request.utilisateur) {
       try {
         const multiResultat = await rechercherMultiConnecteurs({
           query,
           types,
-        });
+        })
 
         // Aplatir les préviews en format simplifié pour le frontend SelecteurEntite
         externes = (multiResultat.resultats ?? []).slice(0, 15).map((preview) => {
-          const nomCandidat = preview.candidatsParChamp?.nom?.[0];
-          const wikidataIdCandidat = preview.candidatsParChamp?.wikidataId?.[0];
-          const bioCandidat = preview.candidatsParChamp?.bio?.[0];
+          const nomCandidat = preview.candidatsParChamp?.nom?.[0]
+          const wikidataIdCandidat = preview.candidatsParChamp?.wikidataId?.[0]
+          const bioCandidat = preview.candidatsParChamp?.bio?.[0]
 
           return {
             type: preview.typeSuggere,
@@ -366,15 +374,15 @@ export default async function enrichissementRoutes(fastify) {
             identifiantsExternes: preview.identifiantsExternes ?? {},
             // Transmettre la preview complète pour permettre l'import depuis le frontend
             preview,
-          };
-        });
+          }
+        })
       } catch (err) {
         // Erreur des connecteurs → ne pas planter, retourner [] avec un avertissement
-        console.warn(`[recherche-globale] Connecteurs externes en erreur : ${err.message}`);
-        externes = [];
+        console.warn(`[recherche-globale] Connecteurs externes en erreur : ${err.message}`)
+        externes = []
       }
     }
 
-    return { locales, externes };
-  });
+    return { locales, externes }
+  })
 }

@@ -20,10 +20,10 @@
  *     est obligatoire.
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
 
-const ENDPOINT_SPARQL = 'https://query.wikidata.org/sparql';
+const ENDPOINT_SPARQL = 'https://query.wikidata.org/sparql'
 
 /**
  * Échappe une chaîne pour usage sécurisé dans une query SPARQL (C-03 / SEC-C-01).
@@ -40,18 +40,18 @@ function echapperSparql(s) {
   // (backslash en premier pour éviter le double-échappement), puis on supprime
   // les caractères de contrôle restants (U+0000–U+001F hors \n, \r, \t et DEL U+007F).
   return String(s)
-    .replace(/\\/g, '\\\\')   // backslash → \\
-    .replace(/"/g, '\\"')     // " → \"
-    .replace(/\n/g, '\\n')    // newline → \n littéral
-    .replace(/\r/g, '\\r')    // retour chariot → \r littéral
-    .replace(/\t/g, '\\t')    // tabulation → \t littéral
+    .replace(/\\/g, '\\\\') // backslash → \\
+    .replace(/"/g, '\\"') // " → \"
+    .replace(/\n/g, '\\n') // newline → \n littéral
+    .replace(/\r/g, '\\r') // retour chariot → \r littéral
+    .replace(/\t/g, '\\t') // tabulation → \t littéral
     .split('')
     .filter((c) => {
-      const code = c.charCodeAt(0);
+      const code = c.charCodeAt(0)
       // Conserver les caractères normaux ; supprimer les autres contrôles U+0000–U+001F et DEL
-      return code > 0x1f && code !== 0x7f;
+      return code > 0x1f && code !== 0x7f
     })
-    .join('');
+    .join('')
 }
 
 /**
@@ -59,7 +59,7 @@ function echapperSparql(s) {
  * Beaucoup plus rapide que SPARQL CONTAINS car utilise l'index de recherche Wikidata.
  * ADR-016 : pivot recherche SPARQL → REST (L3 Passe 5).
  */
-const ENDPOINT_SEARCH = 'https://www.wikidata.org/w/api.php';
+const ENDPOINT_SEARCH = 'https://www.wikidata.org/w/api.php'
 
 /** Mapping propriété Wikidata → code TypeLien interne */
 const MAPPING_PROPRIETES = {
@@ -71,14 +71,14 @@ const MAPPING_PROPRIETES = {
   P112: 'FONDATEUR',
   P98: 'EDITEUR_DE',
   P162: 'PRODUCTEUR_DE',
-};
+}
 
 /** QID Wikidata → type d'entité interne */
-const QID_TYPE_PERSONNE = 'Q5';
-const QID_TYPE_ORGANISATION = 'Q43229';
+const QID_TYPE_PERSONNE = 'Q5'
+const QID_TYPE_ORGANISATION = 'Q43229'
 
 // Export interne pour les tests
-export { echapperSparql };
+export { echapperSparql }
 
 export default class WikidataConnecteur extends BaseConnecteur {
   constructor() {
@@ -92,7 +92,7 @@ export default class WikidataConnecteur extends BaseConnecteur {
       },
       ttlCache: Number(process.env.CACHE_TTL_MS) || 86_400_000,
       timeoutMs: 30_000,
-    });
+    })
   }
 
   /**
@@ -113,11 +113,11 @@ export default class WikidataConnecteur extends BaseConnecteur {
    */
   async rechercher(query, { lang = 'fr' } = {}) {
     if (!query || query.trim().length < 2) {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
     // Validation stricte du code langue pour bloquer toute injection (C-03)
-    const langValide = /^[a-z]{2}$/.test(lang) ? lang : 'fr';
+    const langValide = /^[a-z]{2}$/.test(lang) ? lang : 'fr'
 
     // ── Étape 1 : wbsearchentities → Q-IDs candidats ──────────────────────────
     const searchParams = new URLSearchParams({
@@ -128,22 +128,22 @@ export default class WikidataConnecteur extends BaseConnecteur {
       type: 'item',
       limit: '10',
       uselang: langValide,
-    });
-    const urlSearch = `${ENDPOINT_SEARCH}?${searchParams}`;
+    })
+    const urlSearch = `${ENDPOINT_SEARCH}?${searchParams}`
 
-    let searchData;
+    let searchData
     try {
       searchData = await this._appelHttp(urlSearch, {
         headers: { Accept: 'application/json' },
         cacheMethode: 'rechercher-wbsearch',
         cacheArgs: { query: query.trim(), lang: langValide },
-      });
+      })
     } catch {
-      return this._enveloppe([]);
+      return this._enveloppe([])
     }
 
-    const candidats = searchData.search ?? [];
-    if (candidats.length === 0) return this._enveloppe([]);
+    const candidats = searchData.search ?? []
+    if (candidats.length === 0) return this._enveloppe([])
 
     // ── Étape 2 : SPARQL VALUES ciblé sur les Q-IDs connus (rapide) ────────────
     // Sécurité : les Q-IDs sont extraits via regex strict — pas d'interpolation de
@@ -152,7 +152,7 @@ export default class WikidataConnecteur extends BaseConnecteur {
       .map((c) => c.id)
       .filter((id) => /^Q\d+$/.test(id))
       .map((id) => `wd:${id}`)
-      .join(' ');
+      .join(' ')
 
     const sparql = `
       SELECT DISTINCT ?entite ?label ?description ?type_entite WHERE {
@@ -163,32 +163,31 @@ export default class WikidataConnecteur extends BaseConnecteur {
         FILTER(LANG(?label) = "${langValide}")
         OPTIONAL { ?entite schema:description ?description . FILTER(LANG(?description) = "${langValide}") }
       }
-    `;
+    `
 
-    let donnees;
+    let donnees
     try {
-      donnees = await this._requeteSparql(sparql, 'rechercher-sparql-values', { qids, lang: langValide });
+      donnees = await this._requeteSparql(sparql, 'rechercher-sparql-values', {
+        qids,
+        lang: langValide,
+      })
     } catch {
       // Si SPARQL échoue malgré tout, on replie sur les candidats REST sans filtrage de type
       return this._enveloppe(
-        candidats
-          .filter((c) => /^Q\d+$/.test(c.id))
-          .map((c) => this._mappageRechercheRest(c)),
-      );
+        candidats.filter((c) => /^Q\d+$/.test(c.id)).map((c) => this._mappageRechercheRest(c)),
+      )
     }
 
-    const bindings = donnees.results?.bindings ?? [];
+    const bindings = donnees.results?.bindings ?? []
 
     // Si SPARQL ne retourne rien mais REST a des résultats → utiliser REST (dégradé gracieux)
     if (bindings.length === 0) {
       return this._enveloppe(
-        candidats
-          .filter((c) => /^Q\d+$/.test(c.id))
-          .map((c) => this._mappageRechercheRest(c)),
-      );
+        candidats.filter((c) => /^Q\d+$/.test(c.id)).map((c) => this._mappageRechercheRest(c)),
+      )
     }
 
-    return this._enveloppe(bindings.map((b) => this._mappageRecherche(b)));
+    return this._enveloppe(bindings.map((b) => this._mappageRecherche(b)))
   }
 
   /**
@@ -199,8 +198,8 @@ export default class WikidataConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageRechercheRest(candidat) {
-    const qid = candidat.id;
-    const sourceInfo = { source: 'Wikidata', url: `https://www.wikidata.org/wiki/${qid}` };
+    const qid = candidat.id
+    const sourceInfo = { source: 'Wikidata', url: `https://www.wikidata.org/wiki/${qid}` }
     // Type inconnu depuis REST seul — on retourne Organisation par défaut (champ corrigé après détail)
     return creerEntiteNormalisee(
       'Organisation',
@@ -210,7 +209,7 @@ export default class WikidataConnecteur extends BaseConnecteur {
         bio: marquerProvenance(candidat.description ?? null, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /**
@@ -220,11 +219,11 @@ export default class WikidataConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(qid) {
-    const qidNormalise = qid.startsWith('Q') ? qid : `Q${qid}`;
-    const sparql = this._requeteDetail(qidNormalise);
+    const qidNormalise = qid.startsWith('Q') ? qid : `Q${qid}`
+    const sparql = this._requeteDetail(qidNormalise)
 
-    const donnees = await this._requeteSparql(sparql, 'detailler', { qid: qidNormalise });
-    const bindings = donnees.results?.bindings ?? [];
+    const donnees = await this._requeteSparql(sparql, 'detailler', { qid: qidNormalise })
+    const bindings = donnees.results?.bindings ?? []
 
     if (bindings.length === 0) {
       return {
@@ -232,16 +231,16 @@ export default class WikidataConnecteur extends BaseConnecteur {
         source: 'Wikidata',
         dateRecuperation: new Date().toISOString(),
         version: this.version,
-      };
+      }
     }
 
-    const entite = this._mappageDetail(qidNormalise, bindings);
+    const entite = this._mappageDetail(qidNormalise, bindings)
     return {
       entite,
       source: 'Wikidata',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -251,14 +250,14 @@ export default class WikidataConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(qid) {
-    const detail = await this.detailler(qid);
-    const liens = detail.entite?.liensSuggeres ?? [];
+    const detail = await this.detailler(qid)
+    const liens = detail.entite?.liensSuggeres ?? []
     return {
       liens,
       source: 'Wikidata',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // ─── Méthodes internes ──────────────────────────────────────────────────────
@@ -272,7 +271,7 @@ export default class WikidataConnecteur extends BaseConnecteur {
    * @returns {Promise<object>}
    */
   async _requeteSparql(sparql, cacheMethode, cacheArgs) {
-    const corps = new URLSearchParams({ query: sparql });
+    const corps = new URLSearchParams({ query: sparql })
     return this._appelHttp(ENDPOINT_SPARQL, {
       method: 'POST',
       body: corps.toString(),
@@ -282,7 +281,7 @@ export default class WikidataConnecteur extends BaseConnecteur {
       },
       cacheMethode,
       cacheArgs,
-    });
+    })
   }
 
   /**
@@ -337,15 +336,15 @@ export default class WikidataConnecteur extends BaseConnecteur {
           }
         }
       }
-    `;
+    `
   }
 
   /** Mappe un binding SPARQL de recherche vers une EntiteNormalisee légère. */
   _mappageRecherche(binding) {
-    const qid = this._extraireQid(binding.entite?.value);
-    const typeWikidata = this._extraireQid(binding.type_entite?.value);
-    const typeEntite = typeWikidata === QID_TYPE_PERSONNE ? 'Personne' : 'Organisation';
-    const sourceInfo = { source: 'Wikidata', url: `https://www.wikidata.org/wiki/${qid}` };
+    const qid = this._extraireQid(binding.entite?.value)
+    const typeWikidata = this._extraireQid(binding.type_entite?.value)
+    const typeEntite = typeWikidata === QID_TYPE_PERSONNE ? 'Personne' : 'Organisation'
+    const sourceInfo = { source: 'Wikidata', url: `https://www.wikidata.org/wiki/${qid}` }
 
     return creerEntiteNormalisee(
       typeEntite,
@@ -355,25 +354,25 @@ export default class WikidataConnecteur extends BaseConnecteur {
         bio: marquerProvenance(binding.description?.value ?? null, sourceInfo),
       },
       [],
-    );
+    )
   }
 
   /** Mappe l'ensemble des bindings SPARQL de détail vers une EntiteNormalisee complète. */
   _mappageDetail(qid, bindings) {
-    const premier = bindings[0];
-    const typeWikidata = this._extraireQid(premier.type_entite?.value);
-    const typeEntite = typeWikidata === QID_TYPE_PERSONNE ? 'Personne' : 'Organisation';
-    const urlEntite = `https://www.wikidata.org/wiki/${qid}`;
-    const sourceInfo = { source: 'Wikidata', url: urlEntite };
+    const premier = bindings[0]
+    const typeWikidata = this._extraireQid(premier.type_entite?.value)
+    const typeEntite = typeWikidata === QID_TYPE_PERSONNE ? 'Personne' : 'Organisation'
+    const urlEntite = `https://www.wikidata.org/wiki/${qid}`
+    const sourceInfo = { source: 'Wikidata', url: urlEntite }
 
     // Lieu de naissance avec coordonnées (P19 + P625)
-    const lieuNaissanceLabel = premier.lieuNaissanceLabel?.value ?? null;
+    const lieuNaissanceLabel = premier.lieuNaissanceLabel?.value ?? null
     const lieuNaissanceLat = premier.lieuNaissanceLat?.value
       ? parseFloat(premier.lieuNaissanceLat.value)
-      : null;
+      : null
     const lieuNaissanceLon = premier.lieuNaissanceLon?.value
       ? parseFloat(premier.lieuNaissanceLon.value)
-      : null;
+      : null
 
     const champs = {
       wikidataId: marquerProvenance(qid, sourceInfo),
@@ -392,28 +391,28 @@ export default class WikidataConnecteur extends BaseConnecteur {
       lieuNaissance: marquerProvenance(lieuNaissanceLabel, sourceInfo),
       lieuNaissanceLat: marquerProvenance(lieuNaissanceLat, sourceInfo),
       lieuNaissanceLon: marquerProvenance(lieuNaissanceLon, sourceInfo),
-    };
+    }
 
     // Dédoublonnage des liens par valeur+prop
-    const liensVus = new Set();
-    const liensSuggeres = [];
+    const liensVus = new Set()
+    const liensSuggeres = []
 
     for (const b of bindings) {
-      if (!b.prop?.value || !b.valeur?.value) continue;
+      if (!b.prop?.value || !b.valeur?.value) continue
 
       const propCode = b.prop.value.startsWith('http')
         ? this._extraireQid(b.prop.value)
-        : b.prop.value;
+        : b.prop.value
 
-      const codeLien = MAPPING_PROPRIETES[propCode];
-      if (!codeLien) continue;
+      const codeLien = MAPPING_PROPRIETES[propCode]
+      if (!codeLien) continue
 
-      const valeurQid = this._extraireQid(b.valeur.value);
-      const cleUnique = `${propCode}:${valeurQid}`;
-      if (liensVus.has(cleUnique)) continue;
-      liensVus.add(cleUnique);
+      const valeurQid = this._extraireQid(b.valeur.value)
+      const cleUnique = `${propCode}:${valeurQid}`
+      if (liensVus.has(cleUnique)) continue
+      liensVus.add(cleUnique)
 
-      const typeVers = propCode === 'P26' ? 'Personne' : 'Organisation';
+      const typeVers = propCode === 'P26' ? 'Personne' : 'Organisation'
 
       liensSuggeres.push({
         vers: { type: typeVers, identifiantExterne: valeurQid },
@@ -424,17 +423,17 @@ export default class WikidataConnecteur extends BaseConnecteur {
         dateDebut: b.dateDebut?.value ? b.dateDebut.value.substring(0, 10) : null,
         dateFin: b.dateFin?.value ? b.dateFin.value.substring(0, 10) : null,
         libelle: b.valeurLabel?.value ?? valeurQid,
-      });
+      })
     }
 
-    return creerEntiteNormalisee(typeEntite, champs, liensSuggeres);
+    return creerEntiteNormalisee(typeEntite, champs, liensSuggeres)
   }
 
   /** Extrait le QID (ex: 'Q5') depuis une URI Wikidata. */
   _extraireQid(uri) {
-    if (!uri) return null;
-    const match = uri.match(/\/([QP]\d+)$/);
-    return match ? match[1] : uri;
+    if (!uri) return null
+    const match = uri.match(/\/([QP]\d+)$/)
+    return match ? match[1] : uri
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -444,6 +443,6 @@ export default class WikidataConnecteur extends BaseConnecteur {
       source: 'Wikidata',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 }

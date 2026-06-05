@@ -37,37 +37,58 @@
  *   4. Cache 30 jours — pas de re-téléchargement quotidien du leak
  */
 
-import { BaseConnecteur } from '../base.js';
-import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js';
-import { createReadStream, existsSync, statSync, mkdirSync } from 'fs';
-import { createInterface } from 'readline';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { BaseConnecteur } from '../base.js'
+import { marquerProvenance, creerEntiteNormalisee } from '../normaliseur.js'
+import { createReadStream, existsSync, statSync, mkdirSync } from 'fs'
+import { createInterface } from 'readline'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-const execFileAsync = promisify(execFile);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const execFileAsync = promisify(execFile)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const URL_ZIP = 'https://offshoreleaks-data.icij.org/offshoreleaks/csv/full-oldb.LATEST.zip';
+const URL_ZIP = 'https://offshoreleaks-data.icij.org/offshoreleaks/csv/full-oldb.LATEST.zip'
 
 /** Dossier de cache ICIJ (hors .cache/connecteurs standard pour isoler les gros datasets) */
-const CACHE_ICIJ_DIR = join(__dirname, '../../../../backend/.cache/connecteurs/icij');
-const CHEMIN_ZIP = join(CACHE_ICIJ_DIR, 'full-oldb.zip');
-const CHEMIN_CSV_DIR = join(CACHE_ICIJ_DIR, 'csv');
+const CACHE_ICIJ_DIR = join(__dirname, '../../../../backend/.cache/connecteurs/icij')
+const CHEMIN_ZIP = join(CACHE_ICIJ_DIR, 'full-oldb.zip')
+const CHEMIN_CSV_DIR = join(CACHE_ICIJ_DIR, 'csv')
 
 /** TTL cache disque 30 jours (en ms) */
-const TTL_30_JOURS_MS = 30 * 24 * 60 * 60 * 1000;
+const TTL_30_JOURS_MS = 30 * 24 * 60 * 60 * 1000
 
 /** Juridictions / codes pays associés à la France, DOM-TOM, Monaco, Andorre */
 const PAYS_FRANCE = new Set([
-  'FRA', 'France', 'FR',
-  'MCO', 'Monaco', 'MC',
-  'AND', 'Andorra', 'Andorre', 'AD',
-  'GUF', 'Guyane', 'MTQ', 'Martinique', 'GLP', 'Guadeloupe',
-  'REU', 'Réunion', 'Reunion', 'MYT', 'Mayotte',
-  'NCL', 'Nouvelle-Calédonie', 'PYF', 'Polynésie', 'SPM', 'WLF',
-]);
+  'FRA',
+  'France',
+  'FR',
+  'MCO',
+  'Monaco',
+  'MC',
+  'AND',
+  'Andorra',
+  'Andorre',
+  'AD',
+  'GUF',
+  'Guyane',
+  'MTQ',
+  'Martinique',
+  'GLP',
+  'Guadeloupe',
+  'REU',
+  'Réunion',
+  'Reunion',
+  'MYT',
+  'Mayotte',
+  'NCL',
+  'Nouvelle-Calédonie',
+  'PYF',
+  'Polynésie',
+  'SPM',
+  'WLF',
+])
 
 /**
  * Vérifie si un champ pays/countries contient une référence française.
@@ -76,11 +97,11 @@ const PAYS_FRANCE = new Set([
  * @returns {boolean}
  */
 function estLieFrance(paysChamp) {
-  if (!paysChamp) return false;
+  if (!paysChamp) return false
   for (const code of PAYS_FRANCE) {
-    if (paysChamp.includes(code)) return true;
+    if (paysChamp.includes(code)) return true
   }
-  return false;
+  return false
 }
 
 /** Mapping types de relations ICIJ → codes TypeLien internes */
@@ -96,7 +117,7 @@ const MAPPING_RELATION = new Map([
   ['nominee_shareholder_of', 'BENEFICIAIRE_EFFECTIF'],
   ['intermediary_of', 'FONDATEUR'],
   ['registered_address', 'SIEGE_SOCIAL'],
-]);
+])
 
 /**
  * Normalise une chaîne pour la recherche (minuscules, sans accents, sans ponctuation).
@@ -105,14 +126,14 @@ const MAPPING_RELATION = new Map([
  * @returns {string}
  */
 function normaliserRecherche(chaine) {
-  if (!chaine) return '';
+  if (!chaine) return ''
   return chaine
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
@@ -128,16 +149,16 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       // TTL géré manuellement (cache disque 30 jours sur le ZIP)
       ttlCache: TTL_30_JOURS_MS,
       timeoutMs: 120_000, // 2 min pour le téléchargement du ZIP
-    });
+    })
 
     /** @type {Map<string, object>|null} Index nodes par nom normalisé */
-    this._indexNom = null;
+    this._indexNom = null
     /** @type {Map<string, object>|null} Index nodes par ID ICIJ */
-    this._indexId = null;
+    this._indexId = null
     /** @type {Map<string, Array>|null} Relations par ID node source */
-    this._relations = null;
+    this._relations = null
     /** @type {Promise<void>|null} */
-    this._promesseChargement = null;
+    this._promesseChargement = null
   }
 
   /**
@@ -154,23 +175,23 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<{ resultats: Array, source: string, dateRecuperation: string, version: string, avertissement: string }>}
    */
   async rechercher(query, options = {}) {
-    const terme = String(query ?? '').trim();
-    if (terme.length < 2) return this._enveloppe([]);
+    const terme = String(query ?? '').trim()
+    if (terme.length < 2) return this._enveloppe([])
 
-    await this._assureIndex();
+    await this._assureIndex()
 
-    const termeNormalise = normaliserRecherche(terme);
-    const limite = Math.min(Number(options.limite) || 10, 50);
-    const resultats = [];
+    const termeNormalise = normaliserRecherche(terme)
+    const limite = Math.min(Number(options.limite) || 10, 50)
+    const resultats = []
 
-    for (const [cle, node] of (this._indexNom ?? new Map())) {
+    for (const [cle, node] of this._indexNom ?? new Map()) {
       if (cle.includes(termeNormalise)) {
-        resultats.push(this._mappageNode(node));
-        if (resultats.length >= limite) break;
+        resultats.push(this._mappageNode(node))
+        if (resultats.length >= limite) break
       }
     }
 
-    return this._enveloppe(resultats);
+    return this._enveloppe(resultats)
   }
 
   /**
@@ -180,17 +201,17 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(id) {
-    await this._assureIndex();
+    await this._assureIndex()
 
-    const node = this._indexId?.get(String(id)) ?? null;
-    const entite = node ? this._mappageNode(node) : null;
+    const node = this._indexId?.get(String(id)) ?? null
+    const entite = node ? this._mappageNode(node) : null
 
     return {
       entite,
       source: 'ICIJ Offshore Leaks',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   /**
@@ -200,10 +221,10 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(id) {
-    await this._assureIndex();
+    await this._assureIndex()
 
-    const relations = this._relations?.get(String(id)) ?? [];
-    const maintenant = new Date().toISOString();
+    const relations = this._relations?.get(String(id)) ?? []
+    const maintenant = new Date().toISOString()
 
     const liens = relations.map((rel) => ({
       vers: {
@@ -216,14 +237,14 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       url: 'https://offshoreleaks.icij.org',
       date: maintenant,
       statut: 'EN_ATTENTE',
-    }));
+    }))
 
     return {
       liens,
       source: 'ICIJ Offshore Leaks',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-    };
+    }
   }
 
   // --- Méthodes internes ---
@@ -234,18 +255,18 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _assureIndex() {
-    if (this._indexNom !== null) return;
+    if (this._indexNom !== null) return
 
     if (this._promesseChargement) {
-      await this._promesseChargement;
-      return;
+      await this._promesseChargement
+      return
     }
 
-    this._promesseChargement = this._chargerDataset();
+    this._promesseChargement = this._chargerDataset()
     try {
-      await this._promesseChargement;
+      await this._promesseChargement
     } finally {
-      this._promesseChargement = null;
+      this._promesseChargement = null
     }
   }
 
@@ -257,27 +278,29 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    */
   async _chargerDataset() {
     // Créer les dossiers de cache si nécessaires
-    mkdirSync(CACHE_ICIJ_DIR, { recursive: true });
-    mkdirSync(CHEMIN_CSV_DIR, { recursive: true });
+    mkdirSync(CACHE_ICIJ_DIR, { recursive: true })
+    mkdirSync(CHEMIN_CSV_DIR, { recursive: true })
 
-    const doitTelecharger = this._zipDoitEtreTelecharg();
+    const doitTelecharger = this._zipDoitEtreTelecharg()
 
     if (doitTelecharger) {
-      console.info('[icij-offshore-leaks] Téléchargement du dataset ZIP (~73 Mo)...');
-      await this._telechargerZip();
-      console.info('[icij-offshore-leaks] Téléchargement terminé. Décompression...');
-      await this._decompresserZip();
-      console.info('[icij-offshore-leaks] Décompression terminée. Indexation...');
+      console.info('[icij-offshore-leaks] Téléchargement du dataset ZIP (~73 Mo)...')
+      await this._telechargerZip()
+      console.info('[icij-offshore-leaks] Téléchargement terminé. Décompression...')
+      await this._decompresserZip()
+      console.info('[icij-offshore-leaks] Décompression terminée. Indexation...')
     } else {
-      console.info('[icij-offshore-leaks] Cache ZIP valide (< 30 jours). Indexation...');
+      console.info('[icij-offshore-leaks] Cache ZIP valide (< 30 jours). Indexation...')
       // Vérifier que les CSV sont bien présents
       if (!this._csvSontPresents()) {
-        await this._decompresserZip();
+        await this._decompresserZip()
       }
     }
 
-    await this._construireIndex();
-    console.info(`[icij-offshore-leaks] Index construit : ${this._indexNom?.size ?? 0} entités liées à la France.`);
+    await this._construireIndex()
+    console.info(
+      `[icij-offshore-leaks] Index construit : ${this._indexNom?.size ?? 0} entités liées à la France.`,
+    )
   }
 
   /**
@@ -286,10 +309,10 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {boolean}
    */
   _zipDoitEtreTelecharg() {
-    if (!existsSync(CHEMIN_ZIP)) return true;
-    const stats = statSync(CHEMIN_ZIP);
-    const age = Date.now() - stats.mtimeMs;
-    return age > TTL_30_JOURS_MS;
+    if (!existsSync(CHEMIN_ZIP)) return true
+    const stats = statSync(CHEMIN_ZIP)
+    const age = Date.now() - stats.mtimeMs
+    return age > TTL_30_JOURS_MS
   }
 
   /**
@@ -298,8 +321,8 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {boolean}
    */
   _csvSontPresents() {
-    const nomsFichiersAttendus = ['nodes-entities.csv', 'nodes-officers.csv', 'relationships.csv'];
-    return nomsFichiersAttendus.some((f) => existsSync(join(CHEMIN_CSV_DIR, f)));
+    const nomsFichiersAttendus = ['nodes-entities.csv', 'nodes-officers.csv', 'relationships.csv']
+    return nomsFichiersAttendus.some((f) => existsSync(join(CHEMIN_CSV_DIR, f)))
   }
 
   /**
@@ -309,38 +332,35 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _telechargerZip() {
-    const { consommer } = await import('../rate-limit.js');
-    await consommer(this.nom);
+    const { consommer } = await import('../rate-limit.js')
+    await consommer(this.nom)
 
     const userAgent =
       process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)';
+      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
-    const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const controleur = new AbortController()
+    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
     try {
       const reponse = await fetch(URL_ZIP, {
         signal: controleur.signal,
         headers: { 'User-Agent': userAgent },
-      });
+      })
 
       if (!reponse.ok) {
-        throw new Error(`[icij-offshore-leaks] HTTP ${reponse.status} sur le téléchargement ZIP`);
+        throw new Error(`[icij-offshore-leaks] HTTP ${reponse.status} sur le téléchargement ZIP`)
       }
 
       // Écriture en streaming vers le disque
-      const { createWriteStream } = await import('fs');
-      const { Writable } = await import('stream');
-      const { pipeline } = await import('stream/promises');
+      const { createWriteStream } = await import('fs')
+      const { Writable } = await import('stream')
+      const { pipeline } = await import('stream/promises')
 
-      const fluxSortie = createWriteStream(CHEMIN_ZIP);
-      await pipeline(
-        Writable.fromWeb ? reponse.body : reponse.body,
-        fluxSortie,
-      );
+      const fluxSortie = createWriteStream(CHEMIN_ZIP)
+      await pipeline(Writable.fromWeb ? reponse.body : reponse.body, fluxSortie)
     } finally {
-      clearTimeout(minuterie);
+      clearTimeout(minuterie)
     }
   }
 
@@ -355,11 +375,11 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       // execFile avec arguments en tableau → pas d'injection shell possible (M-03)
       await execFileAsync('/usr/bin/unzip', ['-o', CHEMIN_ZIP, '-d', CHEMIN_CSV_DIR], {
         maxBuffer: 10 * 1024 * 1024,
-      });
+      })
     } catch (err) {
       // unzip retourne code 1 si avertissements non-fatals — ne pas propager
       if (err.code !== 1) {
-        throw new Error(`[icij-offshore-leaks] Décompression échouée : ${err.message}`);
+        throw new Error(`[icij-offshore-leaks] Décompression échouée : ${err.message}`)
       }
     }
   }
@@ -371,9 +391,9 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {Promise<void>}
    */
   async _construireIndex() {
-    this._indexNom = new Map();
-    this._indexId = new Map();
-    this._relations = new Map();
+    this._indexNom = new Map()
+    this._indexId = new Map()
+    this._relations = new Map()
 
     // Noms possibles des fichiers CSV selon la version du ZIP
     const fichiersNodes = [
@@ -381,7 +401,7 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       'nodes-officers.csv',
       'nodes-intermediaries.csv',
       'nodes-addresses.csv',
-    ];
+    ]
 
     for (const nomFichier of fichiersNodes) {
       // Chercher dans le dossier racine ou dans des sous-dossiers
@@ -389,29 +409,32 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
         join(CHEMIN_CSV_DIR, nomFichier),
         join(CHEMIN_CSV_DIR, 'full-oldb', nomFichier),
         join(CHEMIN_CSV_DIR, 'oldb', nomFichier),
-      ];
+      ]
 
-      let cheminExistant = null;
+      let cheminExistant = null
       for (const c of chemins) {
-        if (existsSync(c)) { cheminExistant = c; break; }
+        if (existsSync(c)) {
+          cheminExistant = c
+          break
+        }
       }
 
-      if (!cheminExistant) continue;
+      if (!cheminExistant) continue
 
       await this._lireCsvFiltreParLigne(cheminExistant, (node) => {
-        const pays = node.countries ?? node.country_codes ?? node.jurisdiction ?? '';
-        if (!estLieFrance(pays)) return;
+        const pays = node.countries ?? node.country_codes ?? node.jurisdiction ?? ''
+        if (!estLieFrance(pays)) return
 
-        const id = String(node.node_id ?? node.id ?? '');
-        const nom = node.name ?? node.name_used ?? '';
-        if (!id || !nom) return;
+        const id = String(node.node_id ?? node.id ?? '')
+        const nom = node.name ?? node.name_used ?? ''
+        if (!id || !nom) return
 
-        this._indexId.set(id, node);
-        const cle = normaliserRecherche(nom);
+        this._indexId.set(id, node)
+        const cle = normaliserRecherche(nom)
         if (cle && !this._indexNom.has(cle)) {
-          this._indexNom.set(cle, node);
+          this._indexNom.set(cle, node)
         }
-      });
+      })
     }
 
     // Charger les relations pour les nodes filtrés
@@ -419,25 +442,28 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       join(CHEMIN_CSV_DIR, 'relationships.csv'),
       join(CHEMIN_CSV_DIR, 'full-oldb', 'relationships.csv'),
       join(CHEMIN_CSV_DIR, 'oldb', 'relationships.csv'),
-    ];
+    ]
 
-    let cheminRelations = null;
+    let cheminRelations = null
     for (const c of cheminsRelations) {
-      if (existsSync(c)) { cheminRelations = c; break; }
+      if (existsSync(c)) {
+        cheminRelations = c
+        break
+      }
     }
 
     if (cheminRelations) {
       await this._lireCsvFiltreParLigne(cheminRelations, (rel) => {
-        const id1 = String(rel.node_1 ?? rel.node_1_id ?? '');
-        const id2 = String(rel.node_2 ?? rel.node_2_id ?? '');
-        if (!this._indexId.has(id1) && !this._indexId.has(id2)) return;
+        const id1 = String(rel.node_1 ?? rel.node_1_id ?? '')
+        const id2 = String(rel.node_2 ?? rel.node_2_id ?? '')
+        if (!this._indexId.has(id1) && !this._indexId.has(id2)) return
 
-        const sourceId = this._indexId.has(id1) ? id1 : id2;
+        const sourceId = this._indexId.has(id1) ? id1 : id2
         if (!this._relations.has(sourceId)) {
-          this._relations.set(sourceId, []);
+          this._relations.set(sourceId, [])
         }
-        this._relations.get(sourceId).push(rel);
-      });
+        this._relations.get(sourceId).push(rel)
+      })
     }
   }
 
@@ -451,36 +477,36 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    */
   async _lireCsvFiltreParLigne(chemin, callback) {
     return new Promise((resolve, reject) => {
-      const flux = createReadStream(chemin, { encoding: 'utf8' });
-      const rl = createInterface({ input: flux, crlfDelay: Infinity });
+      const flux = createReadStream(chemin, { encoding: 'utf8' })
+      const rl = createInterface({ input: flux, crlfDelay: Infinity })
 
-      let enTetes = null;
+      let enTetes = null
 
       rl.on('line', (ligne) => {
-        if (!ligne.trim()) return;
+        if (!ligne.trim()) return
 
         if (enTetes === null) {
-          enTetes = this._parserLigneCSV(ligne);
-          return;
+          enTetes = this._parserLigneCSV(ligne)
+          return
         }
 
-        const valeurs = this._parserLigneCSV(ligne);
-        const obj = {};
+        const valeurs = this._parserLigneCSV(ligne)
+        const obj = {}
         for (let i = 0; i < enTetes.length; i++) {
-          obj[enTetes[i]] = valeurs[i] ?? '';
+          obj[enTetes[i]] = valeurs[i] ?? ''
         }
 
         try {
-          callback(obj);
+          callback(obj)
         } catch {
           // Ignorer les erreurs de callback pour ne pas interrompre le streaming
         }
-      });
+      })
 
-      rl.on('close', resolve);
-      rl.on('error', reject);
-      flux.on('error', reject);
-    });
+      rl.on('close', resolve)
+      rl.on('error', reject)
+      flux.on('error', reject)
+    })
   }
 
   /**
@@ -491,28 +517,28 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {string[]}
    */
   _parserLigneCSV(ligne) {
-    const champs = [];
-    let courant = '';
-    let dansGuillemets = false;
+    const champs = []
+    let courant = ''
+    let dansGuillemets = false
 
     for (let i = 0; i < ligne.length; i++) {
-      const c = ligne[i];
+      const c = ligne[i]
       if (c === '"') {
         if (dansGuillemets && ligne[i + 1] === '"') {
-          courant += '"';
-          i++;
+          courant += '"'
+          i++
         } else {
-          dansGuillemets = !dansGuillemets;
+          dansGuillemets = !dansGuillemets
         }
       } else if (c === ',' && !dansGuillemets) {
-        champs.push(courant.trim());
-        courant = '';
+        champs.push(courant.trim())
+        courant = ''
       } else {
-        courant += c;
+        courant += c
       }
     }
-    champs.push(courant.trim());
-    return champs;
+    champs.push(courant.trim())
+    return champs
   }
 
   /**
@@ -523,12 +549,12 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {import('../normaliseur.js').EntiteNormalisee}
    */
   _mappageNode(node) {
-    const id = String(node.node_id ?? node.id ?? '');
-    const urlSource = `https://offshoreleaks.icij.org/nodes/${id}`;
-    const sourceInfo = { source: 'ICIJ Offshore Leaks', url: urlSource };
+    const id = String(node.node_id ?? node.id ?? '')
+    const urlSource = `https://offshoreleaks.icij.org/nodes/${id}`
+    const sourceInfo = { source: 'ICIJ Offshore Leaks', url: urlSource }
 
-    const nom = node.name ?? node.name_used ?? '';
-    const type = this._inferTypeNode(node._type ?? node.labels ?? '');
+    const nom = node.name ?? node.name_used ?? ''
+    const type = this._inferTypeNode(node._type ?? node.labels ?? '')
 
     /**
      * Badge provenance obligatoire (ADR-013) :
@@ -537,13 +563,17 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
     const badgeProvenance = {
       source: 'ICIJ Offshore Leaks',
       leaks: node.sourceID ?? 'Panama Papers / Pandora Papers / Paradise Papers',
-      avertissement: "Source : ICIJ Offshore Leaks — vérifier avant publication. Une mention n'implique pas d'illégalité.",
+      avertissement:
+        "Source : ICIJ Offshore Leaks — vérifier avant publication. Une mention n'implique pas d'illégalité.",
       statut: 'EN_ATTENTE',
-    };
+    }
 
     const champs = {
       nom: marquerProvenance(nom, sourceInfo),
-      pays: marquerProvenance(node.countries ?? node.country_codes ?? node.jurisdiction ?? null, sourceInfo),
+      pays: marquerProvenance(
+        node.countries ?? node.country_codes ?? node.jurisdiction ?? null,
+        sourceInfo,
+      ),
       jurisdiction: marquerProvenance(node.jurisdiction ?? null, sourceInfo),
       incorporation: marquerProvenance(node.incorporation_date ?? null, sourceInfo),
       inactivite: marquerProvenance(node.inactivation_date ?? null, sourceInfo),
@@ -551,24 +581,24 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       sourceID: marquerProvenance(node.sourceID ?? null, sourceInfo),
       statut: marquerProvenance('EN_ATTENTE', sourceInfo),
       badgeProvenance: marquerProvenance(badgeProvenance, sourceInfo),
-    };
-
-    if (type === 'Organisation') {
-      champs.sigle = marquerProvenance(node.former_name ?? null, sourceInfo);
-    } else {
-      champs.prenoms = marquerProvenance(null, sourceInfo);
     }
 
-    const liensSuggeres = [];
-    const relations = this._relations?.get(id) ?? [];
-    const maintenant = new Date().toISOString();
+    if (type === 'Organisation') {
+      champs.sigle = marquerProvenance(node.former_name ?? null, sourceInfo)
+    } else {
+      champs.prenoms = marquerProvenance(null, sourceInfo)
+    }
+
+    const liensSuggeres = []
+    const relations = this._relations?.get(id) ?? []
+    const maintenant = new Date().toISOString()
 
     for (const rel of relations.slice(0, 20)) {
-      const codeType = MAPPING_RELATION.get(rel.rel_type) ?? 'DIRIGEANT';
-      const idCible = String(rel.node_2 ?? rel.node_2_id ?? '');
-      const nomCible = rel.node_2_name ?? idCible;
+      const codeType = MAPPING_RELATION.get(rel.rel_type) ?? 'DIRIGEANT'
+      const idCible = String(rel.node_2 ?? rel.node_2_id ?? '')
+      const nomCible = rel.node_2_name ?? idCible
 
-      if (!idCible) continue;
+      if (!idCible) continue
 
       liensSuggeres.push({
         vers: {
@@ -581,10 +611,10 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
         url: urlSource,
         date: maintenant,
         statut: 'EN_ATTENTE',
-      });
+      })
     }
 
-    return creerEntiteNormalisee(type, champs, liensSuggeres);
+    return creerEntiteNormalisee(type, champs, liensSuggeres)
   }
 
   /**
@@ -594,11 +624,11 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
    * @returns {'Personne'|'Organisation'}
    */
   _inferTypeNode(typeIcij) {
-    const t = typeIcij.toLowerCase();
+    const t = typeIcij.toLowerCase()
     if (t.includes('officer') || t.includes('individual') || t.includes('person')) {
-      return 'Personne';
+      return 'Personne'
     }
-    return 'Organisation';
+    return 'Organisation'
   }
 
   /** Enveloppe un tableau de résultats dans la forme de retour standard. */
@@ -608,7 +638,8 @@ export default class IcijOffshoreLeaksConnecteur extends BaseConnecteur {
       source: 'ICIJ Offshore Leaks',
       dateRecuperation: new Date().toISOString(),
       version: this.version,
-      avertissement: "Source : ICIJ Offshore Leaks — vérifier avant publication. Une mention n'implique pas d'illégalité.",
-    };
+      avertissement:
+        "Source : ICIJ Offshore Leaks — vérifier avant publication. Une mention n'implique pas d'illégalité.",
+    }
   }
 }

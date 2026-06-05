@@ -10,6 +10,7 @@
 ## Semaine 1 — Fondations et modèles de données
 
 ### Objectifs
+
 Mettre en place l'environnement de développement et les modèles de base.
 
 ### Tâches
@@ -25,6 +26,7 @@ Mettre en place l'environnement de développement et les modèles de base.
 - [ ] Tester localement : création et lecture de personnes et liens via l'admin
 
 ### Livrables
+
 - Projet Django fonctionnel avec modèles et admin
 - Projet React initialisé avec Tailwind CSS
 - Base PostgreSQL opérationnelle avec schéma complet
@@ -34,6 +36,7 @@ Mettre en place l'environnement de développement et les modèles de base.
 ## Semaine 2 — Interface de contribution et liste des liens
 
 ### Objectifs
+
 Permettre la contribution et l'affichage des données via le frontend.
 
 ### Tâches
@@ -48,6 +51,7 @@ Permettre la contribution et l'affichage des données via le frontend.
 - [ ] Connecter le frontend à l'API Django (axios ou fetch)
 
 ### Livrables
+
 - Formulaire de contribution fonctionnel
 - Page de liste des liens avec filtres
 - Communication frontend ↔ backend opérationnelle
@@ -57,6 +61,7 @@ Permettre la contribution et l'affichage des données via le frontend.
 ## Semaine 3 — Visualisation interactive (graphe D3.js)
 
 ### Objectifs
+
 Offrir une représentation visuelle interactive des réseaux d'influence.
 
 ### Tâches
@@ -72,6 +77,7 @@ Offrir une représentation visuelle interactive des réseaux d'influence.
 - [ ] Tester avec un jeu de données fictif (20-30 personnes, 50-80 liens)
 
 ### Livrables
+
 - Graphe interactif D3.js fonctionnel
 - Filtres visuels opérationnels
 - Jeu de données de test
@@ -81,6 +87,7 @@ Offrir une représentation visuelle interactive des réseaux d'influence.
 ## Semaine 4 — Authentification, modération et gamification
 
 ### Objectifs
+
 Mettre en place le système d'utilisateurs, la modération communautaire et la gamification.
 
 ### Tâches
@@ -99,6 +106,7 @@ Mettre en place le système d'utilisateurs, la modération communautaire et la g
 - [ ] Ajouter la gestion des rôles (contributeur, modérateur, admin)
 
 ### Livrables
+
 - Système d'authentification complet
 - Validation communautaire fonctionnelle
 - Attribution automatique des badges
@@ -109,6 +117,7 @@ Mettre en place le système d'utilisateurs, la modération communautaire et la g
 ## Semaine 5 — API publique, export et documentation
 
 ### Objectifs
+
 Exposer les données via une API documentée et permettre l'export.
 
 ### Tâches
@@ -125,6 +134,7 @@ Exposer les données via une API documentée et permettre l'export.
 - [ ] Tester l'API avec des requêtes curl et via la documentation Swagger
 
 ### Livrables
+
 - API REST complète et documentée (Swagger)
 - Export CSV/JSON fonctionnel
 - Rate limiting et CAPTCHA actifs
@@ -134,6 +144,7 @@ Exposer les données via une API documentée et permettre l'export.
 ## Semaine 6 — Optimisation, tests, déploiement
 
 ### Objectifs
+
 Stabiliser, sécuriser et déployer la plateforme.
 
 ### Tâches
@@ -154,6 +165,7 @@ Stabiliser, sécuriser et déployer la plateforme.
 - [ ] Mettre à jour le README avec les instructions de déploiement
 
 ### Livrables
+
 - Plateforme déployée et accessible sur reseauxinfluences.fr
 - Tests unitaires passants
 - HTTPS actif, headers de sécurité configurés
@@ -164,18 +176,21 @@ Stabiliser, sécuriser et déployer la plateforme.
 ## Post-MVP — Évolutions prévues
 
 ### Semaine 7-8 : Améliorations UX
+
 - Carte géographique des liens (par pays) avec Leaflet ou Mapbox
 - Historique des modifications (versioning type Wikipedia)
 - Système de notification (email, in-app)
 - Recherche avancée avec suggestions et auto-complétion
 
 ### Semaine 9-10 : Communauté
+
 - Système de vote communautaire (en plus de la validation vrai/faux)
 - Tableau de bord des meilleurs contributeurs (leaderboard)
 - Newsletter hebdomadaire des nouveaux liens validés
 - Intégration OAuth supplémentaire (France Connect, etc.)
 
 ### Semaine 11-12 : Données et interopérabilité
+
 - Import/export Wikidata
 - Intégration avec des bases de données publiques (data.gouv.fr, OpenCorporates)
 - API GraphQL (en complément de REST)
@@ -185,12 +200,12 @@ Stabiliser, sécuriser et déployer la plateforme.
 
 ## Métriques de suivi
 
-| Métrique | Objectif Semaine 6 |
-|---|---|
-| Personnes référencées | 50+ (données de test) |
-| Liens créés | 100+ (données de test) |
-| Utilisateurs inscrits | 5+ (équipe de test) |
-| Tests unitaires | 80%+ de couverture |
-| Temps de réponse API | < 200ms |
-| Score Lighthouse | > 80 |
-| Disponibilité | 99%+ |
+| Métrique              | Objectif Semaine 6     |
+| --------------------- | ---------------------- |
+| Personnes référencées | 50+ (données de test)  |
+| Liens créés           | 100+ (données de test) |
+| Utilisateurs inscrits | 5+ (équipe de test)    |
+| Tests unitaires       | 80%+ de couverture     |
+| Temps de réponse API  | < 200ms                |
+| Score Lighthouse      | > 80                   |
+| Disponibilité         | 99%+                   |
