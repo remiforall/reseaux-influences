@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "version": "draft",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [2.3488, 48.8534]
+      },
+      "properties": {
+        "label": "5 Avenue du Général Leclerc 75014 Paris",
+        "score": 0.94,
+        "housenumber": "5",
+        "id": "75114_3756_00005",
+        "type": "housenumber",
+        "name": "5 Avenue du Général Leclerc",
+        "postcode": "75014",
+        "citycode": "75114",
+        "x": 651081.9,
+        "y": 6860400.2,
+        "city": "Paris",
+        "context": "75, Paris, Île-de-France",
+        "importance": 0.68,
+        "street": "Avenue du Général Leclerc"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [2.349, 48.8536]
+      },
+      "properties": {
+        "label": "7 Avenue du Général Leclerc 75014 Paris",
+        "score": 0.89,
+        "housenumber": "7",
+        "id": "75114_3756_00007",
+        "type": "housenumber",
+        "name": "7 Avenue du Général Leclerc",
+        "postcode": "75014",
+        "citycode": "75114",
+        "x": 651083.1,
+        "y": 6860402.8,
+        "city": "Paris",
+        "context": "75, Paris, Île-de-France",
+        "importance": 0.65,
+        "street": "Avenue du Général Leclerc"
+      }
+    }
+  ],
+  "attribution": "BAN",
+  "licence": "ETALAB-2.0",
+  "query": "5 avenue du général leclerc paris",
+  "limit": 10
+}

@@ -1,0 +1,77 @@
+{
+  "objectClassName": "domain",
+  "handle": "EXAMPLE-FR",
+  "ldhName": "example.fr",
+  "unicodeName": "example.fr",
+  "status": ["client delete prohibited", "client transfer prohibited", "active"],
+  "events": [
+    {
+      "eventAction": "registration",
+      "eventDate": "2001-03-15T00:00:00Z"
+    },
+    {
+      "eventAction": "expiration",
+      "eventDate": "2026-03-15T00:00:00Z"
+    },
+    {
+      "eventAction": "last changed",
+      "eventDate": "2023-11-22T10:30:00Z"
+    }
+  ],
+  "entities": [
+    {
+      "objectClassName": "entity",
+      "handle": "REGISTRAR-001",
+      "roles": ["registrar"],
+      "vcardArray": [
+        "vcard",
+        [
+          ["version", {}, "text", "4.0"],
+          ["fn", {}, "text", "Gandi SAS"]
+        ]
+      ]
+    },
+    {
+      "objectClassName": "entity",
+      "handle": "REGISTRANT-001",
+      "roles": ["registrant"],
+      "vcardArray": [
+        "vcard",
+        [
+          ["version", {}, "text", "4.0"],
+          ["fn", {}, "text", "REDACTED FOR PRIVACY"]
+        ]
+      ]
+    },
+    {
+      "objectClassName": "entity",
+      "handle": "TECH-001",
+      "roles": ["technical"],
+      "vcardArray": [
+        "vcard",
+        [
+          ["version", {}, "text", "4.0"],
+          ["fn", {}, "text", "Gandi Technical Contact"]
+        ]
+      ]
+    }
+  ],
+  "nameservers": [
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "a.dns.gandi.net"
+    },
+    {
+      "objectClassName": "nameserver",
+      "ldhName": "b.dns.gandi.net"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://rdap.nic.fr/domain/example.fr",
+      "rel": "self",
+      "type": "application/rdap+json"
+    }
+  ],
+  "rdapConformance": ["rdap_level_0"]
+}

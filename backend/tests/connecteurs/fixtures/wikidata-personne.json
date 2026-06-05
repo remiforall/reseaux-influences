@@ -1,0 +1,68 @@
+{
+  "results": {
+    "bindings": [
+      {
+        "entite": { "type": "uri", "value": "http://www.wikidata.org/entity/Q999999999" },
+        "label": { "type": "literal", "xml:lang": "fr", "value": "Jean Fictif" },
+        "description": {
+          "type": "literal",
+          "xml:lang": "fr",
+          "value": "Personnage fictif de test pour les fixtures OSINT"
+        },
+        "type_entite": { "type": "uri", "value": "http://www.wikidata.org/entity/Q5" },
+        "dateNaissance": {
+          "type": "literal",
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "value": "1970-01-01T00:00:00Z"
+        },
+        "pays": { "type": "uri", "value": "http://www.wikidata.org/entity/Q142" },
+        "paysLabel": { "type": "literal", "xml:lang": "fr", "value": "France" },
+        "prop": { "type": "uri", "value": "http://www.wikidata.org/entity/P39" },
+        "propLabel": { "type": "literal", "xml:lang": "fr", "value": "fonction exercée" },
+        "valeur": { "type": "uri", "value": "http://www.wikidata.org/entity/Q999000001" },
+        "valeurLabel": {
+          "type": "literal",
+          "xml:lang": "fr",
+          "value": "Député fictif de la Seine-Maritime"
+        },
+        "dateDebut": {
+          "type": "literal",
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "value": "2012-06-17T00:00:00Z"
+        },
+        "dateFin": {
+          "type": "literal",
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "value": "2017-06-20T00:00:00Z"
+        }
+      },
+      {
+        "entite": { "type": "uri", "value": "http://www.wikidata.org/entity/Q999999999" },
+        "label": { "type": "literal", "xml:lang": "fr", "value": "Jean Fictif" },
+        "description": {
+          "type": "literal",
+          "xml:lang": "fr",
+          "value": "Personnage fictif de test pour les fixtures OSINT"
+        },
+        "type_entite": { "type": "uri", "value": "http://www.wikidata.org/entity/Q5" },
+        "dateNaissance": {
+          "type": "literal",
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "value": "1970-01-01T00:00:00Z"
+        },
+        "pays": { "type": "uri", "value": "http://www.wikidata.org/entity/Q142" },
+        "paysLabel": { "type": "literal", "xml:lang": "fr", "value": "France" },
+        "prop": { "type": "uri", "value": "http://www.wikidata.org/entity/P102" },
+        "propLabel": { "type": "literal", "xml:lang": "fr", "value": "membre du parti politique" },
+        "valeur": { "type": "uri", "value": "http://www.wikidata.org/entity/Q999000002" },
+        "valeurLabel": { "type": "literal", "xml:lang": "fr", "value": "Parti Fictif de France" },
+        "dateDebut": {
+          "type": "literal",
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "value": "2005-01-01T00:00:00Z"
+        },
+        "dateFin": null
+      }
+    ]
+  }
+}
