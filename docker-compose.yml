@@ -1,0 +1,39 @@
+# Docker Compose pour développement local — reseaux-influences (alpha fermée)
+# Lance uniquement MariaDB (le backend et frontend tournent en npm dev natif sur macOS)
+#
+# Usage :
+#   docker compose up -d        # démarrer en arrière-plan
+#   docker compose ps           # vérifier le statut
+#   docker compose logs -f db   # suivre les logs MariaDB
+#   docker compose down         # arrêter (les données restent dans le volume)
+#   docker compose down -v      # arrêter + supprimer les données (reset total)
+#
+# Le port 3306 est exposé sur localhost pour Prisma + Studio.
+# Identifiants : reseaux / devlocal sur la base reseaux_influences.
+
+services:
+  db:
+    image: mariadb:11
+    container_name: reseaux-influences-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootdev
+      MARIADB_DATABASE: reseaux_influences
+      MARIADB_USER: reseaux
+      MARIADB_PASSWORD: devlocal
+      MARIADB_CHARACTER_SET_SERVER: utf8mb4
+      MARIADB_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mariadb_data:
+    name: reseaux-influences-mariadb-data
