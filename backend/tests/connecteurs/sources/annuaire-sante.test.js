@@ -10,6 +10,7 @@ await jest.unstable_mockModule('../../../src/connecteurs/cache.js', () => ({
   hashCle: jest.fn(() => 'hash-sante-test'),
   lireCache: jest.fn().mockResolvedValue(null),
   ecrireCache: jest.fn().mockResolvedValue(undefined),
+  obtenirOuCalculer: (cle, ttlMs, fabrique) => fabrique(),
   reinitialiserEtatCache: jest.fn(),
 }))
 
