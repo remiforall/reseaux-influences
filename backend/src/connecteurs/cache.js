@@ -21,8 +21,22 @@ const CACHE_DIR = process.env.CACHE_DIR ?? path.resolve(__dirname, '../../.cache
 
 const TTL_PAR_DEFAUT = Number(process.env.CACHE_TTL_MS) || 86_400_000
 
-/** Cache mémoire de secours si le disque est inaccessible. */
+/** Nombre maximal d'entrées du cache mémoire de secours (bornage LRU anti-OOM, m-09). */
+const MAX_ENTREES_MEMOIRE = Number(process.env.CACHE_MAX_MEMOIRE) || 500
+
+/** Cache mémoire de secours si le disque est inaccessible (Map = ordre d'insertion → LRU). */
 const cacheMemoire = new Map()
+
+/**
+ * Requêtes identiques en cours de résolution, indexées par clé de cache.
+ * Permet de dédupliquer les appels concurrents (P-C4) : N appels simultanés sur
+ * la même clé ne déclenchent qu'UN seul fetch externe (évite le ban User-Agent).
+ * @type {Map<string, Promise<*>>}
+ */
+const requetesEnVol = new Map()
+
+/** Compteur monotone pour générer des noms de fichiers temporaires uniques (écriture atomique). */
+let compteurTmp = 0
 
 /** Indique si le cache disque est opérationnel. */
 let cacheDisqueActif = null
@@ -98,6 +112,40 @@ export async function ecrireCache(cle, donnees) {
 }
 
 /**
+ * Lit le cache, sinon exécute `fabrique` pour produire la donnée, l'écrit en cache
+ * et la renvoie. Déduplique les appels concurrents (P-C4) : si une requête identique
+ * est déjà en vol, les appelants suivants attendent son résultat au lieu de relancer
+ * un fetch (protège contre le ban User-Agent côté sources comme Wikidata).
+ *
+ * Les échecs ne sont jamais mis en cache : seul un résultat résolu est persisté.
+ *
+ * @param {string} cle - Hash SHA-256 retourné par `hashCle`
+ * @param {number} ttlMs - TTL en millisecondes
+ * @param {() => Promise<*>} fabrique - Calcule la donnée en cas de miss (ex: fetch externe)
+ * @returns {Promise<*>} Donnée en cache ou fraîchement calculée
+ */
+export async function obtenirOuCalculer(cle, ttlMs, fabrique) {
+  const cacheHit = await lireCache(cle, ttlMs)
+  if (cacheHit !== null) return cacheHit
+
+  // Dédup : une requête identique est déjà en vol → on attend son résultat.
+  const enVol = requetesEnVol.get(cle)
+  if (enVol) return enVol
+
+  const promesse = (async () => {
+    const donnees = await fabrique()
+    await ecrireCache(cle, donnees)
+    return donnees
+  })()
+  requetesEnVol.set(cle, promesse)
+  try {
+    return await promesse
+  } finally {
+    requetesEnVol.delete(cle)
+  }
+}
+
+/**
  * Vide le cache mémoire (utile dans les tests).
  * N'affecte pas le cache disque.
  */
@@ -111,6 +159,7 @@ export function viderCacheMemoire() {
 export function reinitialiserEtatCache() {
   cacheDisqueActif = null
   cacheMemoire.clear()
+  requetesEnVol.clear()
 }
 
 // ─── Implémentations internes ────────────────────────────────────────────────
@@ -130,19 +179,42 @@ async function lireCacheDisque(cle, ttlMs) {
 
 async function ecrireCacheDisque(cle, entree) {
   const chemin = path.join(CACHE_DIR, `${cle}.json`)
-  await fs.writeFile(chemin, JSON.stringify(entree), 'utf8')
+  // Écriture atomique (P-C4) : on écrit dans un fichier temporaire unique puis on
+  // renomme. `rename` est atomique sur un même système de fichiers → jamais de JSON
+  // tronqué/corrompu, même en cas d'écritures concurrentes sur la même clé ou de crash.
+  const cheminTmp = `${chemin}.${process.pid}.${++compteurTmp}.tmp`
+  try {
+    await fs.writeFile(cheminTmp, JSON.stringify(entree), 'utf8')
+    await fs.rename(cheminTmp, chemin)
+  } catch (err) {
+    await fs.unlink(cheminTmp).catch(() => {})
+    throw err
+  }
 }
 
 function lireCacheMemoire(cle, ttlMs) {
   const entree = cacheMemoire.get(cle)
   if (!entree) return null
   const age = Date.now() - new Date(entree.ecritLe).getTime()
-  if (age > ttlMs) return null
+  if (age > ttlMs) {
+    cacheMemoire.delete(cle)
+    return null
+  }
+  // LRU : un accès marque l'entrée comme récemment utilisée (replacée en fin de Map).
+  cacheMemoire.delete(cle)
+  cacheMemoire.set(cle, entree)
   return entree.donnees
 }
 
 function ecrireCacheMemoire(cle, entree) {
+  // Replace en fin (entrée la plus récente), même si la clé existait déjà.
+  cacheMemoire.delete(cle)
   cacheMemoire.set(cle, entree)
+  // Éviction LRU : tant qu'on dépasse la capacité, on retire la plus ancienne (1re clé).
+  while (cacheMemoire.size > MAX_ENTREES_MEMOIRE) {
+    const plusAncienne = cacheMemoire.keys().next().value
+    cacheMemoire.delete(plusAncienne)
+  }
 }
 
 export { CACHE_DIR }

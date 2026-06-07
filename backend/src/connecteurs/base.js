@@ -13,7 +13,7 @@
  * - l'écriture en cache après succès
  */
 
-import { lireCache, ecrireCache, hashCle } from './cache.js'
+import { obtenirOuCalculer, hashCle } from './cache.js'
 import { consommer, creerBucket } from './rate-limit.js'
 
 // ---------------------------------------------------------------------------
@@ -188,54 +188,54 @@ export class BaseConnecteur {
     validerUrlDestination(this.nom, url)
 
     const cle = hashCle(this.nom, cacheMethode, { url, args: cacheArgs })
-    const cacheHit = await lireCache(cle, this.ttlCache)
-    if (cacheHit !== null) return cacheHit
 
-    await consommer(this.nom)
+    // Cache + dédup des requêtes concurrentes identiques (P-C4) : sur un miss, un seul
+    // fetch est lancé pour une clé donnée, les appels simultanés partagent son résultat.
+    return obtenirOuCalculer(cle, this.ttlCache, async () => {
+      await consommer(this.nom)
 
-    const controleur = new AbortController()
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
+      const controleur = new AbortController()
+      const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs)
 
-    // SEC-I-02 — User-Agent sans email perso ; utiliser ENRICHISSEMENT_USER_AGENT si fourni,
-    // sinon tomber sur l'adresse fonctionnelle générique (ADR-001).
-    const userAgent =
-      process.env.ENRICHISSEMENT_USER_AGENT ??
-      'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
+      // SEC-I-02 — User-Agent sans email perso ; utiliser ENRICHISSEMENT_USER_AGENT si fourni,
+      // sinon tomber sur l'adresse fonctionnelle générique (ADR-001).
+      const userAgent =
+        process.env.ENRICHISSEMENT_USER_AGENT ??
+        'reseauxinfluences.fr/1.0 (contact: contact@reseauxinfluences.fr)'
 
-    try {
-      const reponse = await fetch(url, {
-        ...fetchOptions,
-        signal: controleur.signal,
-        headers: {
-          'User-Agent': userAgent,
-          Accept: 'application/json',
-          ...(fetchOptions.headers ?? {}),
-        },
-      })
+      try {
+        const reponse = await fetch(url, {
+          ...fetchOptions,
+          signal: controleur.signal,
+          headers: {
+            'User-Agent': userAgent,
+            Accept: 'application/json',
+            ...(fetchOptions.headers ?? {}),
+          },
+        })
 
-      // M-03 — Vérifier l'URL finale après redirection (si redirect:'follow' par défaut)
-      if (reponse.url && reponse.url !== url) {
-        try {
-          validerUrlDestination(this.nom, reponse.url)
-        } catch {
-          throw new Error(
-            `[${this.nom}] SSRF bloqué — redirection vers URL non autorisée : ${reponse.url}`,
-          )
+        // M-03 — Vérifier l'URL finale après redirection (si redirect:'follow' par défaut)
+        if (reponse.url && reponse.url !== url) {
+          try {
+            validerUrlDestination(this.nom, reponse.url)
+          } catch {
+            throw new Error(
+              `[${this.nom}] SSRF bloqué — redirection vers URL non autorisée : ${reponse.url}`,
+            )
+          }
         }
-      }
 
-      if (!reponse.ok) {
-        const erreur = new Error(`[${this.nom}] HTTP ${reponse.status} sur ${url}`)
-        erreur.status = reponse.status
-        throw erreur
-      }
+        if (!reponse.ok) {
+          const erreur = new Error(`[${this.nom}] HTTP ${reponse.status} sur ${url}`)
+          erreur.status = reponse.status
+          throw erreur
+        }
 
-      const donnees = await reponse.json()
-      await ecrireCache(cle, donnees)
-      return donnees
-    } finally {
-      clearTimeout(minuterie)
-    }
+        return await reponse.json()
+      } finally {
+        clearTimeout(minuterie)
+      }
+    })
   }
 }
 
