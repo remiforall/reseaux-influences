@@ -73,8 +73,15 @@ describe('cache — écriture et lecture', () => {
 })
 
 describe('cache — dédup des requêtes en vol (obtenirOuCalculer, P-C4)', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     reinitialiserEtatCache()
+    // Nettoyage disque : ces tests écrivent sur le vrai CACHE_DIR. Sans purge,
+    // un fichier résiduel d'un run précédent sert la clé et fausse le compteur
+    // d'appels (la fabrique n'est jamais rejouée → appels = 0).
+    for (const args of ['concurrent', 'sequentiel']) {
+      const cle = hashCle('test', 'dedup', args)
+      await fs.rm(path.join(CACHE_DIR, `${cle}.json`), { force: true })
+    }
   })
 
   it('ne lance la fabrique qu’une seule fois pour des appels concurrents identiques', async () => {
