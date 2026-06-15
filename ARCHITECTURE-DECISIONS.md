@@ -945,3 +945,30 @@ Le scraping web est introduit comme **sous-type de connecteur** (`BaseConnecteur
 - La frontière « connecteur API officiel » / « connecteur scraping encadré » doit rester lisible dans le code et la doc, pour ne jamais brouiller la base légale entre les deux régimes.
 
 ---
+
+## ADR-021 — Connecteur GLEIF : dimension mondiale (identifiants d'entités juridiques)
+
+**Statut** : Accepté
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+> Note de numérotation : l'ADR-020 reste **réservée** à l'acte d'ouverture publique effective (cf. ADR-011). Ce connecteur prend donc le numéro 021.
+
+### Contexte
+
+Les 21 connecteurs existants couvrent essentiellement la sphère **française** (Sirene/RNE, BODACC, HATVP, IGN, RNA, RPPS…). La finalité du projet vise explicitement les réseaux d'influence « française, **européenne et mondiale** ». Il manquait une brique d'identité d'entités juridiques **transnationale** permettant de relier une société française à ses sociétés mères / filiales à l'étranger.
+
+### Décision
+
+Ajout du connecteur **`gleif`** sur l'API publique GLEIF (`api.gleif.org`, système LEI ISO 17442, supervisé par le Regulatory Oversight Committee du G20). Conforme à ADR-003 (source publique officielle, pas de scraping) et au pattern ADR-017 (`BaseConnecteur`, entrée `HOSTS_AUTORISES['gleif']`, contrat `rechercher`/`detailler`/`listerLiens`).
+
+- **`rechercher`** : plein-texte (`filter[fulltext]`) ou direct par LEI → entités `Organisation` normalisées (nom, juridiction ISO, forme juridique, adresse, LEI).
+- **`listerLiens`** : relations de propriété/contrôle (société mère directe, mère ultime, filiales directes) via les endpoints `direct-parent` / `ultimate-parent` / `direct-children`. Mappées en liens `BENEFICIAIRE_EFFECTIF` (contrôle capitalistique), **entre personnes morales uniquement** — jamais de personne physique (reste hors champ art. 9/10).
+
+### Conséquences
+
+- `gleif` ajouté à `DEFAUT_CONNECTEURS` (registry) et à `HOSTS_AUTORISES`. Couverture : ~2,7 M d'entités dans 200+ juridictions.
+- 22 connecteurs actifs désormais. 404 sur une relation traité proprement (pas de lien, pas de crash).
+- Brique fondatrice de la dimension mondiale ; prochaines extensions EU naturelles : registre de transparence UE (lobbying), interconnexion BRIS des registres du commerce européens.
+
+---

@@ -47,6 +47,8 @@ const HOSTS_AUTORISES = {
   // --- Connecteurs sphère associative + professionnels de santé (ADR-014) ---
   associations: ['media.interieur.gouv.fr', 'www.data.gouv.fr'],
   'annuaire-sante': ['www.data.gouv.fr', 'static.data.gouv.fr'],
+  // --- Connecteur mondial : identifiants d'entités juridiques (ADR-021) ---
+  gleif: ['api.gleif.org'],
 }
 
 /**
