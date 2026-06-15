@@ -823,3 +823,125 @@ Le registre des sources actives reste interne (`.env` non public). Aucune commun
 - Veille à conserver sur Flowsint : releases majeures, évolutions de leur modèle `flowsint-types` (Pydantic) → comparer avec notre approche Prisma/JSDoc pour la passe future « types stricts ».
 
 ---
+
+## ADR-018 — Couche workbench interactive + chat IA local, et isolement du proto d'auto-audit OSINT hors plateforme
+
+**Statut** : Accepté (direction UX) — activation sur données réelles **gelée par ADR-010**
+**Date** : 2026-06-06
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Veille externe sur **WebVetted Workbench** (`webvetted.com/workbench`, SaaS OSINT commercial US, ~299–1188 $/an). Outil graphique « cible → 80+ transformations → graphe → chat IA », positionné explicitement comme _« map your targets, find hidden connections in seconds »_. C'est, fonctionnellement, un proche de Maltego et de Flowsint (déjà analysé en ADR-017).
+
+Deux enseignements opposés :
+
+1. **À ne pas reproduire** — le cœur de valeur de WebVetted repose sur le scraping de réseaux sociaux (followers Facebook/Instagram/TikTok/X/LinkedIn), les bases de fuites (HIBP), le ciblage nominatif par email/téléphone, la reconnaissance faciale (reverse image / deepfake). C'est exactement le périmètre **exclu** par ADR-017 §3, et c'est l'antithèse de la filiation du projet (InfluenceNetwork / Owni.fr = journalisme sur figures publiques, pas surveillance d'individus). WebVetted sert ici de **miroir inversé** : il clarifie le positionnement « alternative européenne, transparente, légale » plutôt qu'un modèle à copier.
+
+2. **À reprendre** — l'**ergonomie d'interaction** est légitime et réutilisable sans aucun risque RGPD : le flux _cible → enrichissement progressif du graphe → chat IA contextualisé répondant avec citations vers la source brute_. C'est de l'UX, pas une source de données.
+
+### Décision
+
+#### 1. Direction UX « workbench » retenue, sur sources légales uniquement
+
+La couche workbench (cible → enrichissement incrémental → graphe → chat IA) est adoptée comme direction d'évolution du frontend. Elle se branche **exclusivement** sur les 21 connecteurs légaux existants (ADR-003/012/013/014/016) et sur les données déjà détenues légalement. **Aucune nouvelle source de données** n'est introduite par cette ADR — elle ne porte que sur l'interaction.
+
+#### 2. Chat IA = LLM **local** (Ollama), jamais cloud US
+
+Le « chat sur le graphe » (ex. « quel chemin relie X à Y ? », « résume l'influence de cette entité ») s'appuie sur un **LLM local via Ollama** (souveraineté, RGPD, zéro fuite vers OpenAI/Anthropic/US). Contraintes :
+
+- le LLM **raisonne uniquement sur le sous-graphe déjà chargé en session** (entités/liens déjà importés et validés) ; il ne déclenche aucun appel réseau enrichissant ;
+- pas de provider cloud par défaut. Si un fallback EU (Mistral API) est un jour envisagé, ce sera une ADR distincte avec clause d'opt-in explicite ;
+- la réponse cite systématiquement les `provenance` / `AuditEnrichissement` des données mobilisées (cohérent avec le principe de traçabilité ADR-006/008).
+
+#### 3. Le proto d'auto-audit OSINT vit **hors du dépôt**, n'est jamais un connecteur
+
+Pour étudier empiriquement « jusqu'où va le côté obscur », un prototype d'auto-audit (maigret, holehe, HIBP, reverse image, SERP, archives) est mené **sur les seules données personnelles du décideur, auto-consenties**. Règles non négociables :
+
+- ce proto réside **hors** de `~/Developer/reseaux-influences/` (répertoire séparé, hors git, output gitignoré — données d'exposition personnelle = ultra-sensibles) ;
+- il **n'est jamais** intégré comme connecteur, ni importé dans `registry.js`, ni exposé via une route API. Il ne touche pas la plateforme ;
+- sa finalité est documentaire : alimenter la conception éthique et le brief d'audit juridique en montrant ce que la plateforme **refuse** de faire ;
+- il **réaffirme ADR-017 §3** : ces enrichers (breaches, énumération sociale, reconnaissance faciale, lookup tél/IP individuels) restent définitivement hors périmètre plateforme.
+
+#### 4. Activation gelée par ADR-010
+
+La couche workbench peut être **prototypée sur seed de démo / données fictives** dès maintenant. Son activation sur des données réelles de tiers reste **gelée jusqu'à la levée de l'alpha fermée** (audit juridique externe, ADR-010 → futur ADR-011).
+
+### Conséquences
+
+- **Aucun code plateforme produit par cette ADR pour l'instant** — elle fixe une direction. L'implémentation (composant chat frontend + route `/api/graphe/chat` adossée à Ollama) viendra dans une passe dédiée, après validation du périmètre par le juriste.
+- Réutilise l'install Ollama du workspace (binaire CLI standalone `~/.local/ollama/`, cf. mémoire `project_scrapegraphai_setup.md`) — pas de nouvelle dépendance lourde au MVP.
+- Le proto d'auto-audit est tracé hors-dépôt ; aucun de ses outils n'apparaîtra jamais dans `package.json`, `registry.js` ou `HOSTS_AUTORISES`.
+- Le brief d'audit juridique (`docs/courriers/brief-audit-juridique-externe.md`) intègre les questions soulevées par cette veille (collecte automatisée, base légale, périmètre des personnes).
+- Veille à conserver : évolution de la réglementation sur le scraping « public » (jurisprudence CNIL) — impacte directement la frontière connecteurs légaux / interdit.
+
+---
+
+## ADR-011 — Cadre de levée de l'alpha fermée : prérequis et critères de sortie
+
+**Statut** : Accepté (cadre) — la décision d'ouverture effective restera conditionnée à l'audit juridique
+**Date** : 2026-06-15
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+L'ADR-010 a gelé toute ouverture publique jusqu'à un audit juridique externe, sans formaliser **ce qui doit être prêt** pour lever le gel. Le brief d'audit (`docs/courriers/brief-audit-juridique-externe.md`, 2026-06-06) a depuis structuré les questions à trancher (base légale Q1, périmètre des personnes Q2, collecte automatisée Q3). Cette ADR fixe la **checklist de levée** côté plateforme, indépendamment du verdict juridique : ce sont les prérequis matériels sans lesquels la consultation serait prématurée, et que l'audit exigera de toute façon.
+
+Décision de cadrage confirmée le 2026-06-15 : on **prépare la levée** (on construit les prérequis) tout en restant fermé ; on ne réouvre pas avant le rendu de l'audit.
+
+### Décision
+
+La levée de l'alpha (future **ADR-020** actant l'ouverture effective) est subordonnée à **deux conditions cumulatives** :
+
+**A. Prérequis techniques/documentaires produits par la plateforme** (réalisables sans le juriste) :
+
+1. **Procédure droits des personnes** (RGPD art. 15 à 21) opérationnelle — modèle `DemandeDroitPersonne`, route publique `/api/droits`, page `/mes-droits`. ✅ *livré (commit `feat(droits)`)*
+2. **Pages légales** publiées en projet : `/mentions-legales`, `/politique-confidentialite`, `/cgu` (interdiction explicite d'enrichir des citoyens privés), `/cookies`, `/declaration-accessibilite` (modèle DINUM).
+3. **Brouillon d'AIPD/DPIA** (`docs/juridique/aipd-projet.md`) suivant la trame CNIL, à soumettre au juriste.
+4. **Politique de conservation** documentée (`docs/juridique/politique-conservation.md`) — durées par catégorie de donnée.
+5. **`robots.txt`** prêt en deux versions (alpha `Disallow: /` actuelle / ouverture sélective), bascule manuelle et tracée.
+
+**B. Conditions juridiques (hors plateforme, bloquantes)** :
+
+6. Réponse écrite du juriste sur **Q1 (base légale)** — variable déterminante ; tant qu'elle n'est pas tranchée, les pages légales restent en statut « PROJET ».
+7. Position sur **Q2 (tiers périphériques / sphère familiale)** et **Q3 (collecte automatisée / scraping)**.
+8. Avis sur la **nécessité et le périmètre d'une AIPD** formelle.
+9. Décision explicite d'ouverture, actée par une ADR-020 dédiée.
+
+### Conséquences
+
+- Les pages légales et l'AIPD sont produites **en statut « PROJET — à valider par juriste »** : utiles à l'audit comme matière, jamais opposables tant que Q1 n'est pas tranchée.
+- La sphère **familiale** demandée comme finalité produit (cartographie des liens familiaux) est explicitement **suspendue à la réponse Q2** : le modèle `TypeLien` peut décrire des liens familiaux entre personnalités publiques, mais l'inclusion de tiers non-publics par ricochet reste gelée.
+- Cette ADR ne rouvre rien : `robots.txt` reste en `Disallow: /`, aucune inscription publique, aucune communication. Elle balise le chemin de sortie.
+
+---
+
+## ADR-019 — Scraping web encadré : sous-type de connecteur, garde-fous, activation gelée
+
+**Statut** : Accepté (direction) — implémentation gated, **désactivée** jusqu'à validation Q3 par l'audit
+**Date** : 2026-06-15
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Le périmètre de collecte a jusqu'ici exclu volontairement le scraping (ADR-003 : API/open data officiels uniquement). Or la valeur journalistique d'une cartographie d'influence suppose aussi des **sources éditoriales vérifiables** (presse, communiqués, sites institutionnels) qui n'exposent pas toujours d'API. Décision de cadrage 2026-06-15 : **autoriser le scraping web encadré comme direction**, à condition de le borner strictement et de geler son activation jusqu'à ce que le juriste tranche la Q3 du brief (régime distinct du scraping vs API officielle, jurisprudence CNIL sur la collecte « données publiques »).
+
+### Décision
+
+Le scraping web est introduit comme **sous-type de connecteur** (`BaseConnecteurScraping extends BaseConnecteur`), héritant de tous les garde-fous existants (cache disque, rate-limit, anti-SSRF, provenance par champ, audit), **plus** les contraintes spécifiques suivantes, **non négociables** :
+
+1. **Respect de `robots.txt`** de la cible (lecture + obéissance `Disallow`) avant toute requête. Une cible qui refuse les robots n'est jamais scrapée.
+2. **Allowlist de domaines** éditoriaux/institutionnels vérifiables (presse établie, sites publics, communiqués officiels), maintenue explicitement — pas de scraping généraliste du web ouvert.
+3. **Réseaux sociaux exclus** (CGU + RGPD), conformément au brief Q3 et à ADR-017 §3. Aucune exception sans nouvelle ADR.
+4. **Provenance + URL + horodatage** capturés pour chaque champ extrait (traçabilité ADR-006/008, citation de source côté UI).
+5. **Pas de contournement** : ni rotation d'IP/User-Agent trompeur, ni résolution de CAPTCHA, ni accès à du contenu derrière authentification ou paywall.
+6. **Désactivé par défaut** dans `registry.js` (`ENRICHISSEMENT_CONNECTEURS_ACTIFS` ne le liste pas) ; activable seulement après réponse favorable Q3 et sur seed/données fictives en attendant.
+
+### Conséquences
+
+- Le scaffold `BaseConnecteurScraping` peut être écrit et testé **sur fixtures locales** dès maintenant ; aucun domaine réel n'est activé tant que Q3 n'est pas tranchée.
+- Cohérent avec ADR-018 (gel d'activation par ADR-010) et ADR-017 §3 (enrichers individuels hors périmètre).
+- Si l'audit refuse le scraping même encadré : le sous-type reste inerte (zéro domaine en allowlist), aucune dette — la plateforme retombe sur les seules API officielles.
+- La frontière « connecteur API officiel » / « connecteur scraping encadré » doit rester lisible dans le code et la doc, pour ne jamais brouiller la base légale entre les deux régimes.
+
+---
