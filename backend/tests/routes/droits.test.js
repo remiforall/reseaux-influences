@@ -103,7 +103,12 @@ describe('POST /api/droits (soumission publique)', () => {
   })
 
   it("transmet l'IP tronquée à la création", async () => {
-    mockCreate.mockResolvedValue({ id: 'd', typeDroit: 'ACCES', statut: 'RECUE', createdAt: new Date() })
+    mockCreate.mockResolvedValue({
+      id: 'd',
+      typeDroit: 'ACCES',
+      statut: 'RECUE',
+      createdAt: new Date(),
+    })
 
     await fastify.inject({
       method: 'POST',
@@ -170,7 +175,7 @@ describe('GET /api/droits (modérateur/admin)', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(mockFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { statut: 'RECUE' } })
+      expect.objectContaining({ where: { statut: 'RECUE' } }),
     )
   })
 

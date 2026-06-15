@@ -41,7 +41,12 @@ function leiRecord(lei, nom, pays = 'FR') {
         legalForm: { id: '6540' },
         status: 'ACTIVE',
         category: 'GENERAL',
-        legalAddress: { addressLines: ['31 quai de Dion Bouton'], postalCode: '92800', city: 'Puteaux', country: 'FR' },
+        legalAddress: {
+          addressLines: ['31 quai de Dion Bouton'],
+          postalCode: '92800',
+          city: 'Puteaux',
+          country: 'FR',
+        },
       },
       registration: { initialRegistrationDate: '2017-05-09T00:00:00Z', status: 'ISSUED' },
     },
@@ -103,7 +108,9 @@ describe('GleifConnecteur — detailler()', () => {
   })
 
   it('mappe le détail pour un LEI valide', async () => {
-    jest.spyOn(connecteur, '_appelHttp').mockResolvedValue({ data: leiRecord(LEI_BOLLORE, 'BOLLORE SE') })
+    jest
+      .spyOn(connecteur, '_appelHttp')
+      .mockResolvedValue({ data: leiRecord(LEI_BOLLORE, 'BOLLORE SE') })
     const res = await connecteur.detailler(LEI_BOLLORE)
     expect(res.entite.champs.nom.valeur).toBe('BOLLORE SE')
   })
@@ -122,7 +129,8 @@ describe('GleifConnecteur — listerLiens() (relations de propriété)', () => {
     jest.spyOn(connecteur, '_appelHttp').mockImplementation(async (url) => {
       if (url.endsWith('/direct-parent')) return { data: leiRecord(LEI_PARENT, 'GROUPE BOLLORE') }
       if (url.endsWith('/ultimate-parent')) return { data: leiRecord(LEI_PARENT, 'GROUPE BOLLORE') }
-      if (url.includes('/direct-children')) return { data: [leiRecord(LEI_ENFANT, 'BOLLORE LOGISTICS')] }
+      if (url.includes('/direct-children'))
+        return { data: [leiRecord(LEI_ENFANT, 'BOLLORE LOGISTICS')] }
       return { data: null }
     })
 
@@ -139,7 +147,7 @@ describe('GleifConnecteur — listerLiens() (relations de propriété)', () => {
     expect(res.liens[0].vers.identifiantExterne).toBe(LEI_PARENT)
   })
 
-  it("retourne aucun lien si toutes les relations renvoient 404", async () => {
+  it('retourne aucun lien si toutes les relations renvoient 404', async () => {
     const err = new Error('HTTP 404')
     err.status = 404
     jest.spyOn(connecteur, '_appelHttp').mockRejectedValue(err)

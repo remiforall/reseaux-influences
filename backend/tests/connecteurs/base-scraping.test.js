@@ -23,9 +23,8 @@ await jest.unstable_mockModule('../../src/connecteurs/rate-limit.js', () => ({
   obtenirEtatBucket: jest.fn(),
 }))
 
-const { BaseConnecteurScraping, cheminAutoriseParRobots } = await import(
-  '../../src/connecteurs/base-scraping.js'
-)
+const { BaseConnecteurScraping, cheminAutoriseParRobots } =
+  await import('../../src/connecteurs/base-scraping.js')
 
 const fetchOriginal = globalThis.fetch
 
@@ -34,7 +33,11 @@ function mockFetch(handler) {
 }
 
 function reponse({ status = 200, text = '' }) {
-  return Promise.resolve({ ok: status >= 200 && status < 300, status, text: () => Promise.resolve(text) })
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    text: () => Promise.resolve(text),
+  })
 }
 
 afterEach(() => {
@@ -123,9 +126,9 @@ describe('BaseConnecteurScraping — respect robots.txt', () => {
       if (url.endsWith('/robots.txt')) return reponse({ text: 'User-agent: *\nDisallow: /prive' })
       return reponse({ text: '<html>secret</html>' })
     })
-    await expect(
-      scraper._appelHtml('https://exemple-presse.fr/prive/dossier'),
-    ).rejects.toThrow(/robots\.txt interdit/)
+    await expect(scraper._appelHtml('https://exemple-presse.fr/prive/dossier')).rejects.toThrow(
+      /robots\.txt interdit/,
+    )
   })
 
   it('fail-closed : robots.txt injoignable → refus', async () => {
@@ -134,7 +137,9 @@ describe('BaseConnecteurScraping — respect robots.txt', () => {
       if (url.endsWith('/robots.txt')) return Promise.reject(new Error('réseau coupé'))
       return reponse({ text: '<html>ok</html>' })
     })
-    await expect(scraper._appelHtml('https://exemple-presse.fr/a')).rejects.toThrow(/robots\.txt interdit/)
+    await expect(scraper._appelHtml('https://exemple-presse.fr/a')).rejects.toThrow(
+      /robots\.txt interdit/,
+    )
   })
 
   it('fail-closed : robots.txt 5xx → refus', async () => {
@@ -143,7 +148,9 @@ describe('BaseConnecteurScraping — respect robots.txt', () => {
       if (url.endsWith('/robots.txt')) return reponse({ status: 503 })
       return reponse({ text: '<html>ok</html>' })
     })
-    await expect(scraper._appelHtml('https://exemple-presse.fr/a')).rejects.toThrow(/robots\.txt interdit/)
+    await expect(scraper._appelHtml('https://exemple-presse.fr/a')).rejects.toThrow(
+      /robots\.txt interdit/,
+    )
   })
 
   it('404 sur robots.txt → accès autorisé', async () => {

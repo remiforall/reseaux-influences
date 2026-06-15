@@ -13,10 +13,10 @@ function PolitiqueConfidentialite() {
       <h2 className="text-xl font-semibold text-primary">Finalité et base légale</h2>
       <p>
         Le service poursuit une finalité d'<strong>information du public</strong> sur les réseaux
-        d'influence (redevabilité démocratique). La base légale retenue
-        (exception journalistique, art. 85 RGPD / art. 80 loi Informatique et Libertés, ou intérêt
-        légitime, art. 6.1.f) est <strong>en cours de validation</strong> par un·e juriste. Elle
-        sera précisée ici avant toute ouverture publique.
+        d'influence (redevabilité démocratique). La base légale retenue (exception journalistique,
+        art. 85 RGPD / art. 80 loi Informatique et Libertés, ou intérêt légitime, art. 6.1.f) est{' '}
+        <strong>en cours de validation</strong> par un·e juriste. Elle sera précisée ici avant toute
+        ouverture publique.
       </p>
 
       <h2 className="text-xl font-semibold text-primary">Données traitées</h2>

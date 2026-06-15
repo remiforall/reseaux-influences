@@ -23,9 +23,9 @@ function Cgu() {
 
       <h2 className="text-xl font-semibold text-primary">3. Sources admissibles</h2>
       <p>
-        Seules sont admises les <strong>sources publiques officielles</strong> (registres,
-        open data) et les <strong>médias vérifiables</strong>. Sont exclus : réseaux sociaux,
-        données issues de fuites non journalistiques, collecte par contournement technique, données
+        Seules sont admises les <strong>sources publiques officielles</strong> (registres, open
+        data) et les <strong>médias vérifiables</strong>. Sont exclus : réseaux sociaux, données
+        issues de fuites non journalistiques, collecte par contournement technique, données
         nominatives à accès restreint.
       </p>
 

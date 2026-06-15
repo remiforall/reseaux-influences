@@ -14,7 +14,7 @@ const TYPES = [
   { value: 'RECTIFICATION', label: 'Rectification (art. 16)' },
   { value: 'EFFACEMENT', label: 'Effacement (art. 17)' },
   { value: 'LIMITATION', label: 'Limitation du traitement (art. 18)' },
-  { value: 'OPPOSITION', label: "Opposition au traitement (art. 21)" },
+  { value: 'OPPOSITION', label: 'Opposition au traitement (art. 21)' },
 ]
 
 function MesDroits() {
@@ -44,7 +44,7 @@ function MesDroits() {
       setMessage(
         detail
           ? `La demande n'a pas pu être envoyée : ${detail}`
-          : "Une erreur est survenue. Réessayez plus tard ou écrivez à contact@reseauxinfluences.fr."
+          : 'Une erreur est survenue. Réessayez plus tard ou écrivez à contact@reseauxinfluences.fr.',
       )
     }
   }
@@ -54,9 +54,9 @@ function MesDroits() {
       <h1 className="text-3xl font-bold text-primary mb-2">Exercer mes droits</h1>
       <p className="text-gray-700 mb-2">
         Si une fiche vous concerne, vous pouvez demander l'accès, la rectification, l'effacement, la
-        limitation ou l'opposition au traitement de vos données (RGPD art. 15 à 21). Une vérification
-        de votre identité pourra vous être demandée par email avant traitement. Délai légal de
-        réponse : un mois.
+        limitation ou l'opposition au traitement de vos données (RGPD art. 15 à 21). Une
+        vérification de votre identité pourra vous être demandée par email avant traitement. Délai
+        légal de réponse : un mois.
       </p>
 
       <div

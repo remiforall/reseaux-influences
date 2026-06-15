@@ -895,7 +895,7 @@ La levée de l'alpha (future **ADR-020** actant l'ouverture effective) est subor
 
 **A. Prérequis techniques/documentaires produits par la plateforme** (réalisables sans le juriste) :
 
-1. **Procédure droits des personnes** (RGPD art. 15 à 21) opérationnelle — modèle `DemandeDroitPersonne`, route publique `/api/droits`, page `/mes-droits`. ✅ *livré (commit `feat(droits)`)*
+1. **Procédure droits des personnes** (RGPD art. 15 à 21) opérationnelle — modèle `DemandeDroitPersonne`, route publique `/api/droits`, page `/mes-droits`. ✅ _livré (commit `feat(droits)`)_
 2. **Pages légales** publiées en projet : `/mentions-legales`, `/politique-confidentialite`, `/cgu` (interdiction explicite d'enrichir des citoyens privés), `/cookies`, `/declaration-accessibilite` (modèle DINUM).
 3. **Brouillon d'AIPD/DPIA** (`docs/juridique/aipd-projet.md`) suivant la trame CNIL, à soumettre au juriste.
 4. **Politique de conservation** documentée (`docs/juridique/politique-conservation.md`) — durées par catégorie de donnée.

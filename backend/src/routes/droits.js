@@ -77,7 +77,7 @@ export default async function droitsRoutes(fastify) {
           'pourra vous être demandée par email avant traitement. Délai légal : 1 mois (art. 12.3).',
         demande,
       })
-    }
+    },
   )
 
   // --- Liste des demandes (modérateur/admin) ------------------------------

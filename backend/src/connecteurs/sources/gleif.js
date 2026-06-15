@@ -80,7 +80,9 @@ export default class GleifConnecteur extends BaseConnecteur {
    * @returns {Promise<{ entite: object|null, source: string, dateRecuperation: string, version: string }>}
    */
   async detailler(lei) {
-    const leiPropre = String(lei ?? '').trim().toUpperCase()
+    const leiPropre = String(lei ?? '')
+      .trim()
+      .toUpperCase()
     if (!REGEX_LEI.test(leiPropre)) {
       return this._envEntite(null)
     }
@@ -106,7 +108,9 @@ export default class GleifConnecteur extends BaseConnecteur {
    * @returns {Promise<{ liens: Array, source: string, dateRecuperation: string, version: string }>}
    */
   async listerLiens(lei) {
-    const leiPropre = String(lei ?? '').trim().toUpperCase()
+    const leiPropre = String(lei ?? '')
+      .trim()
+      .toUpperCase()
     if (!REGEX_LEI.test(leiPropre)) return this._envLiens([])
 
     const liens = []
@@ -268,10 +272,20 @@ export default class GleifConnecteur extends BaseConnecteur {
   }
 
   _envEntite(entite) {
-    return { entite, source: 'gleif', dateRecuperation: new Date().toISOString(), version: this.version }
+    return {
+      entite,
+      source: 'gleif',
+      dateRecuperation: new Date().toISOString(),
+      version: this.version,
+    }
   }
 
   _envLiens(liens) {
-    return { liens, source: 'gleif', dateRecuperation: new Date().toISOString(), version: this.version }
+    return {
+      liens,
+      source: 'gleif',
+      dateRecuperation: new Date().toISOString(),
+      version: this.version,
+    }
   }
 }

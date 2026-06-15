@@ -62,9 +62,7 @@ export function cheminAutoriseParRobots(contenu, chemin, userAgent) {
   }
 
   // Groupes applicables : '*' ou un agent dont notre token contient le nom
-  const applicables = groupes.filter((g) =>
-    g.agents.some((a) => a === '*' || uaToken.includes(a)),
-  )
+  const applicables = groupes.filter((g) => g.agents.some((a) => a === '*' || uaToken.includes(a)))
   if (applicables.length === 0) return true
 
   for (const g of applicables) {

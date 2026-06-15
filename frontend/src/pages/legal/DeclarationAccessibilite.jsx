@@ -24,9 +24,13 @@ function DeclarationAccessibilite() {
       <h2 className="text-xl font-semibold text-primary">Retour et contact</h2>
       <p>
         Si vous rencontrez un défaut d'accessibilité, signalez-le à{' '}
-        <code>accessibilite@reseauxinfluences.fr</code>. Vous avez le droit d'obtenir une réponse et,
-        à défaut, de saisir le Défenseur des droits (
-        <a className="underline text-primary" href="https://www.defenseurdesdroits.fr" rel="noopener noreferrer">
+        <code>accessibilite@reseauxinfluences.fr</code>. Vous avez le droit d'obtenir une réponse
+        et, à défaut, de saisir le Défenseur des droits (
+        <a
+          className="underline text-primary"
+          href="https://www.defenseurdesdroits.fr"
+          rel="noopener noreferrer"
+        >
           defenseurdesdroits.fr
         </a>
         ).
