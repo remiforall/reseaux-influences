@@ -1,10 +1,17 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import Accueil from './pages/Accueil'
 import Liens from './pages/Liens'
 import Graphe from './pages/Graphe'
 import Profil from './pages/Profil'
 import Enrichissement from './pages/Enrichissement'
+import MentionsLegales from './pages/legal/MentionsLegales'
+import PolitiqueConfidentialite from './pages/legal/PolitiqueConfidentialite'
+import Cgu from './pages/legal/Cgu'
+import Cookies from './pages/legal/Cookies'
+import DeclarationAccessibilite from './pages/legal/DeclarationAccessibilite'
+import MesDroits from './pages/legal/MesDroits'
 
 function App() {
   return (
@@ -31,8 +38,18 @@ function App() {
           <Route path="/profil/:id" element={<Profil />} />
           {/* Route enrichissement — accessible aux utilisateurs authentifiés uniquement */}
           <Route path="/enrichissement" element={<Enrichissement />} />
+
+          {/* Pages légales (PROJET — prérequis levée alpha ADR-011) */}
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
+          <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+          <Route path="/cgu" element={<Cgu />} />
+          <Route path="/cookies" element={<Cookies />} />
+          <Route path="/declaration-accessibilite" element={<DeclarationAccessibilite />} />
+          <Route path="/mes-droits" element={<MesDroits />} />
         </Routes>
       </main>
+
+      <Footer />
     </div>
   )
 }

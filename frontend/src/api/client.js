@@ -89,4 +89,9 @@ export const getExportGraphML = (params) =>
   api.get('/export/graphml', { params, responseType: 'blob' })
 export const getApiPublique = (params) => api.get('/export/api-publique', { params })
 
+// Droits des personnes (RGPD art. 15-21) — soumission publique, sans auth
+export const postDemandeDroit = (data) => api.post('/droits', data)
+export const getDemandesDroit = (params) => api.get('/droits', { params })
+export const patchDemandeDroit = (id, data) => api.patch(`/droits/${id}`, data)
+
 export default api
