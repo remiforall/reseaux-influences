@@ -51,6 +51,8 @@ const HOSTS_AUTORISES = {
   gleif: ['api.gleif.org'],
   // --- Connecteur européen : registre de transparence UE / lobbying (ADR-022) ---
   'eu-transparence': ['ec.europa.eu', 'transparency-register.europa.eu'],
+  // --- Connecteur européen : bénéficiaires du budget UE / FTS (ADR-024) ---
+  'eu-fts': ['ec.europa.eu'],
 }
 
 /**

@@ -1032,3 +1032,30 @@ La piste « interconnexion BRIS des registres du commerce européens » a été 
 - Prochaine extension EU recommandée : connecteur **FTS** (même pattern bulk que `eu-transparence`).
 
 ---
+
+## ADR-024 — Connecteur EU FTS (bénéficiaires du budget UE) + lecteur XLSX zéro-dépendance
+
+**Statut** : Accepté
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Alternative EU recommandée par l'ADR-023 (BRIS étant inaccessible par API). Le **Financial Transparency System** publie les bénéficiaires des fonds UE en gestion directe (subventions, marchés) — signal d'influence : quelles organisations dépendent du financement européen, par programme. Seul format de distribution officiel : **XLSX annuel** (pas de CSV/XML réel — les variantes renvoient une page HTML). Le projet interdit les dépendances npm (`xml-js` déjà banni) ; il fallait donc un lecteur XLSX maison.
+
+### Décision
+
+**1. Lecteur `xlsx-mini` zéro-dépendance** (`backend/src/connecteurs/xlsx-mini.js`) : un `.xlsx` est une archive ZIP de XML. Lecture du répertoire central + décompression via `zlib.inflateRawSync` (natif Node), puis parsing regex de `sharedStrings.xml` et de la première feuille. Réutilisable pour tout futur export gouvernemental XLSX.
+
+**2. Connecteur `eu-fts`** : télécharge le dernier export annuel disponible (résolution par sondage de la signature ZIP « PK » sur les 3 dernières années), parse, **agrège par bénéficiaire** (un bénéficiaire = N lignes d'engagement → pays, type, programmes, nombre d'engagements, engagement max). Cache 30 j du résultat agrégé compact (JSON), pas du binaire.
+
+**Garde-fou RGPD (ADR-006)** : les bénéficiaires personnes physiques sont **masqués `\*\*\***`à la source** ; on les **écarte systématiquement** — seules les organisations nommées sont indexées.`qualiteInfluence`suggérée :`AUTRE`(bénéficiaire de fonds, pas un mandat).`Beneficiary type`→`TypeOrganisation`.
+
+### Conséquences
+
+- `eu-fts` + `xlsx-mini` ajoutés ; `eu-fts` dans `DEFAUT_CONNECTEURS` et `HOSTS_AUTORISES` (`ec.europa.eu`). **24 connecteurs actifs.**
+- Validation runtime : export 2024 (~106 k lignes, 16 Mo) → **23 359 organisations bénéficiaires** agrégées ; recherche « fraunhofer » → entités réelles avec montants formatés FR.
+- Le montant retenu est l'**engagement maximal** observé (les colonnes de montants de l'export ne sont pas documentées finement ; pas de somme hasardeuse). À affiner si la doc officielle des colonnes est récupérée.
+- Coût : parsing ~16 s au premier appel par process (puis cache 30 j). Acceptable pour un connecteur bulk.
+
+---
