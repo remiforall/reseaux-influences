@@ -49,6 +49,8 @@ const HOSTS_AUTORISES = {
   'annuaire-sante': ['www.data.gouv.fr', 'static.data.gouv.fr'],
   // --- Connecteur mondial : identifiants d'entités juridiques (ADR-021) ---
   gleif: ['api.gleif.org'],
+  // --- Connecteur européen : registre de transparence UE / lobbying (ADR-022) ---
+  'eu-transparence': ['ec.europa.eu', 'transparency-register.europa.eu'],
 }
 
 /**

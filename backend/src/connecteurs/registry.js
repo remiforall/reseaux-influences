@@ -17,7 +17,7 @@ const DEFAUT_CONNECTEURS =
   'wikidata,rdap,recherche-entreprises,ign-ban,ign-dvf,ign-carto-cadastre,ign-carto-gpu,ign-geoplateforme,' +
   'hatvp,transparence-sante,bodacc,parlementaires,dataesr,' +
   'icij-offshore-leaks,open-sanctions,anticor,cour-des-comptes,wikileaks,ddosecrets,' +
-  'associations,annuaire-sante,gleif'
+  'associations,annuaire-sante,gleif,eu-transparence'
 
 /** @type {Map<string, import('./base.js').BaseConnecteur>|null} */
 let registryInstancie = null
