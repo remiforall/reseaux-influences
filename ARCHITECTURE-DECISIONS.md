@@ -996,6 +996,7 @@ Ajout du connecteur **`eu-transparence`** sur l'export XML public quotidien : `h
 
 - `eu-transparence` ajouté à `DEFAUT_CONNECTEURS` et à `HOSTS_AUTORISES` (`ec.europa.eu`, `transparency-register.europa.eu`). **23 connecteurs actifs.**
 - Validation runtime sur données réelles : ~14 700 entités parsées, accents préservés, siège pris sur `headOffice` (pas `EUOffice`).
-- Le siège réel des bureaux UE (`EUOffice`) et les données financières restent disponibles dans l'export pour une passe ultérieure si besoin.
+- **Champs financiers et bureau UE extraits** : `budgetLobbyingDeclar` (fourchette `financialData > closedYear > costs > range`, formatée FR + année close), `bureauUe` (Bruxelles le plus souvent), `personnesAccrediteesPe`. Ces champs alimentent directement la lecture d'influence (combien dépensé, présence à Bruxelles).
+- L'UI d'enrichissement affiche ces champs automatiquement (`PreviewEntite` est piloté par les champs renvoyés) ; les liens de propriété GLEIF montrent désormais leur rôle (« Société mère ultime », « Filiale directe »).
 
 ---

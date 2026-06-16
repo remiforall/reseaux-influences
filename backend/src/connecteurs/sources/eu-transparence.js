@@ -79,6 +79,36 @@ function extraireBalise(bloc, balise) {
   return m ? decoderXml(m[1].trim()) : null
 }
 
+/**
+ * Extrait le budget de lobbying déclaré depuis un bloc `financialData`.
+ * Cible le dernier exercice clos (`closedYear`) et sa fourchette de coûts
+ * (`costs > range > min/max`). Retourne un libellé lisible ou null.
+ *
+ * @param {string} financial - contenu du bloc <financialData>
+ * @returns {string|null} ex: "≤ 10 000 € (clos 2023)"
+ */
+function extraireBudget(financial) {
+  if (!financial) return null
+  const closed = financial.match(/<closedYear[^>]*>([\s\S]*?)<\/closedYear>/i)?.[1] ?? financial
+  const costs = closed.match(/<costs([^>]*)>([\s\S]*?)<\/costs>/i)
+  if (!costs) return null
+
+  const devise = costs[1].match(/currency="([^"]*)"/)?.[1] ?? '€'
+  const corps = costs[2]
+  const min = corps.match(/<min>(\d+)<\/min>/)?.[1]
+  const max = corps.match(/<max>(\d+)<\/max>/)?.[1]
+  const annee = closed.match(/<startDate>(\d{4})/)?.[1] ?? null
+  const fmt = (n) => Number(n).toLocaleString('fr-FR')
+
+  let montant = null
+  if (min && max) montant = `${fmt(min)}–${fmt(max)} ${devise}`
+  else if (max) montant = `≤ ${fmt(max)} ${devise}`
+  else if (min) montant = `≥ ${fmt(min)} ${devise}`
+  if (!montant) return null
+
+  return annee ? `${montant} (clos ${annee})` : montant
+}
+
 export default class EuTransparenceConnecteur extends BaseConnecteur {
   constructor() {
     super({
@@ -186,6 +216,8 @@ export default class EuTransparenceConnecteur extends BaseConnecteur {
 
       // Pays/ville du siège : scoper au bloc headOffice (et pas EUOffice)
       const headOffice = bloc.match(/<headOffice>([\s\S]*?)<\/headOffice>/i)?.[1] ?? ''
+      const euOffice = bloc.match(/<EUOffice>([\s\S]*?)<\/EUOffice>/i)?.[1] ?? ''
+      const financial = bloc.match(/<financialData>([\s\S]*?)<\/financialData>/i)?.[1] ?? ''
 
       this._index.set(code, {
         code,
@@ -196,6 +228,9 @@ export default class EuTransparenceConnecteur extends BaseConnecteur {
         categorie: extraireBalise(bloc, 'registrationCategory'),
         pays: extraireBalise(headOffice, 'country'),
         ville: extraireBalise(headOffice, 'city'),
+        bureauUeVille: extraireBalise(euOffice, 'city'),
+        bureauUePays: extraireBalise(euOffice, 'country'),
+        budgetLobby: extraireBudget(financial),
         epAccredites: Number(extraireBalise(bloc, 'EPAccreditedNumber')) || 0,
         dateInscription: extraireBalise(bloc, 'registrationDate'),
       })
@@ -213,11 +248,14 @@ export default class EuTransparenceConnecteur extends BaseConnecteur {
     const sourceInfo = { source: 'Registre de transparence UE', url: urlSource }
 
     const adresse = [e.ville, e.pays].filter(Boolean).join(', ') || null
+    const bureauUe = [e.bureauUeVille, e.bureauUePays].filter(Boolean).join(', ') || null
     const description =
       `Représentant d'intérêts inscrit au registre de transparence UE` +
       `${e.categorie ? ` · ${e.categorie}` : ''}` +
+      `${e.budgetLobby ? ` · Budget lobbying ${e.budgetLobby}` : ''}` +
       `${e.epAccredites ? ` · ${e.epAccredites} accrédité(s) au Parlement européen` : ''}` +
-      `${adresse ? ` · ${adresse}` : ''}` +
+      `${bureauUe ? ` · Bureau UE ${bureauUe}` : ''}` +
+      `${adresse ? ` · Siège ${adresse}` : ''}` +
       ` · Code ${e.code}`
 
     const champs = {
@@ -229,6 +267,9 @@ export default class EuTransparenceConnecteur extends BaseConnecteur {
       formeJuridique: marquerProvenance(e.entityForm, sourceInfo),
       adresseSiege: marquerProvenance(adresse, sourceInfo),
       libelleCommune: marquerProvenance(e.ville, sourceInfo),
+      bureauUe: marquerProvenance(bureauUe, sourceInfo),
+      budgetLobbyingDeclar: marquerProvenance(e.budgetLobby, sourceInfo),
+      personnesAccrediteesPe: marquerProvenance(e.epAccredites || null, sourceInfo),
       siteWeb: marquerProvenance(e.site, sourceInfo),
       identifiantRegistreUe: marquerProvenance(e.code, sourceInfo),
       dateCreation: marquerProvenance(e.dateInscription, sourceInfo),

@@ -57,6 +57,13 @@ const FIXTURE_XML = `<?xml version='1.1' encoding='UTF-8'?>
       <headOffice>
         <address>Rue de la Loi 100</address><city>Brussels</city><country>BELGIUM</country>
       </headOffice>
+      <EUOffice><city>Brussels</city><country>BELGIUM</country></EUOffice>
+      <financialData>
+        <closedYear type="ClosedYearFinancialInformation">
+          <startDate>2023-01-01</startDate><endDate>2023-12-31</endDate>
+          <costs type="CostRange" currency="€"><range><min>900000</min><max>999999</max></range></costs>
+        </closedYear>
+      </financialData>
       <EPAccreditedNumber>5</EPAccreditedNumber>
     </interestRepresentative>
   </resultList>
@@ -100,6 +107,16 @@ describe('EuTransparenceConnecteur — rechercher()', () => {
     expect(ent.champs.typeOrganisation.valeur).toBe('LOBBY') // "Professional consultancies"
     expect(ent.champs.identifiantRegistreUe.valeur).toBe('123456789012-99')
     expect(ent.champs.pays.valeur).toBe('BELGIUM')
+  })
+
+  it('extrait le budget lobbying (fourchette) et le bureau UE', async () => {
+    const res = await connecteur.rechercher('biglobby')
+    const ent = res.resultats[0]
+    // fourchette 900000–999999 € formatée FR + année close
+    expect(ent.champs.budgetLobbyingDeclar.valeur).toMatch(/900\s?000.*999\s?999 €.*2023/)
+    expect(ent.champs.bureauUe.valeur).toBe('Brussels, BELGIUM')
+    expect(ent.champs.personnesAccrediteesPe.valeur).toBe(5)
+    expect(ent.champs.description.valeur).toContain('Budget lobbying')
   })
 
   it('trouve par acronyme', async () => {
