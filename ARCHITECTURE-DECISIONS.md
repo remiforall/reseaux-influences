@@ -1000,3 +1000,35 @@ Ajout du connecteur **`eu-transparence`** sur l'export XML public quotidien : `h
 - L'UI d'enrichissement affiche ces champs automatiquement (`PreviewEntite` est piloté par les champs renvoyés) ; les liens de propriété GLEIF montrent désormais leur rôle (« Société mère ultime », « Filiale directe »).
 
 ---
+
+## ADR-023 — BRIS exclu (pas d'API publique) ; alternatives EU retenues
+
+**Statut** : Accepté (exclusion)
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+La piste « interconnexion BRIS des registres du commerce européens » a été étudiée comme brique EU complémentaire (registres nationaux des sociétés). Vérification faite : **BRIS n'expose aucune API publique**. L'accès se fait uniquement via l'interface web du portail e-Justice ; BRIS ne détient pas les données (couche de routage vers les registres nationaux) et ne fournit qu'un contrôle d'existence harmonisé, sans capitalistique ni comptes.
+
+### Décision
+
+**Aucun connecteur BRIS.** Le seul moyen d'extraire des données BRIS serait de **scraper le portail e-Justice** — ce qui viole ADR-003 (sources via API officielle) et tombe sous le scraping **gelé** (ADR-019, allowlist vide jusqu'à validation juridique Q3). On ne le fait pas.
+
+### Alternatives EU réellement ouvertes (pour une passe ultérieure)
+
+À privilégier si l'on veut étendre la couverture européenne par des **API/exports officiels** (conformes ADR-003) :
+
+1. **EU Financial Transparency System (FTS)** — bénéficiaires du budget de l'UE (subventions, marchés). Export officiel. Cartographie « qui reçoit l'argent de l'UE » = dépendance/influence directe. _Candidat recommandé._
+2. **TED — Tenders Electronic Daily** — marchés publics européens attribués, API open data. Qui remporte les contrats publics UE.
+3. **GLEIF** (déjà intégré, ADR-021) couvre déjà l'identité transnationale des entités et leurs mères/filiales — recouvre une grande part du besoin « registres du commerce ».
+
+> **OpenCorporates** (registres du commerce mondiaux par API) est écarté pour l'instant : clé API requise + conditions de réutilisation restreignant la rediffusion dans un corpus public CC-BY (tension avec l'ADR-007 à venir). À réévaluer si licence compatible.
+
+### Conséquences
+
+- Pas de dette : aucune ligne de code BRIS, aucune entrée `HOSTS_AUTORISES`.
+- Trace explicite pour éviter qu'une session future ne retente BRIS sans revérifier l'absence d'API.
+- Prochaine extension EU recommandée : connecteur **FTS** (même pattern bulk que `eu-transparence`).
+
+---
