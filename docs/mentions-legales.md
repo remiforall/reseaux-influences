@@ -40,7 +40,7 @@ Le site **reseauxinfluences.fr** est édité par :
 - **PostHack**, EURL au capital de 500 euros, représentée par **Rémi Vincent**.
 - Immatriculée le 14 juin 2021 — **SIREN 900 477 571** (SIRET du siège : 900 477 571 00021), RCS de Caen, code NAF 7022Z.
 - N° de TVA intracommunautaire : FR88900477571.
-- Adresse : [à compléter].
+- Adresse du siège : 7 rue des Sorbiers, 14470 Courseulles-sur-Mer.
 - Courriel de contact : contact@reseauxinfluences.fr
 - Directeur de la publication : Rémi Vincent.
 
