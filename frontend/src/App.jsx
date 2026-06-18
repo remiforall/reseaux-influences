@@ -12,6 +12,7 @@ import Cgu from './pages/legal/Cgu'
 import Cookies from './pages/legal/Cookies'
 import DeclarationAccessibilite from './pages/legal/DeclarationAccessibilite'
 import MesDroits from './pages/legal/MesDroits'
+import Ressources from './pages/Ressources'
 
 function App() {
   return (
@@ -46,6 +47,9 @@ function App() {
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/declaration-accessibilite" element={<DeclarationAccessibilite />} />
           <Route path="/mes-droits" element={<MesDroits />} />
+
+          {/* Webographie OSINT — boîte à outils (sources non intégrées) */}
+          <Route path="/ressources" element={<Ressources />} />
         </Routes>
       </main>
 
