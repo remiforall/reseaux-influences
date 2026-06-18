@@ -1059,3 +1059,28 @@ Alternative EU recommandée par l'ADR-023 (BRIS étant inaccessible par API). Le
 - Coût : parsing ~16 s au premier appel par process (puis cache 30 j). Acceptable pour un connecteur bulk.
 
 ---
+
+## ADR-025 — Connecteur TED (marchés publics de l'UE)
+
+**Statut** : Accepté
+**Date** : 2026-06-18
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Troisième brique européenne (après le lobbying `eu-transparence` et les fonds `eu-fts`) : la **commande publique**. TED (Tenders Electronic Daily) publie les avis de marchés publics de l'UE. Une API de recherche publique existe (`POST https://api.ted.europa.eu/v3/notices/search`, sans clé), contrairement à BRIS (ADR-023) — donc connecteur légitime sans scraping.
+
+### Décision
+
+Connecteur **`ted`**, API live (pas bulk), via `_appelHttp` en POST (cache + rate-limit + anti-SSRF hérités). Recherche experte plein-texte `FT~"terme"`.
+
+**Sémantique assumée** : l'API de recherche n'expose pas l'attributaire (`winner-name` toujours `null` ; il n'est que dans le XML détaillé, trop coûteux à parser). L'entité renvoyée est donc l'**acheteur public** (`buyer-name`, toujours présent), agrégé par nom : nombre d'avis correspondant au terme, pays, dernière date, exemples de titres + liens. `TypeOrganisation = INSTITUTION_PUBLIQUE`, `qualiteInfluence = AUTRE`. Le terme matche partout dans l'avis (acheteur, attributaire, objet) → on remonte les acheteurs liés au terme cherché.
+
+### Conséquences
+
+- `ted` ajouté à `DEFAUT_CONNECTEURS` et `HOSTS_AUTORISES` (`api.ted.europa.eu`). **25 connecteurs actifs.**
+- Champs multilingues TED (`{lang: valeur}`) : extraction fra → eng → première langue.
+- Validation runtime : « AP-HP » → 4 acheteurs publics agrégés avec compteurs d'avis réels.
+- Limite connue : pas d'attributaire (faute de l'exposer dans l'API de recherche). Évolution possible : récupérer le XML détaillé d'un avis pour en extraire l'attributaire, si le besoin se confirme.
+
+---

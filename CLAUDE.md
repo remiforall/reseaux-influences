@@ -82,7 +82,7 @@ npm run db:studio               # UI :5555
 # Seeds (depuis backend/)
 npm run db:seed                  # types liens + badges + config gamification
 npm run db:seed:demo             # corpus démo Bolloré/Macron (3 personnes + 2 orgas)
-npm run db:seed:enrichi          # enrichissement multi-cibles via les 24 connecteurs
+npm run db:seed:enrichi          # enrichissement multi-cibles via les 25 connecteurs
 npm run db:seed:complement-geo   # retro-géocodage orgas existantes via BAN
 node bin/seed-perso.js           # Rémi + PostHack + posthack.com (seed personnel)
 ```
@@ -117,23 +117,23 @@ Invariant **applicatif** (pas DB) — validation zod sur `routes/liens.js`. Tout
 
 ## Module Enrichissement OSINT (cœur du projet)
 
-### 24 connecteurs actifs
+### 25 connecteurs actifs
 
 Sources publiques officielles uniquement (ADR-003) :
 
-| Catégorie                 | Connecteurs                                                                       |
-| ------------------------- | --------------------------------------------------------------------------------- |
-| **Identité publique**     | wikidata (wbsearchentities + SPARQL ciblé)                                        |
-| **Entreprises FR**        | recherche-entreprises (Sirene/RNE), bodacc, hatvp, dataesr                        |
-| **Entreprises monde**     | gleif (LEI ISO 17442 — mères/filiales transnationales, ADR-021)                   |
-| **Influence UE**          | eu-transparence (lobbying UE, ADR-022), eu-fts (bénéficiaires budget UE, ADR-024) |
-| **Web**                   | rdap (bootstrap IANA → registries)                                                |
-| **Géographie / cadastre** | ign-ban, ign-dvf, ign-carto-cadastre, ign-carto-gpu, ign-geoplateforme            |
-| **Politique**             | parlementaires (NosDéputés/NosSénateurs — Sénat désactivé, service mort 2024)     |
-| **Sanctions / leaks**     | open-sanctions (5 sub-datasets FR), icij-offshore-leaks (Panama/Paradise/Pandora) |
-| **Veille presse**         | anticor (RSS), cour-des-comptes (RSS)                                             |
-| **Société civile**        | associations (RNA), annuaire-sante (RPPS)                                         |
-| **Stubs désactivés**      | wikileaks, ddosecrets — activables post-audit juridique ADR-010                   |
+| Catégorie                 | Connecteurs                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Identité publique**     | wikidata (wbsearchentities + SPARQL ciblé)                                                         |
+| **Entreprises FR**        | recherche-entreprises (Sirene/RNE), bodacc, hatvp, dataesr                                         |
+| **Entreprises monde**     | gleif (LEI ISO 17442 — mères/filiales transnationales, ADR-021)                                    |
+| **Influence UE**          | eu-transparence (lobbying, ADR-022), eu-fts (fonds UE, ADR-024), ted (marchés publics UE, ADR-025) |
+| **Web**                   | rdap (bootstrap IANA → registries)                                                                 |
+| **Géographie / cadastre** | ign-ban, ign-dvf, ign-carto-cadastre, ign-carto-gpu, ign-geoplateforme                             |
+| **Politique**             | parlementaires (NosDéputés/NosSénateurs — Sénat désactivé, service mort 2024)                      |
+| **Sanctions / leaks**     | open-sanctions (5 sub-datasets FR), icij-offshore-leaks (Panama/Paradise/Pandora)                  |
+| **Veille presse**         | anticor (RSS), cour-des-comptes (RSS)                                                              |
+| **Société civile**        | associations (RNA), annuaire-sante (RPPS)                                                          |
+| **Stubs désactivés**      | wikileaks, ddosecrets — activables post-audit juridique ADR-010                                    |
 
 ### Architecture connecteur — `backend/src/connecteurs/`
 

@@ -53,6 +53,8 @@ const HOSTS_AUTORISES = {
   'eu-transparence': ['ec.europa.eu', 'transparency-register.europa.eu'],
   // --- Connecteur européen : bénéficiaires du budget UE / FTS (ADR-024) ---
   'eu-fts': ['ec.europa.eu'],
+  // --- Connecteur européen : marchés publics UE / TED (ADR-025) ---
+  ted: ['api.ted.europa.eu'],
 }
 
 /**
