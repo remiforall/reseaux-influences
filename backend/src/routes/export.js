@@ -1,4 +1,9 @@
 import { prisma } from '../utils/prisma.js'
+import { authenticate } from '../middleware/auth.js'
+
+// Corpus nominatif : aucune licence ouverte (ADR-026, CGU art. 7.3).
+// La réutilisation est encadrée par les CGU (art. 6 et 7), pas par une licence libre.
+const LICENCE_CORPUS = 'Usage encadré — CGU art. 6 et 7 (reseauxinfluences.fr/cgu). Aucune licence ouverte : corpus nominatif.'
 
 // Helper : nom complet d'une entité
 function nomEntite(lien, cote) {
@@ -80,14 +85,14 @@ export default async function exportRoutes(fastify) {
   // =========================================================================
   // Export JSON (existant, enrichi avec organisations)
   // =========================================================================
-  fastify.get('/json', async (request) => {
+  fastify.get('/json', { preHandler: [authenticate] }, async (request) => {
     const liens = await fetchValidatedLiens(request.query)
 
     return {
       meta: {
         exportDate: new Date().toISOString(),
         source: 'reseauxinfluences.fr',
-        licence: 'MIT',
+        licence: LICENCE_CORPUS,
         total: liens.length,
         format: 'json',
       },
@@ -98,7 +103,7 @@ export default async function exportRoutes(fastify) {
   // =========================================================================
   // Export CSV (enrichi avec organisations)
   // =========================================================================
-  fastify.get('/csv', async (request, reply) => {
+  fastify.get('/csv', { preHandler: [authenticate] }, async (request, reply) => {
     const liens = await fetchValidatedLiens(request.query)
 
     const header =
@@ -133,7 +138,7 @@ export default async function exportRoutes(fastify) {
   // =========================================================================
   // Export JSON-LD (web sémantique — compatible detective.io, Wikidata)
   // =========================================================================
-  fastify.get('/jsonld', async (request) => {
+  fastify.get('/jsonld', { preHandler: [authenticate] }, async (request) => {
     const liens = await fetchValidatedLiens(request.query)
 
     // Collecter les entités uniques
@@ -211,7 +216,7 @@ export default async function exportRoutes(fastify) {
       '@type': 'Dataset',
       name: "Réseaux d'Influence — Export",
       description: "Données collaboratives et vérifiées sur les réseaux d'influence",
-      license: 'https://opensource.org/licenses/MIT',
+      license: 'https://reseauxinfluences.fr/cgu',
       dateModified: new Date().toISOString(),
       creator: {
         '@type': 'Organization',
@@ -225,7 +230,7 @@ export default async function exportRoutes(fastify) {
   // =========================================================================
   // Export GraphML (pour Gephi, yEd, NetworkX, igraph...)
   // =========================================================================
-  fastify.get('/graphml', async (request, reply) => {
+  fastify.get('/graphml', { preHandler: [authenticate] }, async (request, reply) => {
     const liens = await fetchValidatedLiens(request.query)
 
     // Collecter les noeuds uniques
@@ -300,7 +305,7 @@ export default async function exportRoutes(fastify) {
   // =========================================================================
   // API publique — données validées paginées pour intégration externe
   // =========================================================================
-  fastify.get('/api-publique', async (request) => {
+  fastify.get('/api-publique', { preHandler: [authenticate] }, async (request) => {
     const { page = 1, limit = 100, type, minScore = 70, depuis } = request.query
     const skip = (parseInt(page) - 1) * parseInt(limit)
     const take = Math.min(parseInt(limit), 500)
@@ -323,7 +328,7 @@ export default async function exportRoutes(fastify) {
     return {
       meta: {
         source: 'reseauxinfluences.fr',
-        licence: 'MIT',
+        licence: LICENCE_CORPUS,
         total,
         page: parseInt(page),
         limit: take,
