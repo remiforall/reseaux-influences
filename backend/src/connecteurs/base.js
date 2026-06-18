@@ -47,6 +47,14 @@ const HOSTS_AUTORISES = {
   // --- Connecteurs sphère associative + professionnels de santé (ADR-014) ---
   associations: ['media.interieur.gouv.fr', 'www.data.gouv.fr'],
   'annuaire-sante': ['www.data.gouv.fr', 'static.data.gouv.fr'],
+  // --- Connecteur mondial : identifiants d'entités juridiques (ADR-021) ---
+  gleif: ['api.gleif.org'],
+  // --- Connecteur européen : registre de transparence UE / lobbying (ADR-022) ---
+  'eu-transparence': ['ec.europa.eu', 'transparency-register.europa.eu'],
+  // --- Connecteur européen : bénéficiaires du budget UE / FTS (ADR-024) ---
+  'eu-fts': ['ec.europa.eu'],
+  // --- Connecteur européen : marchés publics UE / TED (ADR-025) ---
+  ted: ['api.ted.europa.eu'],
 }
 
 /**

@@ -823,3 +823,264 @@ Le registre des sources actives reste interne (`.env` non public). Aucune commun
 - Veille à conserver sur Flowsint : releases majeures, évolutions de leur modèle `flowsint-types` (Pydantic) → comparer avec notre approche Prisma/JSDoc pour la passe future « types stricts ».
 
 ---
+
+## ADR-018 — Couche workbench interactive + chat IA local, et isolement du proto d'auto-audit OSINT hors plateforme
+
+**Statut** : Accepté (direction UX) — activation sur données réelles **gelée par ADR-010**
+**Date** : 2026-06-06
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Veille externe sur **WebVetted Workbench** (`webvetted.com/workbench`, SaaS OSINT commercial US, ~299–1188 $/an). Outil graphique « cible → 80+ transformations → graphe → chat IA », positionné explicitement comme _« map your targets, find hidden connections in seconds »_. C'est, fonctionnellement, un proche de Maltego et de Flowsint (déjà analysé en ADR-017).
+
+Deux enseignements opposés :
+
+1. **À ne pas reproduire** — le cœur de valeur de WebVetted repose sur le scraping de réseaux sociaux (followers Facebook/Instagram/TikTok/X/LinkedIn), les bases de fuites (HIBP), le ciblage nominatif par email/téléphone, la reconnaissance faciale (reverse image / deepfake). C'est exactement le périmètre **exclu** par ADR-017 §3, et c'est l'antithèse de la filiation du projet (InfluenceNetwork / Owni.fr = journalisme sur figures publiques, pas surveillance d'individus). WebVetted sert ici de **miroir inversé** : il clarifie le positionnement « alternative européenne, transparente, légale » plutôt qu'un modèle à copier.
+
+2. **À reprendre** — l'**ergonomie d'interaction** est légitime et réutilisable sans aucun risque RGPD : le flux _cible → enrichissement progressif du graphe → chat IA contextualisé répondant avec citations vers la source brute_. C'est de l'UX, pas une source de données.
+
+### Décision
+
+#### 1. Direction UX « workbench » retenue, sur sources légales uniquement
+
+La couche workbench (cible → enrichissement incrémental → graphe → chat IA) est adoptée comme direction d'évolution du frontend. Elle se branche **exclusivement** sur les 21 connecteurs légaux existants (ADR-003/012/013/014/016) et sur les données déjà détenues légalement. **Aucune nouvelle source de données** n'est introduite par cette ADR — elle ne porte que sur l'interaction.
+
+#### 2. Chat IA = LLM **local** (Ollama), jamais cloud US
+
+Le « chat sur le graphe » (ex. « quel chemin relie X à Y ? », « résume l'influence de cette entité ») s'appuie sur un **LLM local via Ollama** (souveraineté, RGPD, zéro fuite vers OpenAI/Anthropic/US). Contraintes :
+
+- le LLM **raisonne uniquement sur le sous-graphe déjà chargé en session** (entités/liens déjà importés et validés) ; il ne déclenche aucun appel réseau enrichissant ;
+- pas de provider cloud par défaut. Si un fallback EU (Mistral API) est un jour envisagé, ce sera une ADR distincte avec clause d'opt-in explicite ;
+- la réponse cite systématiquement les `provenance` / `AuditEnrichissement` des données mobilisées (cohérent avec le principe de traçabilité ADR-006/008).
+
+#### 3. Le proto d'auto-audit OSINT vit **hors du dépôt**, n'est jamais un connecteur
+
+Pour étudier empiriquement « jusqu'où va le côté obscur », un prototype d'auto-audit (maigret, holehe, HIBP, reverse image, SERP, archives) est mené **sur les seules données personnelles du décideur, auto-consenties**. Règles non négociables :
+
+- ce proto réside **hors** de `~/Developer/reseaux-influences/` (répertoire séparé, hors git, output gitignoré — données d'exposition personnelle = ultra-sensibles) ;
+- il **n'est jamais** intégré comme connecteur, ni importé dans `registry.js`, ni exposé via une route API. Il ne touche pas la plateforme ;
+- sa finalité est documentaire : alimenter la conception éthique et le brief d'audit juridique en montrant ce que la plateforme **refuse** de faire ;
+- il **réaffirme ADR-017 §3** : ces enrichers (breaches, énumération sociale, reconnaissance faciale, lookup tél/IP individuels) restent définitivement hors périmètre plateforme.
+
+#### 4. Activation gelée par ADR-010
+
+La couche workbench peut être **prototypée sur seed de démo / données fictives** dès maintenant. Son activation sur des données réelles de tiers reste **gelée jusqu'à la levée de l'alpha fermée** (audit juridique externe, ADR-010 → futur ADR-011).
+
+### Conséquences
+
+- **Aucun code plateforme produit par cette ADR pour l'instant** — elle fixe une direction. L'implémentation (composant chat frontend + route `/api/graphe/chat` adossée à Ollama) viendra dans une passe dédiée, après validation du périmètre par le juriste.
+- Réutilise l'install Ollama du workspace (binaire CLI standalone `~/.local/ollama/`, cf. mémoire `project_scrapegraphai_setup.md`) — pas de nouvelle dépendance lourde au MVP.
+- Le proto d'auto-audit est tracé hors-dépôt ; aucun de ses outils n'apparaîtra jamais dans `package.json`, `registry.js` ou `HOSTS_AUTORISES`.
+- Le brief d'audit juridique (`docs/courriers/brief-audit-juridique-externe.md`) intègre les questions soulevées par cette veille (collecte automatisée, base légale, périmètre des personnes).
+- Veille à conserver : évolution de la réglementation sur le scraping « public » (jurisprudence CNIL) — impacte directement la frontière connecteurs légaux / interdit.
+
+---
+
+## ADR-011 — Cadre de levée de l'alpha fermée : prérequis et critères de sortie
+
+**Statut** : Accepté (cadre) — la décision d'ouverture effective restera conditionnée à l'audit juridique
+**Date** : 2026-06-15
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+L'ADR-010 a gelé toute ouverture publique jusqu'à un audit juridique externe, sans formaliser **ce qui doit être prêt** pour lever le gel. Le brief d'audit (`docs/courriers/brief-audit-juridique-externe.md`, 2026-06-06) a depuis structuré les questions à trancher (base légale Q1, périmètre des personnes Q2, collecte automatisée Q3). Cette ADR fixe la **checklist de levée** côté plateforme, indépendamment du verdict juridique : ce sont les prérequis matériels sans lesquels la consultation serait prématurée, et que l'audit exigera de toute façon.
+
+Décision de cadrage confirmée le 2026-06-15 : on **prépare la levée** (on construit les prérequis) tout en restant fermé ; on ne réouvre pas avant le rendu de l'audit.
+
+### Décision
+
+La levée de l'alpha (future **ADR-020** actant l'ouverture effective) est subordonnée à **deux conditions cumulatives** :
+
+**A. Prérequis techniques/documentaires produits par la plateforme** (réalisables sans le juriste) :
+
+1. **Procédure droits des personnes** (RGPD art. 15 à 21) opérationnelle — modèle `DemandeDroitPersonne`, route publique `/api/droits`, page `/mes-droits`. ✅ _livré (commit `feat(droits)`)_
+2. **Pages légales** publiées en projet : `/mentions-legales`, `/politique-confidentialite`, `/cgu` (interdiction explicite d'enrichir des citoyens privés), `/cookies`, `/declaration-accessibilite` (modèle DINUM).
+3. **Brouillon d'AIPD/DPIA** (`docs/juridique/aipd-projet.md`) suivant la trame CNIL, à soumettre au juriste.
+4. **Politique de conservation** documentée (`docs/juridique/politique-conservation.md`) — durées par catégorie de donnée.
+5. **`robots.txt`** prêt en deux versions (alpha `Disallow: /` actuelle / ouverture sélective), bascule manuelle et tracée.
+
+**B. Conditions juridiques (hors plateforme, bloquantes)** :
+
+6. Réponse écrite du juriste sur **Q1 (base légale)** — variable déterminante ; tant qu'elle n'est pas tranchée, les pages légales restent en statut « PROJET ».
+7. Position sur **Q2 (tiers périphériques / sphère familiale)** et **Q3 (collecte automatisée / scraping)**.
+8. Avis sur la **nécessité et le périmètre d'une AIPD** formelle.
+9. Décision explicite d'ouverture, actée par une ADR-020 dédiée.
+
+### Conséquences
+
+- Les pages légales et l'AIPD sont produites **en statut « PROJET — à valider par juriste »** : utiles à l'audit comme matière, jamais opposables tant que Q1 n'est pas tranchée.
+- La sphère **familiale** demandée comme finalité produit (cartographie des liens familiaux) est explicitement **suspendue à la réponse Q2** : le modèle `TypeLien` peut décrire des liens familiaux entre personnalités publiques, mais l'inclusion de tiers non-publics par ricochet reste gelée.
+- Cette ADR ne rouvre rien : `robots.txt` reste en `Disallow: /`, aucune inscription publique, aucune communication. Elle balise le chemin de sortie.
+
+---
+
+## ADR-019 — Scraping web encadré : sous-type de connecteur, garde-fous, activation gelée
+
+**Statut** : Accepté (direction) — implémentation gated, **désactivée** jusqu'à validation Q3 par l'audit
+**Date** : 2026-06-15
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Le périmètre de collecte a jusqu'ici exclu volontairement le scraping (ADR-003 : API/open data officiels uniquement). Or la valeur journalistique d'une cartographie d'influence suppose aussi des **sources éditoriales vérifiables** (presse, communiqués, sites institutionnels) qui n'exposent pas toujours d'API. Décision de cadrage 2026-06-15 : **autoriser le scraping web encadré comme direction**, à condition de le borner strictement et de geler son activation jusqu'à ce que le juriste tranche la Q3 du brief (régime distinct du scraping vs API officielle, jurisprudence CNIL sur la collecte « données publiques »).
+
+### Décision
+
+Le scraping web est introduit comme **sous-type de connecteur** (`BaseConnecteurScraping extends BaseConnecteur`), héritant de tous les garde-fous existants (cache disque, rate-limit, anti-SSRF, provenance par champ, audit), **plus** les contraintes spécifiques suivantes, **non négociables** :
+
+1. **Respect de `robots.txt`** de la cible (lecture + obéissance `Disallow`) avant toute requête. Une cible qui refuse les robots n'est jamais scrapée.
+2. **Allowlist de domaines** éditoriaux/institutionnels vérifiables (presse établie, sites publics, communiqués officiels), maintenue explicitement — pas de scraping généraliste du web ouvert.
+3. **Réseaux sociaux exclus** (CGU + RGPD), conformément au brief Q3 et à ADR-017 §3. Aucune exception sans nouvelle ADR.
+4. **Provenance + URL + horodatage** capturés pour chaque champ extrait (traçabilité ADR-006/008, citation de source côté UI).
+5. **Pas de contournement** : ni rotation d'IP/User-Agent trompeur, ni résolution de CAPTCHA, ni accès à du contenu derrière authentification ou paywall.
+6. **Désactivé par défaut** dans `registry.js` (`ENRICHISSEMENT_CONNECTEURS_ACTIFS` ne le liste pas) ; activable seulement après réponse favorable Q3 et sur seed/données fictives en attendant.
+
+### Conséquences
+
+- Le scaffold `BaseConnecteurScraping` peut être écrit et testé **sur fixtures locales** dès maintenant ; aucun domaine réel n'est activé tant que Q3 n'est pas tranchée.
+- Cohérent avec ADR-018 (gel d'activation par ADR-010) et ADR-017 §3 (enrichers individuels hors périmètre).
+- Si l'audit refuse le scraping même encadré : le sous-type reste inerte (zéro domaine en allowlist), aucune dette — la plateforme retombe sur les seules API officielles.
+- La frontière « connecteur API officiel » / « connecteur scraping encadré » doit rester lisible dans le code et la doc, pour ne jamais brouiller la base légale entre les deux régimes.
+
+---
+
+## ADR-021 — Connecteur GLEIF : dimension mondiale (identifiants d'entités juridiques)
+
+**Statut** : Accepté
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+> Note de numérotation : l'ADR-020 reste **réservée** à l'acte d'ouverture publique effective (cf. ADR-011). Ce connecteur prend donc le numéro 021.
+
+### Contexte
+
+Les 21 connecteurs existants couvrent essentiellement la sphère **française** (Sirene/RNE, BODACC, HATVP, IGN, RNA, RPPS…). La finalité du projet vise explicitement les réseaux d'influence « française, **européenne et mondiale** ». Il manquait une brique d'identité d'entités juridiques **transnationale** permettant de relier une société française à ses sociétés mères / filiales à l'étranger.
+
+### Décision
+
+Ajout du connecteur **`gleif`** sur l'API publique GLEIF (`api.gleif.org`, système LEI ISO 17442, supervisé par le Regulatory Oversight Committee du G20). Conforme à ADR-003 (source publique officielle, pas de scraping) et au pattern ADR-017 (`BaseConnecteur`, entrée `HOSTS_AUTORISES['gleif']`, contrat `rechercher`/`detailler`/`listerLiens`).
+
+- **`rechercher`** : plein-texte (`filter[fulltext]`) ou direct par LEI → entités `Organisation` normalisées (nom, juridiction ISO, forme juridique, adresse, LEI).
+- **`listerLiens`** : relations de propriété/contrôle (société mère directe, mère ultime, filiales directes) via les endpoints `direct-parent` / `ultimate-parent` / `direct-children`. Mappées en liens `BENEFICIAIRE_EFFECTIF` (contrôle capitalistique), **entre personnes morales uniquement** — jamais de personne physique (reste hors champ art. 9/10).
+
+### Conséquences
+
+- `gleif` ajouté à `DEFAUT_CONNECTEURS` (registry) et à `HOSTS_AUTORISES`. Couverture : ~2,7 M d'entités dans 200+ juridictions.
+- 22 connecteurs actifs désormais. 404 sur une relation traité proprement (pas de lien, pas de crash).
+- Brique fondatrice de la dimension mondiale ; prochaines extensions EU naturelles : registre de transparence UE (lobbying), interconnexion BRIS des registres du commerce européens.
+
+---
+
+## ADR-022 — Connecteur Registre de Transparence UE : dimension européenne (lobbying)
+
+**Statut** : Accepté
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Après la brique mondiale (GLEIF, ADR-021), il manquait la sphère d'influence **européenne** : qui cherche à peser sur la décision publique de l'UE. Le **registre de transparence** (commun Parlement européen + Commission + Conseil) recense ~17 000 représentants d'intérêts déclarés, avec catégorie, niveau d'intérêt, présence à Bruxelles et nombre de personnes accréditées au Parlement européen. C'est la source officielle de référence du lobbying européen.
+
+### Décision
+
+Ajout du connecteur **`eu-transparence`** sur l'export XML public quotidien : `https://ec.europa.eu/transparencyregister/public/files/ODP/download/XML/latest` (le domaine `transparency-register.europa.eu` y redirige). Conforme ADR-003 (source publique officielle, pas de scraping) et ADR-006 (toute organisation importée porte `qualiteInfluence = LOBBYISTE` — les inscrits sont par définition des représentants d'intérêts déclarés).
+
+- **Bulk + index paresseux** (pattern `open-sanctions`) : téléchargement de l'export (~95 Mo, format `ListOfIRPublicDetail`), parsing **regex zéro-dépendance** (politique du projet — `xml-js` interdit), indexation en mémoire par code d'identification.
+- **`rechercher`** : nom ou acronyme → `Organisation` (catégorie d'inscription mappée vers `TypeOrganisation` : consultancies→LOBBY, syndicats→SYNDICAT, ONG→ONG, think tanks→THINK_TANK, etc.).
+- **`detailler`** : par code d'identification. **`listerLiens`** : vide (les personnes accréditées au PE ne sont qu'un compte agrégé dans l'export — pas de liens nominatifs fiables).
+- Cache **30 jours** (export volumineux, mise à jour quotidienne côté source ; TTL long suffisant). Timeout 60 s.
+
+### Conséquences
+
+- `eu-transparence` ajouté à `DEFAUT_CONNECTEURS` et à `HOSTS_AUTORISES` (`ec.europa.eu`, `transparency-register.europa.eu`). **23 connecteurs actifs.**
+- Validation runtime sur données réelles : ~14 700 entités parsées, accents préservés, siège pris sur `headOffice` (pas `EUOffice`).
+- **Champs financiers et bureau UE extraits** : `budgetLobbyingDeclar` (fourchette `financialData > closedYear > costs > range`, formatée FR + année close), `bureauUe` (Bruxelles le plus souvent), `personnesAccrediteesPe`. Ces champs alimentent directement la lecture d'influence (combien dépensé, présence à Bruxelles).
+- L'UI d'enrichissement affiche ces champs automatiquement (`PreviewEntite` est piloté par les champs renvoyés) ; les liens de propriété GLEIF montrent désormais leur rôle (« Société mère ultime », « Filiale directe »).
+
+---
+
+## ADR-023 — BRIS exclu (pas d'API publique) ; alternatives EU retenues
+
+**Statut** : Accepté (exclusion)
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+La piste « interconnexion BRIS des registres du commerce européens » a été étudiée comme brique EU complémentaire (registres nationaux des sociétés). Vérification faite : **BRIS n'expose aucune API publique**. L'accès se fait uniquement via l'interface web du portail e-Justice ; BRIS ne détient pas les données (couche de routage vers les registres nationaux) et ne fournit qu'un contrôle d'existence harmonisé, sans capitalistique ni comptes.
+
+### Décision
+
+**Aucun connecteur BRIS.** Le seul moyen d'extraire des données BRIS serait de **scraper le portail e-Justice** — ce qui viole ADR-003 (sources via API officielle) et tombe sous le scraping **gelé** (ADR-019, allowlist vide jusqu'à validation juridique Q3). On ne le fait pas.
+
+### Alternatives EU réellement ouvertes (pour une passe ultérieure)
+
+À privilégier si l'on veut étendre la couverture européenne par des **API/exports officiels** (conformes ADR-003) :
+
+1. **EU Financial Transparency System (FTS)** — bénéficiaires du budget de l'UE (subventions, marchés). Export officiel. Cartographie « qui reçoit l'argent de l'UE » = dépendance/influence directe. _Candidat recommandé._
+2. **TED — Tenders Electronic Daily** — marchés publics européens attribués, API open data. Qui remporte les contrats publics UE.
+3. **GLEIF** (déjà intégré, ADR-021) couvre déjà l'identité transnationale des entités et leurs mères/filiales — recouvre une grande part du besoin « registres du commerce ».
+
+> **OpenCorporates** (registres du commerce mondiaux par API) est écarté pour l'instant : clé API requise + conditions de réutilisation restreignant la rediffusion dans un corpus public CC-BY (tension avec l'ADR-007 à venir). À réévaluer si licence compatible.
+
+### Conséquences
+
+- Pas de dette : aucune ligne de code BRIS, aucune entrée `HOSTS_AUTORISES`.
+- Trace explicite pour éviter qu'une session future ne retente BRIS sans revérifier l'absence d'API.
+- Prochaine extension EU recommandée : connecteur **FTS** (même pattern bulk que `eu-transparence`).
+
+---
+
+## ADR-024 — Connecteur EU FTS (bénéficiaires du budget UE) + lecteur XLSX zéro-dépendance
+
+**Statut** : Accepté
+**Date** : 2026-06-16
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Alternative EU recommandée par l'ADR-023 (BRIS étant inaccessible par API). Le **Financial Transparency System** publie les bénéficiaires des fonds UE en gestion directe (subventions, marchés) — signal d'influence : quelles organisations dépendent du financement européen, par programme. Seul format de distribution officiel : **XLSX annuel** (pas de CSV/XML réel — les variantes renvoient une page HTML). Le projet interdit les dépendances npm (`xml-js` déjà banni) ; il fallait donc un lecteur XLSX maison.
+
+### Décision
+
+**1. Lecteur `xlsx-mini` zéro-dépendance** (`backend/src/connecteurs/xlsx-mini.js`) : un `.xlsx` est une archive ZIP de XML. Lecture du répertoire central + décompression via `zlib.inflateRawSync` (natif Node), puis parsing regex de `sharedStrings.xml` et de la première feuille. Réutilisable pour tout futur export gouvernemental XLSX.
+
+**2. Connecteur `eu-fts`** : télécharge le dernier export annuel disponible (résolution par sondage de la signature ZIP « PK » sur les 3 dernières années), parse, **agrège par bénéficiaire** (un bénéficiaire = N lignes d'engagement → pays, type, programmes, nombre d'engagements, engagement max). Cache 30 j du résultat agrégé compact (JSON), pas du binaire.
+
+**Garde-fou RGPD (ADR-006)** : les bénéficiaires personnes physiques sont **masqués `\*\*\***`à la source** ; on les **écarte systématiquement** — seules les organisations nommées sont indexées.`qualiteInfluence`suggérée :`AUTRE`(bénéficiaire de fonds, pas un mandat).`Beneficiary type`→`TypeOrganisation`.
+
+### Conséquences
+
+- `eu-fts` + `xlsx-mini` ajoutés ; `eu-fts` dans `DEFAUT_CONNECTEURS` et `HOSTS_AUTORISES` (`ec.europa.eu`). **24 connecteurs actifs.**
+- Validation runtime : export 2024 (~106 k lignes, 16 Mo) → **23 359 organisations bénéficiaires** agrégées ; recherche « fraunhofer » → entités réelles avec montants formatés FR.
+- Le montant retenu est l'**engagement maximal** observé (les colonnes de montants de l'export ne sont pas documentées finement ; pas de somme hasardeuse). À affiner si la doc officielle des colonnes est récupérée.
+- Coût : parsing ~16 s au premier appel par process (puis cache 30 j). Acceptable pour un connecteur bulk.
+
+---
+
+## ADR-025 — Connecteur TED (marchés publics de l'UE)
+
+**Statut** : Accepté
+**Date** : 2026-06-18
+**Décideur** : Rémi Vincent
+
+### Contexte
+
+Troisième brique européenne (après le lobbying `eu-transparence` et les fonds `eu-fts`) : la **commande publique**. TED (Tenders Electronic Daily) publie les avis de marchés publics de l'UE. Une API de recherche publique existe (`POST https://api.ted.europa.eu/v3/notices/search`, sans clé), contrairement à BRIS (ADR-023) — donc connecteur légitime sans scraping.
+
+### Décision
+
+Connecteur **`ted`**, API live (pas bulk), via `_appelHttp` en POST (cache + rate-limit + anti-SSRF hérités). Recherche experte plein-texte `FT~"terme"`.
+
+**Sémantique assumée** : l'API de recherche n'expose pas l'attributaire (`winner-name` toujours `null` ; il n'est que dans le XML détaillé, trop coûteux à parser). L'entité renvoyée est donc l'**acheteur public** (`buyer-name`, toujours présent), agrégé par nom : nombre d'avis correspondant au terme, pays, dernière date, exemples de titres + liens. `TypeOrganisation = INSTITUTION_PUBLIQUE`, `qualiteInfluence = AUTRE`. Le terme matche partout dans l'avis (acheteur, attributaire, objet) → on remonte les acheteurs liés au terme cherché.
+
+### Conséquences
+
+- `ted` ajouté à `DEFAUT_CONNECTEURS` et `HOSTS_AUTORISES` (`api.ted.europa.eu`). **25 connecteurs actifs.**
+- Champs multilingues TED (`{lang: valeur}`) : extraction fra → eng → première langue.
+- Validation runtime : « AP-HP » → 4 acheteurs publics agrégés avec compteurs d'avis réels.
+- Limite connue : pas d'attributaire (faute de l'exposer dans l'API de recherche). Évolution possible : récupérer le XML détaillé d'un avis pour en extraire l'attributaire, si le besoin se confirme.
+
+---

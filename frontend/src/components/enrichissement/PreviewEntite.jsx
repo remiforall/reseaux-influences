@@ -218,14 +218,20 @@ function PreviewEntite({ preview, index, choix, onChoixChange, onImporter }) {
                           type="checkbox"
                           checked={estRetenu}
                           onChange={() => toggleLien(li)}
-                          aria-label={`Retenir le lien : ${libelleTypeLien(lien.typeLienCode)} vers ${lien.vers?.identifiantExterne ?? lien.vers?.type ?? 'entité'}`}
+                          aria-label={`Retenir le lien : ${libelleTypeLien(lien.typeLienCode)} vers ${lien.vers?.details?.nom ?? lien.vers?.identifiantExterne ?? lien.vers?.type ?? 'entité'}`}
                           className="w-4 h-4 rounded border-gray-400 text-secondary focus-visible-ring"
                         />
                         <span className="text-sm text-gray-800 flex-1">
-                          <span className="font-medium">{libelleTypeLien(lien.typeLienCode)}</span>
+                          <span className="font-medium">
+                            {libelleTypeLien(lien.typeLienCode)}
+                            {lien.roleRelation ? ` (${lien.roleRelation})` : ''}
+                          </span>
                           {' → '}
                           <span className="italic">
-                            {lien.vers?.identifiantExterne ?? lien.vers?.type ?? 'entité inconnue'}
+                            {lien.vers?.details?.nom ??
+                              lien.vers?.identifiantExterne ??
+                              lien.vers?.type ??
+                              'entité inconnue'}
                           </span>
                         </span>
                         <BadgeProvenance source={lien.source} url={lien.url} date={lien.date} />

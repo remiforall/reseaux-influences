@@ -24,6 +24,7 @@ import organisationsRoutes from './routes/organisations.js'
 import exportRoutes from './routes/export.js'
 import enrichissementRoutes from './routes/enrichissement.js'
 import entitesRoutes from './routes/entites.js'
+import droitsRoutes from './routes/droits.js'
 
 dotenv.config()
 
@@ -138,6 +139,7 @@ async function build() {
   await fastify.register(exportRoutes, { prefix: '/api/export' })
   await fastify.register(enrichissementRoutes, { prefix: '/api/enrichissement' })
   await fastify.register(entitesRoutes, { prefix: '/api/entites' })
+  await fastify.register(droitsRoutes, { prefix: '/api/droits' })
 
   // Health check
   fastify.get('/api/health', async () => {

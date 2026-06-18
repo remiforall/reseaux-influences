@@ -51,6 +51,7 @@ model Utilisateur {
   sitesWebCrees          SiteWeb[]               @relation("SiteWebCreePar")
   auditsEnrichissement   AuditEnrichissement[]   @relation("AuditEnrichissementUtilisateur")
   evenementsCreees       Evenement[]             @relation("EvenementCreeePar")
+  demandesDroitTraitees  DemandeDroitPersonne[]  @relation("DemandeDroitTraitePar")
 
   @@map("utilisateurs")
 }
@@ -599,4 +600,53 @@ model AuditEnrichissement {
 
   @@index([utilisateurId, dateAction])
   @@map("audit_enrichissement")
+}
+
+// =============================================================================
+// DROITS DES PERSONNES CONCERNÉES (RGPD art. 15 à 21)
+// Procédure publique de demande — prérequis de levée de l'alpha (ADR-010 → ADR-011).
+// Une personne concernée (qui n'est PAS nécessairement un compte contributeur)
+// peut demander l'accès, la rectification, l'effacement, la limitation ou
+// l'opposition concernant une entité qui la désigne.
+//
+// Minimisation (art. 5.1.c) : on stocke un email de contact + un nom revendiqué,
+// jamais la pièce d'identité elle-même (vérifiée hors-bande). IP tronquée.
+// =============================================================================
+
+model DemandeDroitPersonne {
+  id                String             @id @default(uuid()) @db.VarChar(36)
+  typeDroit         TypeDroitPersonne  @map("type_droit")
+  // Entité visée — optionnelle : le demandeur peut ne pas connaître l'id exact
+  entiteType        String?            @map("entite_type") @db.VarChar(50)
+  entiteId          String?            @map("entite_id") @db.VarChar(36)
+  nomRevendique     String             @map("nom_revendique") @db.VarChar(255)
+  emailContact      String             @map("email_contact") @db.VarChar(255)
+  motif             String             @db.Text
+  statut            StatutDemandeDroit @default(RECUE)
+  reponse           String?            @db.Text
+  // onDelete: SetNull — conserver la trace du traitement après suppression d'un modérateur (art. 5.2)
+  traitePar         Utilisateur?       @relation("DemandeDroitTraitePar", fields: [traiteParId], references: [id], onDelete: SetNull)
+  traiteParId       String?            @map("traite_par") @db.VarChar(36)
+  traiteLe          DateTime?          @map("traite_le")
+  ipAddressTronquee String?            @map("ip_address_tronquee") @db.VarChar(45)
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  @@index([statut, createdAt])
+  @@map("demandes_droit_personne")
+}
+
+enum TypeDroitPersonne {
+  ACCES         // art. 15 — droit d'accès
+  RECTIFICATION // art. 16 — droit de rectification
+  EFFACEMENT    // art. 17 — droit à l'effacement
+  LIMITATION    // art. 18 — droit à la limitation
+  OPPOSITION    // art. 21 — droit d'opposition
+}
+
+enum StatutDemandeDroit {
+  RECUE
+  EN_COURS
+  ACCEPTEE
+  REFUSEE
+  CLOTUREE
 }
