@@ -275,4 +275,33 @@ export const CATEGORIES = [
       },
     ],
   },
+  {
+    titre: 'Visualisation & data-journalisme (inspiration)',
+    statut: 'manuel',
+    raison:
+      'Références de visualisation et de narration data, pas des sources de données OSINT du graphe. Utiles pour s’inspirer des formes (réseaux, flux, hiérarchies) et de la méthodo de sourcing.',
+    adr: 'ADR-015',
+    outils: [
+      {
+        nom: 'Information is Beautiful',
+        url: 'https://informationisbeautiful.net/',
+        desc: 'Dataviz éditoriale (David McCandless) ; jeux de données publiés en feuilles Google par visualisation.',
+        usage:
+          'Inspiration de formes/lisibilité ; si un dataset officiel est cité, remonter à la source.',
+      },
+      {
+        nom: 'Our World in Data',
+        url: 'https://ourworldindata.org/',
+        desc: 'Data journalism académique ; datasets ouverts et sourcés, souvent dotés d’une API.',
+        usage:
+          'Source potentiellement citable (contextes), à recouper avec la source primaire officielle.',
+      },
+      {
+        nom: 'The Pudding',
+        url: 'https://pudding.cool/',
+        desc: 'Essais visuels (visual essays) ; méthodo et code souvent ouverts.',
+        usage: 'Inspiration narrative et technique, pas une source de fiche.',
+      },
+    ],
+  },
 ]
