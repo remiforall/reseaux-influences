@@ -8,6 +8,7 @@
 import { Link } from 'react-router-dom'
 
 const LIENS = [
+  { to: '/ressources', label: 'Boîte à outils OSINT' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/politique-confidentialite', label: 'Confidentialité' },
   { to: '/cgu', label: 'CGU' },
