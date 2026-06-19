@@ -4,7 +4,7 @@
 **Version** : cadrage v0.1 (2026-06-18)
 **Statut** : **PROJET — à valider par avocat·e presse** (brief d'audit Q3). Non implémenté en code à ce jour.
 
-> Ce document cadre un **risque pénal et civil distinct du RGPD**. L'exception journalistique de l'art. 85 RGPD rend *licite le traitement de données personnelles* (y compris sensibles et pénales) — mais elle **ne couvre en rien** la diffamation, l'atteinte à la présomption d'innocence ou le défaut de droit de réponse. Ces régimes relèvent de la **loi du 29 juillet 1881** et du **Code civil**, pas du RGPD. C'est aujourd'hui le **manque le plus critique** du projet : aucun outillage n'existe pour le couvrir.
+> Ce document cadre un **risque pénal et civil distinct du RGPD**. L'exception journalistique de l'art. 85 RGPD rend _licite le traitement de données personnelles_ (y compris sensibles et pénales) — mais elle **ne couvre en rien** la diffamation, l'atteinte à la présomption d'innocence ou le défaut de droit de réponse. Ces régimes relèvent de la **loi du 29 juillet 1881** et du **Code civil**, pas du RGPD. C'est aujourd'hui le **manque le plus critique** du projet : aucun outillage n'existe pour le couvrir.
 
 ---
 
@@ -49,7 +49,7 @@ Chaque exigence ci-dessous est destinée à devenir une spécification implémen
 ### EX-2 — Marquage obligatoire du stade procédural (présomption d'innocence)
 
 - Pour toute donnée pénale (art. 10 RGPD) reliée à une personne physique, un champ **statut procédural obligatoire** parmi une énumération contrôlée, par ex. :
-  `SIGNALEMENT` · `ENQUETE_EN_COURS` · `MISE_EN_EXAMEN` · `RENVOI_PROCES` · `CONDAMNATION_1ERE_INSTANCE_NON_DEFINITIVE` · `CONDAMNATION_DEFINITIVE` · `RELAXE_ACQUITTEMENT` · `SANCTION_ADMINISTRATIVE` (gel d'avoirs, sanction AMF — *n'est pas une condamnation pénale*) · `NON_PRECISE`.
+  `SIGNALEMENT` · `ENQUETE_EN_COURS` · `MISE_EN_EXAMEN` · `RENVOI_PROCES` · `CONDAMNATION_1ERE_INSTANCE_NON_DEFINITIVE` · `CONDAMNATION_DEFINITIVE` · `RELAXE_ACQUITTEMENT` · `SANCTION_ADMINISTRATIVE` (gel d'avoirs, sanction AMF — _n'est pas une condamnation pénale_) · `NON_PRECISE`.
 - **Affichage non ambigu** côté UI : jamais « condamné » par défaut. La mention par défaut en l'absence de stade établi est « mis en cause — présumé innocent ».
 - Distinguer explicitement **sanction administrative** (gel Trésor/AMF) de **condamnation pénale** : ce sont des régimes différents, les confondre est diffamatoire.
 

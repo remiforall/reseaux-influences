@@ -17,7 +17,7 @@ L'art. 35.1 RGPD impose une AIPD lorsqu'un traitement est « susceptible d'engen
 2. **Données sensibles ou hautement personnelles** : opinions politiques (art. 9.1 RGPD) et données pénales (art. 10 RGPD) — voir §3.
 3. **Données traitées à grande échelle**.
 4. **Croisement / combinaison d'ensembles de données** issus de 25 sources hétérogènes.
-S'y ajoute, par ricochet, le traitement de **personnes vulnérables / tiers non consentants** (nœuds périphériques, §5).
+   S'y ajoute, par ricochet, le traitement de **personnes vulnérables / tiers non consentants** (nœuds périphériques, §5).
 
 **Conclusion provisoire** : AIPD **obligatoire** (art. 35). À confirmer (brief Q4). Si le risque résiduel demeure **élevé** après mesures, **consultation préalable de la CNIL obligatoire** (art. 36 RGPD) — voir §8.
 
@@ -52,13 +52,13 @@ Recherche multi-connecteurs → prévisualisation → import en `EN_ATTENTE` (ja
 
 ## 2. Évaluation de la nécessité et de la proportionnalité (art. 35.7.b)
 
-| Principe | Mise en œuvre actuelle | Évaluation |
-| --- | --- | --- |
-| **Limitation des finalités** (art. 5.1.b) | Finalité unique documentée (cartographie d'influence). Risque de **changement de finalité** par recombinaison (art. 6.4) | **[À COMPLÉTER — brief Q7]** |
-| **Minimisation** (art. 5.1.c) | `CHAMPS_AUTORISES` en liste blanche à l'import ; pas d'énumération d'identifiants individuels (ADR-017 §3) ; bénéficiaires personnes physiques masqués côté FTS (ADR-024) | Satisfaisant, à documenter |
-| **Exactitude** (art. 5.1.d) | Provenance par champ + horodatage + score de confiance ; statut `EN_ATTENTE` ; droit de rectification (incontournable même sous art. 80, §6) | Satisfaisant |
-| **Limitation de conservation** (art. 5.1.e) | **[À COMPLÉTER — politique de conservation]** | Non finalisé |
-| **Licéité** (art. 6, 9, 10) | Art. 85 RGPD + art. 80 LIL (ADR-026) | À confirmer (brief Q1) |
+| Principe                                    | Mise en œuvre actuelle                                                                                                                                                    | Évaluation                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **Limitation des finalités** (art. 5.1.b)   | Finalité unique documentée (cartographie d'influence). Risque de **changement de finalité** par recombinaison (art. 6.4)                                                  | **[À COMPLÉTER — brief Q7]** |
+| **Minimisation** (art. 5.1.c)               | `CHAMPS_AUTORISES` en liste blanche à l'import ; pas d'énumération d'identifiants individuels (ADR-017 §3) ; bénéficiaires personnes physiques masqués côté FTS (ADR-024) | Satisfaisant, à documenter   |
+| **Exactitude** (art. 5.1.d)                 | Provenance par champ + horodatage + score de confiance ; statut `EN_ATTENTE` ; droit de rectification (incontournable même sous art. 80, §6)                              | Satisfaisant                 |
+| **Limitation de conservation** (art. 5.1.e) | **[À COMPLÉTER — politique de conservation]**                                                                                                                             | Non finalisé                 |
+| **Licéité** (art. 6, 9, 10)                 | Art. 85 RGPD + art. 80 LIL (ADR-026)                                                                                                                                      | À confirmer (brief Q1)       |
 
 ---
 
@@ -78,7 +78,7 @@ Identité publique, fonctions, mandats, participations, fonctions dirigeantes, l
 
 - `TypeLien.CONDAMNATION` (`schema.prisma` l. 525) ; gels d'avoirs Trésor/AMF (OpenSanctions) ; mentions ICIJ ; veille presse anti-corruption (Anticor, Cour des comptes).
 - **Régime** : traitement réservé (art. 10), admis ici via art. 85 RGPD + art. 80 LIL.
-- **Risque spécifique** : confusion entre *sanction administrative* (gel d'avoirs), *poursuite en cours* et *condamnation définitive* → croise directement le risque presse (présomption d'innocence, §5 et `docs/dispositif-anti-diffamation.md`).
+- **Risque spécifique** : confusion entre _sanction administrative_ (gel d'avoirs), _poursuite en cours_ et _condamnation définitive_ → croise directement le risque presse (présomption d'innocence, §5 et `docs/dispositif-anti-diffamation.md`).
 
 ### 3.4. Catégories EXCLUES (par construction)
 
@@ -94,15 +94,15 @@ Cadastre nominatif MAJIC, breaches/HIBP, énumération d'identifiants sociaux, r
 
 ## 5. Risques pour les droits et libertés des personnes (art. 35.7.c)
 
-| Risque | Description | Gravité × Vraisemblance (à coter) |
-| --- | --- | --- |
-| **Profilage politique** | Inférence d'opinions politiques (art. 9) par recombinaison de liens | **[À COTER — DPO]** — *a priori* élevé |
-| **Réidentification de tiers** | Nœuds périphériques non publics identifiables par ricochet (proche, collaborateur) | **[À COTER]** — maillon faible de la défense art. 85 |
-| **Atteinte à la présomption d'innocence** | Personne présentée comme coupable avant condamnation définitive (art. 9-1 C. civ.) | **[À COTER]** — élevé, hors champ RGPD, voir dispositif dédié |
-| **Diffamation** | Allégation factuelle inexacte/non sourcée portant atteinte à l'honneur (art. 29 loi 1881) | **[À COTER]** — hors champ RGPD |
-| **Erreur d'homonymie** | Rattachement d'une donnée pénale à la mauvaise personne | Atténué (matching strict, pas de fuzzy par nom seul — ADR-013) |
-| **Détournement d'usage** | Réutilisation des exports à des fins de surveillance/harcèlement | **[À COTER]** — encadrement CGU + voir mentions légales |
-| **Effet « casier permanent »** | Conservation indéfinie de faits anciens (droit à l'oubli vs archive) | **[À COMPLÉTER — politique de conservation, brief Q8]** |
+| Risque                                    | Description                                                                               | Gravité × Vraisemblance (à coter)                              |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Profilage politique**                   | Inférence d'opinions politiques (art. 9) par recombinaison de liens                       | **[À COTER — DPO]** — _a priori_ élevé                         |
+| **Réidentification de tiers**             | Nœuds périphériques non publics identifiables par ricochet (proche, collaborateur)        | **[À COTER]** — maillon faible de la défense art. 85           |
+| **Atteinte à la présomption d'innocence** | Personne présentée comme coupable avant condamnation définitive (art. 9-1 C. civ.)        | **[À COTER]** — élevé, hors champ RGPD, voir dispositif dédié  |
+| **Diffamation**                           | Allégation factuelle inexacte/non sourcée portant atteinte à l'honneur (art. 29 loi 1881) | **[À COTER]** — hors champ RGPD                                |
+| **Erreur d'homonymie**                    | Rattachement d'une donnée pénale à la mauvaise personne                                   | Atténué (matching strict, pas de fuzzy par nom seul — ADR-013) |
+| **Détournement d'usage**                  | Réutilisation des exports à des fins de surveillance/harcèlement                          | **[À COTER]** — encadrement CGU + voir mentions légales        |
+| **Effet « casier permanent »**            | Conservation indéfinie de faits anciens (droit à l'oubli vs archive)                      | **[À COMPLÉTER — politique de conservation, brief Q8]**        |
 
 ---
 

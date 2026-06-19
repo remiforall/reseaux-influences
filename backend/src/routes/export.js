@@ -3,7 +3,8 @@ import { authenticate } from '../middleware/auth.js'
 
 // Corpus nominatif : aucune licence ouverte (ADR-026, CGU art. 7.3).
 // La réutilisation est encadrée par les CGU (art. 6 et 7), pas par une licence libre.
-const LICENCE_CORPUS = 'Usage encadré — CGU art. 6 et 7 (reseauxinfluences.fr/cgu). Aucune licence ouverte : corpus nominatif.'
+const LICENCE_CORPUS =
+  'Usage encadré — CGU art. 6 et 7 (reseauxinfluences.fr/cgu). Aucune licence ouverte : corpus nominatif.'
 
 // Helper : nom complet d'une entité
 function nomEntite(lien, cote) {

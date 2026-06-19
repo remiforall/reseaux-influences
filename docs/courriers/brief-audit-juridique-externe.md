@@ -23,16 +23,16 @@ Ce document n'est pas une demande de validation « oui/non ». Il liste les **qu
 
 Le projet n'attend pas l'audit pour appliquer une discipline RGPD ; les garde-fous suivants sont **déjà actifs en code** (et opposables comme preuve de _privacy by design_, art. 25 RGPD) :
 
-| Garde-fou                                                    | Mise en œuvre                                                                                                                                                                 | ADR          |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Garde-fou                                                    | Mise en œuvre                                                                                                                                                                                    | ADR          |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
 | Sources limitées à l'open data officiel + médias vérifiables | 25 connecteurs whitelistés (Wikidata, Sirene/RNE, BODACC, HATVP, RDAP, IGN, NosDéputés, OpenSanctions, ICIJ, RNA, RPPS, GLEIF, registre transparence UE, FTS, TED, RSS Anticor/Cour des comptes) | 003, 012-025 |
-| **Qualité d'influence publique obligatoire**                 | Refus d'import (HTTP 400) si le champ `qualiteInfluencePublique` (enum : ÉLU, DIRIGEANT, ARTISTE…) est vide                                                                   | 006          |
-| Statut par défaut **EN_ATTENTE**                             | Aucune donnée n'est publiée automatiquement ; consensus communautaire requis (≥ 5 validations, ratio ≥ 70 %)                                                                  | 006          |
-| **Audit immuable**                                           | `AuditEnrichissement` conservé même après suppression du compte contributeur (`onDelete: SetNull`) ; query expurgée des emails/téléphones, IP tronquée (minimisation, art. 5) | 008          |
-| Périmètre **restreint volontairement**                       | Exclusion explicite : cadastre nominatif MAJIC, breaches/HIBP, énumération d'identifiants sociaux (maigret), reconnaissance faciale, lookup tél/IP individuels                | 003, 017     |
-| Scraping web gelé                                            | Sous-type `BaseConnecteurScraping` scaffold-only, allowlist vide, désactivé jusqu'à validation Q5                                                                            | 019          |
-| Leaks « gris » désactivés                                    | WikiLeaks / DDoSecrets en stub inerte (risque recel art. 323-3 C. pén.) — activation conditionnée à un avis juridique au cas par cas                                          | 013          |
-| Alpha fermée                                                 | `robots.txt: Disallow: /`, aucune communication publique, aucune démo                                                                                                         | 010, 011     |
+| **Qualité d'influence publique obligatoire**                 | Refus d'import (HTTP 400) si le champ `qualiteInfluencePublique` (enum : ÉLU, DIRIGEANT, ARTISTE…) est vide                                                                                      | 006          |
+| Statut par défaut **EN_ATTENTE**                             | Aucune donnée n'est publiée automatiquement ; consensus communautaire requis (≥ 5 validations, ratio ≥ 70 %)                                                                                     | 006          |
+| **Audit immuable**                                           | `AuditEnrichissement` conservé même après suppression du compte contributeur (`onDelete: SetNull`) ; query expurgée des emails/téléphones, IP tronquée (minimisation, art. 5)                    | 008          |
+| Périmètre **restreint volontairement**                       | Exclusion explicite : cadastre nominatif MAJIC, breaches/HIBP, énumération d'identifiants sociaux (maigret), reconnaissance faciale, lookup tél/IP individuels                                   | 003, 017     |
+| Scraping web gelé                                            | Sous-type `BaseConnecteurScraping` scaffold-only, allowlist vide, désactivé jusqu'à validation Q5                                                                                                | 019          |
+| Leaks « gris » désactivés                                    | WikiLeaks / DDoSecrets en stub inerte (risque recel art. 323-3 C. pén.) — activation conditionnée à un avis juridique au cas par cas                                                             | 013          |
+| Alpha fermée                                                 | `robots.txt: Disallow: /`, aucune communication publique, aucune démo                                                                                                                            | 010, 011     |
 
 Documents techniques annexes disponibles : `ARCHITECTURE-DECISIONS.md` (26 ADR), `docs/aipd-reseaux-influences.md` (brouillon d'AIPD), `docs/dispositif-anti-diffamation.md`, `docs/mentions-legales.md` (projet), `docs/courriers/inpi-rbe-acces-interet-legitime.md`, `docs/courriers/note-acces-cadastre-nominatif.md`.
 
@@ -57,15 +57,16 @@ Les questions ci-dessous sont **hiérarchisées** : 4 questions **bloquantes** (
 
 **Notre analyse, soumise à votre confirmation/infirmation** : l'intérêt légitime de l'**art. 6.1.f RGPD** ne peut **pas** être le fondement, **seul**, de ce traitement.
 
-- Le traitement porte sur des **opinions politiques** (art. 9.1 RGPD) : elles sont soit stockées explicitement (lien vers un `PARTI_POLITIQUE`, déclarations HATVP), soit **déduites** par recombinaison de liens — et une donnée sensible *inférée* relève de l'art. 9 (CJUE, gr. ch., 4 juillet 2023, *Meta Platforms c/ Bundeskartellamt*, C-252/21).
+- Le traitement porte sur des **opinions politiques** (art. 9.1 RGPD) : elles sont soit stockées explicitement (lien vers un `PARTI_POLITIQUE`, déclarations HATVP), soit **déduites** par recombinaison de liens — et une donnée sensible _inférée_ relève de l'art. 9 (CJUE, gr. ch., 4 juillet 2023, _Meta Platforms c/ Bundeskartellamt_, C-252/21).
 - Il porte aussi sur des **données relatives aux condamnations et infractions** (art. 10 RGPD) : type de lien `CONDAMNATION`, gels d'avoirs Trésor/AMF via OpenSanctions, mentions issues d'ICIJ et de la veille presse anti-corruption.
 - Or l'art. 9.1 **interdit par principe** le traitement de données sensibles, sauf exception de l'art. 9.2 ; et l'art. 10 réserve le traitement des données pénales aux autorités publiques ou aux cas prévus par le droit de l'État membre.
 - La voie qui rend ce traitement licite est le **régime dérogatoire « journalisme et expression » de l'art. 85 RGPD**, transposé en droit français par l'**art. 80 de la loi n° 78-17 du 6 janvier 1978** (loi Informatique et Libertés), qui écarte notamment l'interdiction des art. 9 et 10 « dans la mesure nécessaire » à la finalité d'expression journalistique.
-- L'art. 9.2.e (« données manifestement rendues publiques par la personne ») est **d'interprétation stricte** et ne couvre **pas** une couleur politique *déduite* d'un faisceau de liens (même raisonnement *Meta/Bundeskartellamt*, C-252/21). Ne pas s'y appuyer comme fondement principal.
+- L'art. 9.2.e (« données manifestement rendues publiques par la personne ») est **d'interprétation stricte** et ne couvre **pas** une couleur politique _déduite_ d'un faisceau de liens (même raisonnement _Meta/Bundeskartellamt_, C-252/21). Ne pas s'y appuyer comme fondement principal.
 
 **Questions précises** :
+
 1. Confirmez-vous que le fondement **doit** être l'art. 85 RGPD + art. 80 LIL (et non l'art. 6.1.f seul) dès lors qu'art. 9 et art. 10 sont en jeu ?
-2. Une **plateforme contributive gamifiée**, ouverte à des contributeurs non journalistes (grand public), peut-elle se prévaloir de la finalité « journalistique » au sens de l'art. 85 ? La conception fonctionnelle de la notion par la CJUE est large (CJUE, 14 février 2019, *Buivids*, C-345/17 ; CJUE, gr. ch., 16 décembre 2008, *Tietosuojavaltuutettu c/ Satakunnan Markkinapörssi et Satamedia*, C-73/07 — *références à vérifier en version consolidée*). Mais la **gamification** et l'ouverture à des contributeurs anonymes sont un point de fragilité : à quelles conditions (charte éditoriale, modération, finalité documentée) l'éligibilité tient-elle ?
+2. Une **plateforme contributive gamifiée**, ouverte à des contributeurs non journalistes (grand public), peut-elle se prévaloir de la finalité « journalistique » au sens de l'art. 85 ? La conception fonctionnelle de la notion par la CJUE est large (CJUE, 14 février 2019, _Buivids_, C-345/17 ; CJUE, gr. ch., 16 décembre 2008, _Tietosuojavaltuutettu c/ Satakunnan Markkinapörssi et Satamedia_, C-73/07 — _références à vérifier en version consolidée_). Mais la **gamification** et l'ouverture à des contributeurs anonymes sont un point de fragilité : à quelles conditions (charte éditoriale, modération, finalité documentée) l'éligibilité tient-elle ?
 3. À défaut d'éligibilité art. 85 : quel fondement de repli (art. 9.2.g « intérêt public important » fondé sur une disposition de droit national ? — semble peu probable sans texte dédié) ?
 
 > C'est **la** variable qui détermine toute l'architecture. Sans elle, le reste est indécidable.
@@ -81,6 +82,7 @@ Le contenu est **doublement produit** : des `Lien` saisis par des contributeurs 
 ### Q3 — Diffamation (loi 1881) et présomption d'innocence : le risque pénal/civil HORS RGPD
 
 Indépendamment du RGPD, relier publiquement une personne à une « affaire », une condamnation, un réseau offshore expose à :
+
 - la **diffamation** (art. 29, al. 1 de la loi du 29 juillet 1881 : allégation d'un fait portant atteinte à l'honneur ou à la considération), avec les défenses de l'**exception de vérité** (art. 35) et de la **bonne foi** (création prétorienne : but légitime, absence d'animosité personnelle, prudence dans l'expression, enquête sérieuse) ;
 - l'atteinte à la **présomption d'innocence** (**art. 9-1 du Code civil**) si une personne est présentée comme coupable avant condamnation définitive ;
 - l'obligation de **droit de réponse** (art. 13 loi 1881 ; pour les services en ligne, **art. 6-IV LCEN**).
@@ -101,7 +103,8 @@ Le traitement coche au moins trois critères de la liste des **lignes directrice
 
 ### Q5 — Collecte automatisée / scraping de sources publiques
 
-L'enrichissement **automatisé** a son propre régime (la CNIL a déjà sanctionné de la collecte sur données publiques — *cf. délibérations Clearview AI, et le contentieux sur la réutilisation de données publiques ; références à vérifier en version consolidée*).
+L'enrichissement **automatisé** a son propre régime (la CNIL a déjà sanctionné de la collecte sur données publiques — _cf. délibérations Clearview AI, et le contentieux sur la réutilisation de données publiques ; références à vérifier en version consolidée_).
+
 - La collecte via **API officielles / open data** (notre cas actuel) est-elle traitée différemment du **scraping** de pages web publiques (ADR-019, gelé) ?
 - Conditions pour rester licite (information des personnes art. 14, finalité, proportionnalité) ?
 - Confirmation attendue : **réseaux sociaux exclus** — marge nulle ou résiduelle ?
@@ -109,12 +112,14 @@ L'enrichissement **automatisé** a son propre régime (la CNIL a déjà sanction
 ### Q6 — Tiers « périphériques » non publics
 
 Un réseau fait apparaître des tiers non publics (proche, collaborateur, membre de famille). Le garde-fou `qualiteInfluencePublique` vise les figures publiques, mais les nœuds périphériques sont le **maillon faible** de la défense art. 85.
+
 - Mécanisme d'exclusion / **pseudonymisation** des nœuds sans `qualiteInfluencePublique` ?
 - La cartographie des **liens familiaux** (finalité produit demandée) est-elle tenable, et à quelles conditions ?
 
 ### Q7 — Recombinaison multi-sources et licences de réutilisation
 
 Le **risque dominant n'est pas la collecte** (sources licites isolément) mais la **recombinaison** : croiser des sources licites recrée des profils sensibles, possible **changement de finalité** (art. 6.4 RGPD) et tension avec les **licences** des sources (OpenSanctions **CC BY-NC 4.0**, conditions ICIJ propres — ≠ Licence Ouverte Etalab des données publiques françaises).
+
 - Le croisement est-il un traitement nouveau à requalifier ?
 - Les licences NC / propres des sources limitent-elles la rediffusion dans un corpus public ?
 
@@ -136,6 +141,7 @@ L'art. 80 LIL permet d'écarter certains droits « dans la mesure nécessaire »
 ## 7. Livrable attendu de l'audit
 
 Une note permettant de **trancher la levée de l'alpha** (rédaction de l'ADR-020), précisant :
+
 1. la **base légale retenue** et ses conditions (réponse Q1) ;
 2. la **qualification éditeur/hébergeur** et les obligations DSA/LCEN (Q2) ;
 3. les exigences du **dispositif anti-diffamation / présomption d'innocence** (Q3) ;
@@ -159,6 +165,7 @@ Une note permettant de **trancher la levée de l'alpha** (rédaction de l'ADR-02
 ---
 
 > **Notes de cadrage (internes, à retirer avant envoi)** :
+>
 > - **Profil recherché** : double compétence RGPD + droit de la presse (loi 1881). C'est rare : ce pont est exactement l'art. 85. Pistes : cabinets « médias & données » (ex. spécialistes presse parisiens couplés data, ou DPO externalisé avec practice presse). À défaut d'un seul profil : un binôme (un·e RGPD + un·e presse) sur la même mission.
 > - **Séquence budget** : Temps 1 (Q1 + Q4, ≤ 900 € HT) AVANT Temps 2 (audit complet, 3-6 k€ HT). Q1 conditionne tout.
 > - Ce brief n'est pas un conseil juridique engageant ; il prépare la consultation.

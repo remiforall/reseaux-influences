@@ -1096,6 +1096,7 @@ Connecteur **`ted`**, API live (pas bulk), via `_appelHttp` en POST (cache + rat
 ### Contexte
 
 Jusqu'ici, les ADR mentionnaient la base légale de façon dispersée et parfois contradictoire :
+
 - ADR-006 cite « art. 85 RGPD + art. 80 LIL » comme cadre du garde-fou `qualiteInfluencePublique` ;
 - ADR-008 fonde la conservation des audits sur l'art. 6.1.c (obligation légale) et l'art. 5.2 (accountability) — ce qui est correct **pour les logs**, mais ne dit rien du fondement du traitement principal ;
 - ADR-013 mélange « art. 6.1.e (mission d'intérêt public) + art. 85 » pour OpenSanctions ;
@@ -1103,7 +1104,7 @@ Jusqu'ici, les ADR mentionnaient la base légale de façon dispersée et parfois
 
 Or le modèle de données franchit deux seuils qui **ferment** la voie de l'art. 6.1.f seul :
 
-1. **Données sensibles — opinions politiques (art. 9.1 RGPD)** : présentes en code via `TypeLien.PARTI_POLITIQUE` (`schema.prisma` l. 169), les déclarations HATVP, les affiliations parlementaires, le registre de transparence UE. Une opinion politique **déduite** par recombinaison de liens relève aussi de l'art. 9 (CJUE, gr. ch., 4 juillet 2023, *Meta Platforms c/ Bundeskartellamt*, C-252/21, pts 68-70 sur les données sensibles inférées — *à vérifier en version consolidée*).
+1. **Données sensibles — opinions politiques (art. 9.1 RGPD)** : présentes en code via `TypeLien.PARTI_POLITIQUE` (`schema.prisma` l. 169), les déclarations HATVP, les affiliations parlementaires, le registre de transparence UE. Une opinion politique **déduite** par recombinaison de liens relève aussi de l'art. 9 (CJUE, gr. ch., 4 juillet 2023, _Meta Platforms c/ Bundeskartellamt_, C-252/21, pts 68-70 sur les données sensibles inférées — _à vérifier en version consolidée_).
 2. **Données pénales (art. 10 RGPD)** : présentes en code via `TypeLien.CONDAMNATION` (`schema.prisma` l. 525), les gels d'avoirs Trésor/AMF (OpenSanctions, ADR-013), ICIJ, et la veille presse anti-corruption (Anticor, Cour des comptes).
 
 L'**art. 9.1 interdit par principe** le traitement de données sensibles (sauf exceptions de l'art. 9.2) ; l'**art. 10** réserve le traitement des données pénales aux autorités ou aux cas prévus par le droit de l'État membre. L'intérêt légitime (art. 6.1.f) est un fondement de **licéité au sens de l'art. 6**, mais il ne **lève pas** l'interdiction de l'art. 9 ni la réserve de l'art. 10. Il est donc, à lui seul, **insuffisant et juridiquement inopérant** pour ce traitement.
@@ -1113,13 +1114,15 @@ L'**art. 9.1 interdit par principe** le traitement de données sensibles (sauf e
 Le fondement du traitement principal de `reseaux-influences` est le **régime dérogatoire de l'article 85 du RGPD** (traitements à des fins journalistiques et d'expression), transposé en droit français par l'**article 80 de la loi n° 78-17 du 6 janvier 1978** (loi Informatique et Libertés). Ce régime écarte, « dans la mesure nécessaire » à la finalité d'expression, l'interdiction des articles 9 et 10, et aménage certains droits des personnes.
 
 Conséquences de principe :
+
 - L'**intérêt légitime (art. 6.1.f) n'est PAS retenu comme fondement** du traitement principal. Il pourra rester pertinent à la marge pour des traitements accessoires non sensibles (ex. logs techniques), mais jamais comme base du cœur métier.
-- L'**art. 9.2.e** (« données manifestement rendues publiques par la personne ») n'est **pas** un fondement principal : son interprétation est stricte et ne couvre pas une donnée sensible *déduite* (même arrêt C-252/21). Il peut tout au plus conforter le caractère public de certaines données déjà publiées par la personne.
-- L'éligibilité au régime art. 85 suppose une **véritable finalité d'expression/information du public** ; la conception est fonctionnelle et large (CJUE, 14 février 2019, *Buivids*, C-345/17 ; CJUE, gr. ch., 16 décembre 2008, *Satamedia*, C-73/07 — *références à vérifier en version consolidée*), mais le caractère **contributif gamifié et ouvert** est un **point de fragilité** à sécuriser (charte éditoriale, modération, traçabilité).
+- L'**art. 9.2.e** (« données manifestement rendues publiques par la personne ») n'est **pas** un fondement principal : son interprétation est stricte et ne couvre pas une donnée sensible _déduite_ (même arrêt C-252/21). Il peut tout au plus conforter le caractère public de certaines données déjà publiées par la personne.
+- L'éligibilité au régime art. 85 suppose une **véritable finalité d'expression/information du public** ; la conception est fonctionnelle et large (CJUE, 14 février 2019, _Buivids_, C-345/17 ; CJUE, gr. ch., 16 décembre 2008, _Satamedia_, C-73/07 — _références à vérifier en version consolidée_), mais le caractère **contributif gamifié et ouvert** est un **point de fragilité** à sécuriser (charte éditoriale, modération, traçabilité).
 
 ### Statut de la décision — SOUS RÉSERVE
 
 Cette décision est **un cadrage interne, pas un acquis**. Elle est **subordonnée à la confirmation par l'audit juridique externe** (brief Q1, ADR-010). Tant que le/la juriste n'a pas confirmé par écrit :
+
 - les pages légales restent en statut « PROJET — à valider » (cohérent ADR-011) ;
 - aucune communication ne présente l'art. 85 comme une base acquise ;
 - si l'audit infirme l'éligibilité art. 85, le périmètre du traitement (notamment les champs art. 9/10) devra être **réduit ou refondu**, pas seulement « rebasé » sur l'art. 6.1.f.

@@ -12,11 +12,8 @@
 > ### Pourquoi cette clause ne tient pas
 >
 > 1. **Déterminer les finalités = être responsable de traitement.** L'**art. 4.7 RGPD** définit le responsable de traitement comme celui qui « détermine les finalités et les moyens du traitement ». Tu choisis les 25 connecteurs, les règles de croisement, ce qui est affiché : tu détermines les finalités et les moyens. Tu **es** responsable de traitement, et **aucune mention légale ne peut t'enlever cette qualité** — c'est une qualification objective, pas un choix contractuel. Une clause qui prétend le contraire est inopposable (et donne une fausse sécurité, ce qui est pire).
->
 > 2. **Le statut éditeur/hébergeur ne dépend pas de ce que tu écris.** L'**art. 6 de la LCEN** (loi n° 2004-575 du 21 juin 2004) et l'**art. 6 du règlement (UE) 2022/2065 (DSA)** qualifient l'hébergeur par son **rôle réel** (stockage passif de contenus de tiers). Dès que tu **organises, enrichis automatiquement, hiérarchises** le contenu (ce que fait l'enrichissement OSINT paramétré par toi), tu glisses vers le statut d'**éditeur** — pleinement responsable. Écrire « je ne suis qu'un hébergeur » ne change pas la réalité fonctionnelle que le juge regardera.
->
 > 3. **Une clause d'irresponsabilité générale est réputée non écrite.** En droit de la consommation comme en responsabilité civile (art. 1240 C. civ.), une clause qui exonère de sa propre faute ou de ses obligations légales d'ordre public est sans effet. La présentée comme un bouclier serait une **fausse protection**.
->
 > 4. **Risque hors RGPD non couvert.** L'art. 85 RGPD ne couvre **ni** la diffamation (loi 1881, art. 29) **ni** la présomption d'innocence (art. 9-1 C. civ.). Une clause « usages détournés » n'y change rien (voir `docs/dispositif-anti-diffamation.md`).
 >
 > ### Ce qui te protège VRAIMENT
@@ -29,7 +26,7 @@
 >
 > **En résumé** : on ne se protège pas en niant sa responsabilité (impossible), mais en l'**assumant proprement** — finalité légitime + cadre d'usage contractuel + modération + traçabilité. C'est cela qui est rédigé ci-dessous.
 >
-> *Ceci n'est pas un conseil juridique engageant — à faire confirmer par l'avocat·e (brief Q1, Q2, Q3).*
+> _Ceci n'est pas un conseil juridique engageant — à faire confirmer par l'avocat·e (brief Q1, Q2, Q3)._
 
 ---
 

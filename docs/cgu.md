@@ -14,12 +14,10 @@
 > ### Trois alertes issues de la lecture du code (à arbitrer AVANT publication)
 >
 > 1. **L'export est aujourd'hui PUBLIC, NON AUTHENTIFIÉ et MASSIF.** Les routes `/api/export/{json,csv,jsonld,graphml,api-publique}` (`backend/src/routes/export.js`) renvoient le corpus complet des liens VALIDE, sans authentification, sans clé API, sans rate-limit différencié. Le JSON annonce même une **« licence MIT »**. C'est **incompatible** avec : (a) l'alpha fermée ADR-010 (`robots.txt Disallow: /`, aucun accès non authentifié prévu) ; (b) le régime art. 85 RGPD (la finalité d'expression journalistique ne légitime **pas** une rediffusion libre, à toute fin, d'un fichier nominatif de personnes liées à des « affaires ») ; (c) le bon sens RGPD (un export libre rend possible la reconstitution de profils sensibles par un tiers — c'est précisément le risque dominant identifié au cadrage). **Recommandation** : avant toute ouverture, (i) réserver l'export aux utilisateurs **authentifiés** ayant **accepté les présentes CGU**, (ii) **supprimer la mention « licence MIT »** sur le corpus de données (la licence MIT est faite pour du code, pas pour un fichier de données personnelles — l'appliquer ici reviendrait à autoriser n'importe quelle réutilisation, ce qui contredit tout le dispositif), (iii) journaliser les exports (audit). Les présentes CGU sont rédigées pour ce **modèle cible** (export soumis aux CGU), avec une clause prospective si la fonctionnalité UI n'est pas encore branchée.
->
 > 2. **La licence du corpus est un ADR non tranché (ADR-007 réservé).** Je ne tranche pas ici (ce n'est pas à un document contractuel de créer la politique de licence). L'article 7 ci-dessous pose une clause **prudente et restrictive par défaut** (réutilisation encadrée, pas de licence ouverte) en attendant la décision ADR-007 + l'avis avocat. Ne pas remplacer par une licence ouverte (CC-BY-SA, ODbL, MIT) sans validation : sur un corpus nominatif, une licence ouverte = perte de maîtrise des réutilisations = ta responsabilité de responsable de traitement reste engagée alors que tu as renoncé à tout contrôle.
->
 > 3. **Statut éditeur vs hébergeur (brief Q2) :** les CGU ci-dessous distinguent à dessein le contenu **contribué par les utilisateurs** (régime hébergeur, retrait sur notification) du contenu **produit/organisé par la plateforme** (enrichissement auto paramétré = régime éditeur). Cette frontière doit être confirmée par l'avocat·e ; les CGU ne peuvent pas te faire « choisir » d'être hébergeur (le juge regarde le rôle réel), mais elles peuvent **organiser la notice-and-action** qui te protège dans les deux cas.
 >
-> *Ceci n'est pas un conseil juridique engageant — à confirmer par l'avocat·e (brief Q1, Q2, Q3, Q7).*
+> _Ceci n'est pas un conseil juridique engageant — à confirmer par l'avocat·e (brief Q1, Q2, Q3, Q7)._
 
 ---
 
@@ -106,7 +104,7 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 
 > Cet article est au cœur du dispositif de protection. Il transforme une obligation légale diffuse (le RGPD) en **obligation contractuelle directement opposable** à l'utilisateur qui exporte.
 
-6.1. **Principe.** L'export de données depuis le Service est réservé aux utilisateurs **authentifiés ayant accepté les présentes CGU**. *[Clause prospective : si l'export public non authentifié subsiste techniquement, il doit être fermé avant l'ouverture publique — cf. note de cadrage en tête.]* Toute opération d'export est subordonnée au respect intégral du présent article.
+6.1. **Principe.** L'export de données depuis le Service est réservé aux utilisateurs **authentifiés ayant accepté les présentes CGU**. _[Clause prospective : si l'export public non authentifié subsiste techniquement, il doit être fermé avant l'ouverture publique — cf. note de cadrage en tête.]_ Toute opération d'export est subordonnée au respect intégral du présent article.
 
 6.2. **Changement de finalité — l'utilisateur devient responsable de traitement.** L'utilisateur qui exporte des données à caractère personnel et les réutilise pour ses propres finalités devient, de ce fait, **responsable de traitement autonome** au sens de l'**article 4, point 7, du RGPD**. Il assume **l'intégralité de ses propres obligations** : disposer d'une **base légale** propre (art. 6, et le cas échéant art. 9, 10 et 85 RGPD), respecter les principes de l'**article 5** (licéité, loyauté, finalité, minimisation, exactitude, limitation de conservation), **informer les personnes** (art. 13 et 14), **garantir leurs droits** (art. 15 à 22), et tenir le **registre** prévu à l'article 30 si applicable. La réutilisation pour une finalité incompatible avec la finalité journalistique d'origine constitue un **changement de finalité** au sens de l'**article 6, paragraphe 4, du RGPD**, dont l'utilisateur répond seul.
 
@@ -122,11 +120,11 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 - f) tout **recroisement avec des données privées** ou des données issues d'autres sources permettant de **réidentifier**, de **profiler** ou de **reconstituer des données sensibles** (opinions politiques, condamnations, état de santé) sur une personne, au-delà de ce qui figure dans le Service ;
 - g) tout usage contraire au RGPD, à la loi n° 78-17 du 6 janvier 1978, à la loi du 29 juillet 1881, au Code pénal, ou aux **licences des sources** (article 7).
 
-6.5. **Respect des droits des personnes.** L'utilisateur qui réutilise des données exportées doit faire droit aux demandes d'accès, de rectification, d'opposition et d'effacement émanant des personnes concernées, dans les conditions du RGPD, indépendamment des procédures gérées par l'Éditeur.
+  6.5. **Respect des droits des personnes.** L'utilisateur qui réutilise des données exportées doit faire droit aux demandes d'accès, de rectification, d'opposition et d'effacement émanant des personnes concernées, dans les conditions du RGPD, indépendamment des procédures gérées par l'Éditeur.
 
-6.6. **Interdiction d'extraction massive abusive.** Sont interdits le **scraping**, l'aspiration automatisée, l'extraction systématique ou la reconstitution massive du Corpus en dehors des interfaces d'export prévues et dans des conditions excédant un usage normal. Une telle extraction est susceptible de porter atteinte au **droit du producteur de base de données** (articles L341-1 et suivants du Code de la propriété intellectuelle) et d'engager la responsabilité de l'utilisateur.
+  6.6. **Interdiction d'extraction massive abusive.** Sont interdits le **scraping**, l'aspiration automatisée, l'extraction systématique ou la reconstitution massive du Corpus en dehors des interfaces d'export prévues et dans des conditions excédant un usage normal. Une telle extraction est susceptible de porter atteinte au **droit du producteur de base de données** (articles L341-1 et suivants du Code de la propriété intellectuelle) et d'engager la responsabilité de l'utilisateur.
 
-6.7. **Traçabilité.** L'Éditeur se réserve le droit de **journaliser** les opérations d'export (date, volume, utilisateur, format), à des fins de preuve, de sécurité et de respect des présentes, dans le respect du RGPD.
+  6.7. **Traçabilité.** L'Éditeur se réserve le droit de **journaliser** les opérations d'export (date, volume, utilisateur, format), à des fins de preuve, de sécurité et de respect des présentes, dans le respect du RGPD.
 
 ---
 
@@ -136,7 +134,7 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 
 7.2. **Données sources.** Les données proviennent de sources publiques (Wikidata, Sirene/RNE, BODACC, HATVP, IGN, OpenSanctions, ICIJ, GLEIF, registres de l'UE, etc.) soumises à des **licences distinctes**, dont certaines comportent des restrictions (notamment des clauses **non commerciales**, par ex. OpenSanctions sous licence CC BY-NC 4.0, ou des conditions de réutilisation propres à l'ICIJ). L'utilisateur qui réutilise des données **demeure tenu de respecter la licence de chaque source d'origine**, indépendamment des présentes.
 
-7.3. **Licence du Corpus — clause prudente par défaut.** *[À TRANCHER — ADR-007 réservé, validation avocat·e requise.]* En l'absence de décision formelle de l'Éditeur sur la licence du Corpus, et compte tenu de la nature **nominative** des données, **aucune licence ouverte n'est accordée** sur le Corpus. La réutilisation des données exportées n'est autorisée que dans les conditions et limites de l'article 6 (finalités compatibles) et de l'article 7.2 (licences des sources). Toute reproduction, rediffusion ou mise à disposition du Corpus ou d'une partie substantielle de celui-ci à des tiers requiert l'accord préalable de l'Éditeur. La mention d'une « licence MIT » qui figurerait sur un fichier d'export est **sans valeur** s'agissant des données personnelles et ne saurait être interprétée comme une autorisation de réutilisation libre.
+7.3. **Licence du Corpus — clause prudente par défaut.** _[À TRANCHER — ADR-007 réservé, validation avocat·e requise.]_ En l'absence de décision formelle de l'Éditeur sur la licence du Corpus, et compte tenu de la nature **nominative** des données, **aucune licence ouverte n'est accordée** sur le Corpus. La réutilisation des données exportées n'est autorisée que dans les conditions et limites de l'article 6 (finalités compatibles) et de l'article 7.2 (licences des sources). Toute reproduction, rediffusion ou mise à disposition du Corpus ou d'une partie substantielle de celui-ci à des tiers requiert l'accord préalable de l'Éditeur. La mention d'une « licence MIT » qui figurerait sur un fichier d'export est **sans valeur** s'agissant des données personnelles et ne saurait être interprétée comme une autorisation de réutilisation libre.
 
 7.4. **Droit du producteur de base de données.** L'Éditeur fait valoir, sur le Corpus qu'il a constitué, organisé et enrichi, le **droit sui generis du producteur de base de données** (articles L341-1 et suivants du Code de la propriété intellectuelle). L'extraction ou la réutilisation d'une **partie substantielle** du Corpus, ou d'extractions répétées de parties non substantielles excédant l'usage normal, est interdite.
 
@@ -144,7 +142,7 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 
 ## Article 8 — Responsabilité, modération, signalement et retrait
 
-8.1. **Statut hybride éditeur / hébergeur.** *[Qualification à confirmer — brief Q2.]* L'Éditeur agit en qualité d'**hébergeur** (art. 6, I, 2° de la LCEN ; art. 6 du règlement (UE) 2022/2065 — DSA) à l'égard des contenus **librement contribués par les utilisateurs**, et en qualité d'**éditeur** à l'égard des contenus qu'il **produit, sélectionne, hiérarchise ou enrichit automatiquement**. Cette qualification résulte du **rôle réel** de l'Éditeur et non d'une stipulation contractuelle.
+8.1. **Statut hybride éditeur / hébergeur.** _[Qualification à confirmer — brief Q2.]_ L'Éditeur agit en qualité d'**hébergeur** (art. 6, I, 2° de la LCEN ; art. 6 du règlement (UE) 2022/2065 — DSA) à l'égard des contenus **librement contribués par les utilisateurs**, et en qualité d'**éditeur** à l'égard des contenus qu'il **produit, sélectionne, hiérarchise ou enrichit automatiquement**. Cette qualification résulte du **rôle réel** de l'Éditeur et non d'une stipulation contractuelle.
 
 8.2. **Signalement.** Tout utilisateur peut signaler un contenu qu'il estime illicite via le mécanisme de signalement accessible sur le Service (obligation issue de l'art. 16 du DSA). Le signalement doit être suffisamment précis et motivé pour permettre l'identification du contenu et l'appréciation de son caractère éventuellement illicite.
 
@@ -158,7 +156,7 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 
 ## Article 9 — Données personnelles des utilisateurs
 
-9.1. L'Éditeur traite les données personnelles **des utilisateurs eux-mêmes** (compte, journalisation, contributions) dans les conditions décrites par la **politique de confidentialité** (`/confidentialite`) *[à créer]*, distincte du traitement journalistique portant sur les entités d'influence publique.
+9.1. L'Éditeur traite les données personnelles **des utilisateurs eux-mêmes** (compte, journalisation, contributions) dans les conditions décrites par la **politique de confidentialité** (`/confidentialite`) _[à créer]_, distincte du traitement journalistique portant sur les entités d'influence publique.
 
 9.2. Les utilisateurs disposent, sur leurs propres données, des droits prévus aux articles 15 à 22 du RGPD, exerçables auprès du contact indiqué dans les mentions légales et la politique de confidentialité.
 
@@ -176,9 +174,9 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 - le **retrait** des contributions concernées ;
 - le **signalement** aux autorités compétentes en cas d'infraction pénale (notamment art. 226-16 et suivants du Code pénal pour les traitements illicites de données, art. 225-1 pour la discrimination, ou loi du 29 juillet 1881).
 
-10.2. Ces sanctions sont sans préjudice de toute action en réparation du préjudice subi par l'Éditeur ou par un tiers, et de la **responsabilité personnelle** de l'utilisateur au titre de ses réutilisations.
+  10.2. Ces sanctions sont sans préjudice de toute action en réparation du préjudice subi par l'Éditeur ou par un tiers, et de la **responsabilité personnelle** de l'utilisateur au titre de ses réutilisations.
 
-10.3. La suppression du compte d'un utilisateur n'efface pas les traces d'audit conservées à des fins de preuve (audit immuable, ADR-008), dans le respect du RGPD.
+  10.3. La suppression du compte d'un utilisateur n'efface pas les traces d'audit conservées à des fins de preuve (audit immuable, ADR-008), dans le respect du RGPD.
 
 ---
 
@@ -188,7 +186,7 @@ Le contributeur s'engage, **à peine de suspension ou de suppression de son comp
 
 11.2. **Réclamations.** Toute réclamation peut être adressée à l'Éditeur via le contact indiqué dans les mentions légales. L'Éditeur s'efforce d'y répondre dans un délai raisonnable.
 
-11.3. **Médiation de la consommation.** *[À CONFIRMER avec l'avocat·e — applicabilité.]* Dans l'hypothèse où le Service serait fourni à des **consommateurs** au sens du Code de la consommation, l'Éditeur informerait l'utilisateur de la possibilité de recourir gratuitement à un **médiateur de la consommation** (art. L611-1 et L612-1 du Code de la consommation) et indiquerait les coordonnées du médiateur retenu. En l'état (service gratuit, finalité d'intérêt général, absence de relation commerciale), l'applicabilité de la médiation conso est incertaine et doit être tranchée.
+11.3. **Médiation de la consommation.** _[À CONFIRMER avec l'avocat·e — applicabilité.]_ Dans l'hypothèse où le Service serait fourni à des **consommateurs** au sens du Code de la consommation, l'Éditeur informerait l'utilisateur de la possibilité de recourir gratuitement à un **médiateur de la consommation** (art. L611-1 et L612-1 du Code de la consommation) et indiquerait les coordonnées du médiateur retenu. En l'état (service gratuit, finalité d'intérêt général, absence de relation commerciale), l'applicabilité de la médiation conso est incertaine et doit être tranchée.
 
 11.4. **Litiges.** À défaut de résolution amiable, tout litige relève des juridictions françaises compétentes, sous réserve des règles d'ordre public applicables (notamment en matière de consommation et de presse).
 
