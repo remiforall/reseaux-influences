@@ -4,11 +4,11 @@
 >
 > **Contexte** : ces deux lacunes du référentiel ont été rencontrées par l'agent `osint-investigation` (mémoire `project_agents_backup`, instance Why) en seedant un corpus Macron + Brigitte Macron + Lecornu + Renaissance le 2026-06-22. L'agent a contourné en utilisant les codes les plus proches existants, mais la modélisation reste imparfaite.
 >
-> **Note de numérotation (2026-06-24)** : ébauches d'abord nommées ADR-019 / ADR-020 par l'agent, renumérotées **ADR-026 / ADR-027** car les numéros jusqu'à ADR-025 (TED) sont déjà attribués.
+> **Note de numérotation (2026-06-26)** : ébauches d'abord nommées ADR-019 / ADR-020 par l'agent, renumérotées **ADR-027 / ADR-028** — ADR-026 ayant entre-temps été attribué (base légale art. 85 RGPD, mergé le 2026-06-19) ; les numéros jusqu'à ADR-026 sont donc déjà pris.
 
 ---
 
-## ADR-026 (proposé) — Ajout d'une valeur `CONJOINT_PUBLIC` à l'enum `QualiteInfluence`
+## ADR-027 (proposé) — Ajout d'une valeur `CONJOINT_PUBLIC` à l'enum `QualiteInfluence`
 
 **Statut** : DRAFT
 **Date proposée** : 2026-06-22
@@ -43,7 +43,7 @@ Ajouter `CONJOINT_PUBLIC` à l'enum `QualiteInfluence`. Définition : conjoint·
 
 ---
 
-## ADR-027 (proposé) — Ajout d'un code `nomination_gouvernementale` au référentiel `TypeLien`
+## ADR-028 (proposé) — Ajout d'un code `nomination_gouvernementale` au référentiel `TypeLien`
 
 **Statut** : DRAFT
 **Date proposée** : 2026-06-22
