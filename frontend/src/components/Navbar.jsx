@@ -75,6 +75,31 @@ function Navbar() {
                 </Link>
               </li>
             )}
+
+            {/* Connexion / Déconnexion */}
+            <li>
+              {estConnecte ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem('token')
+                    window.location.href = '/'
+                  }}
+                  className="flex items-center gap-1 px-3 py-2 rounded hover:text-accent focus-visible-ring transition-colors min-h-[44px]"
+                >
+                  <span aria-hidden="true">⏻</span>
+                  <span>Déconnexion</span>
+                </button>
+              ) : (
+                <Link
+                  to="/connexion"
+                  className="flex items-center gap-1 px-3 py-2 rounded hover:text-accent focus-visible-ring transition-colors min-h-[44px]"
+                >
+                  <span aria-hidden="true">→]</span>
+                  <span>Connexion</span>
+                </Link>
+              )}
+            </li>
           </ul>
         </div>
       </div>

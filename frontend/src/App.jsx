@@ -6,6 +6,7 @@ import Liens from './pages/Liens'
 import Graphe from './pages/Graphe'
 import Profil from './pages/Profil'
 import Enrichissement from './pages/Enrichissement'
+import Connexion from './pages/Connexion'
 import MentionsLegales from './pages/legal/MentionsLegales'
 import PolitiqueConfidentialite from './pages/legal/PolitiqueConfidentialite'
 import Cgu from './pages/legal/Cgu'
@@ -39,6 +40,7 @@ function App() {
           <Route path="/profil/:id" element={<Profil />} />
           {/* Route enrichissement — accessible aux utilisateurs authentifiés uniquement */}
           <Route path="/enrichissement" element={<Enrichissement />} />
+          <Route path="/connexion" element={<Connexion />} />
 
           {/* Pages légales (PROJET — prérequis levée alpha ADR-011) */}
           <Route path="/mentions-legales" element={<MentionsLegales />} />
