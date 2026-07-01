@@ -91,6 +91,36 @@ async function main() {
       couleur: '#27AE60',
     },
     {
+      code: 'DETENTION_CAPITAL',
+      libelle: 'Détention de capital',
+      description: 'Détient une participation minoritaire au capital de (origine → cible)',
+      categorie: 'financier',
+      couleur: '#117A65',
+    },
+    {
+      code: 'ACTIONNAIRE_MAJORITAIRE',
+      libelle: 'Actionnaire majoritaire',
+      description:
+        'Détient la majorité du capital OU des droits de vote (contrôle), origine → cible',
+      categorie: 'financier',
+      couleur: '#0E6655',
+    },
+    {
+      code: 'FILIALE',
+      libelle: 'Société mère / filiale',
+      description: "L'origine contrôle la cible comme filiale (détention quasi totale)",
+      categorie: 'financier',
+      couleur: '#1A5276',
+    },
+    {
+      code: 'ADMINISTRATEUR',
+      libelle: 'Administrateur·rice',
+      description:
+        'Membre du conseil d’administration / de surveillance (origine = personne → cible = société). Jetons de présence en description si sourcés (URD).',
+      categorie: 'professionnel',
+      couleur: '#6C3483',
+    },
+    {
       code: 'MANDAT_ELECTIF',
       libelle: 'Mandat électif',
       description: 'Mandat électif (P39 Wikidata)',

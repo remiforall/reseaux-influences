@@ -1136,3 +1136,31 @@ Cette décision est **un cadrage interne, pas un acquis**. Elle est **subordonn�
 - Aucune migration de code : l'ADR documente et verrouille la base légale, il ne modifie pas le schéma.
 
 ---
+
+## ADR-027 — Codes de lien capitalistiques dédiés (détention / contrôle)
+
+**Date** : 2026-06-30
+**Statut** : Accepté
+
+### Contexte
+
+La construction du corpus (programme de seed OSINT : gouvernements, fortunes, CAC 40, participations CDC, médias mdiplo) génère un grand volume de **liens capitalistiques** entre personnes et organisations (actionnariat, détention majoritaire, filiales). Le référentiel `types_liens` ne disposait que d'un code générique `economique` (« Relation d'affaires, actionnariat, conseil »). Tasser des milliers de liens de détention dans `economique` rend le cœur du réseau d'influence — *qui contrôle qui, et à quel niveau* — **illisible** (impossible de filtrer « détention majoritaire » ou de distinguer une filiale d'une participation minoritaire).
+
+### Décision
+
+Ajout de **trois codes** dans `backend/prisma/seed.js` (catégorie `financier`) :
+
+- `DETENTION_CAPITAL` — participation **minoritaire** au capital (origine → cible).
+- `ACTIONNAIRE_MAJORITAIRE` — majorité du **capital OU des droits de vote** (contrôle), origine → cible. Couvre le cas du contrôle par droits de vote majoritaires sans majorité du capital (ex. Christian Dior SE → LVMH : 41,89 % du capital, 56,69 % des droits de vote).
+- `FILIALE` — l'origine contrôle la cible comme **filiale** (détention quasi totale).
+
+Convention de direction : `aRef` = détenteur/mère, `bRef` = détenu/filiale (cohérent avec le modèle mdiplo `origine → cible`).
+
+### Conséquences
+
+- `economique` est **conservé** pour les relations d'affaires non capitalistiques (conseil, partenariat).
+- Le seed `bin/seed-fortunes-1.js` (vague 1b) est mis à jour : ses 8 liens de détention passent de `economique` aux codes précis selon le % réel.
+- Les vagues capitalistiques à venir (CAC 40, CDC/Bpifrance/APE, importeur médias mdiplo) **doivent** utiliser ces codes, pas `economique`.
+- Aucune migration de schéma : `typeLienCode` est une valeur du référentiel `types_liens`, pas un enum Prisma. Le code est créé à l'exécution de `npm run db:seed`.
+
+---
