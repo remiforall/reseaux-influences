@@ -297,35 +297,34 @@ const SOURCES = {
     verifiee: true,
   },
   echos_station_f: {
-    url: "https://www.lesechos.fr/tech-medias/hightech/station-f-xavier-niel-inaugurera-son-campus-start-up-avec-macron-le-29-juin-1213527",
-    titre: "Station F : Xavier Niel inaugurera son campus avec Macron le 29 juin — Les Échos",
-    media: "Les Échos",
-    typeMedia: "PRESSE_ECRITE",
+    url: "https://fr.wikipedia.org/wiki/Station_F",
+    titre: "Station F — Wikipédia",
+    media: "Wikipédia",
+    typeMedia: "WEB",
     langue: "fr",
-    paysMedia: "France",
-    datePublication: new Date("2017-06-26"),
+    paysMedia: "International",
+    datePublication: null,
     dateConsultation: new Date("2026-07-02"),
     auteur: null,
     description:
-      "Emmanuel Macron a inauguré Station F aux côtés de Xavier Niel le 29 juin 2017 " +
-      "(campus start-up de 34 000 m² à Paris). Symbole de la proximité entre le macronisme " +
-      "et la French Tech.",
-    verifiee: false,
+      "Emmanuel Macron a inauguré Station F, campus de start-up créé par Xavier Niel, " +
+      "le 29 juin 2017 à Paris.",
+    verifiee: true,
   },
   echos_arnault_macron: {
-    url: "https://www.lesechos.fr/politique-societe/politique/macron-les-grands-patrons-un-amour-contrarie-mais-solide-1990714",
-    titre: "Macron et les grands patrons : un amour contrariè mais solide — Les Échos",
-    media: "Les Échos",
-    typeMedia: "PRESSE_ECRITE",
+    url: "https://fr.wikipedia.org/wiki/Choose_France",
+    titre: "Choose France — Wikipédia",
+    media: "Wikipédia",
+    typeMedia: "WEB",
     langue: "fr",
-    paysMedia: "France",
-    datePublication: new Date("2023-06-01"),
+    paysMedia: "International",
+    datePublication: null,
     dateConsultation: new Date("2026-07-02"),
     auteur: null,
     description:
-      "Bernard Arnault figure parmi les grands patrons accédant régulièrement à la présidence " +
-      "dans le cadre des réunions informelles Élysée-patronat (Choose France, déjeuners, etc.).",
-    verifiee: false,
+      "Sommet Choose France organisé par la présidence de la République pour attirer les " +
+      "investissements ; les grands groupes français, dont LVMH (Bernard Arnault), y participent.",
+    verifiee: true,
   },
   bdf_rapport: {
     url: "https://www.banque-france.fr/publications-et-statistiques/publications/rapports-annuels-et-comptes",
@@ -356,7 +355,7 @@ const SOURCES = {
     description:
       "Note officielle sur la nomination de Bruno Le Maire comme ministre de l'Économie " +
       "et des Finances le 17 mai 2017 par Emmanuel Macron (reconduit sans interruption jusqu'en 2025).",
-    verifiee: false,
+    verifiee: true,
   },
   vie_pub_darmanin: {
     url: "https://www.vie-publique.fr/en-bref/19742-gerald-darmanin-secrétaire-detat-budget",
@@ -371,7 +370,7 @@ const SOURCES = {
     description:
       "Gérald Darmanin nommé par Emmanuel Macron secrétaire d'État puis ministre des Comptes publics " +
       "dans le premier gouvernement Philippe (17 mai 2017).",
-    verifiee: false,
+    verifiee: true,
   },
 }
 
