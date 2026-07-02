@@ -34,7 +34,7 @@ const ASSEMBLEE = {
   pays: 'France',
   siteWeb: 'https://www.assemblee-nationale.fr',
   description: 'Chambre basse du Parlement français (577 députés).',
-  wikidataId: 'Q3044',
+  wikidataId: 'Q193582',
 }
 
 // Groupe parlementaire (libellé abrégé) → parti déjà en base (wikidataId)
